@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MUESTRA.MX | Datos, Encuestas y Opinión Pública</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@800;900&family=Playfair+Display:ital,wght@0,700;0,800;1,600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+  <style>
+    :root {
+      --brand-red: #BE3455;
+      --brand-red-dark: #9A2642;
+      --brand-gray: #9DA19F;
+      --brand-dark: #0A0A0A;
+      --bg-color: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --text-color: #111827;
+      --text-muted: #4B5563;
+      --border-color: #9DA19F;
+      --font-sans: 'Inter', sans-serif;
+      --font-logo: 'Montserrat', sans-serif;
+      --font-serif: 'Playfair Display', serif;
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #0F172A;
+      --card-bg: #1E293B;
+      --text-color: #F8FAFC;
+      --text-muted: #94A3B8;
+      --border-color: #64748B;
+    }
+
+    body, html {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: var(--font-sans);
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    a { text-decoration: none; color: inherit; cursor: pointer; }
+
+    .container { max-width: 1240px; margin: 0 auto; padding: 0 1.5rem; width: 100%; }
+
+    .view-section { display: none; }
+    .view-section.active-view { display: block; }
+
+    .splash-screen {
+      position: fixed; inset: 0; 
+      background: linear-gradient(rgba(10, 10, 10, 0.75), rgba(10, 10, 10, 0.88)), 
+                  url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+      display: flex; align-items: center; justify-content: center; z-index: 9999;
+      opacity: 1; visibility: visible; transition: opacity 0.6s ease;
+    }
+    .splash-screen.fade-out { opacity: 0; visibility: hidden; pointer-events: none; }
+    .splash-content { text-align: center; color: #FFFFFF; padding: 2.5rem; max-width: 520px; }
+    .splash-logo-main {
+      font-family: var(--font-logo); font-size: clamp(3.2rem, 7vw, 4.8rem); font-weight: 900; letter-spacing: -3px;
+      line-height: 0.9; color: #FFFFFF; text-transform: lowercase; margin-bottom: 0.8rem;
+    }
+    .splash-logo-main .logo-es { color: var(--brand-red); }
+    .splash-sub {
+      font-size: 0.88rem; font-weight: 900; letter-spacing: 6px; color: #E2E8F0; text-transform: uppercase;
+      margin-bottom: 2rem; border-top: 1px solid rgba(255,255,255,0.3); border-bottom: 1px solid rgba(255,255,255,0.3);
+      padding: 0.6rem 0; display: inline-block;
+    }
+
+    .top-bar-wrapper { background: var(--card-bg); border-bottom: 1px solid var(--border-color); width: 100%; padding: 0 5%; }
+    .top-bar { padding: 1.5rem 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.5rem; max-width: 1300px; margin: 0 auto; }
+
+    .brand-logo { display: inline-flex; flex-direction: column; cursor: pointer; }
+    .logo-main-text {
+      font-family: var(--font-logo); font-size: clamp(2.1rem, 4.5vw, 3rem); font-weight: 900; letter-spacing: -2px; line-height: 0.9; color: var(--text-color); text-transform: lowercase;
+    }
+    .logo-es { color: var(--brand-red); }
+    .logo-sub-text {
+      font-size: clamp(0.55rem, 1.2vw, 0.68rem); font-weight: 900; letter-spacing: 4px; color: var(--text-color); margin-top: 6px; text-transform: uppercase;
+    }
+
+    .meta-center { font-size: 0.82rem; font-weight: 600; color: var(--text-muted); }
+    .header-right { display: flex; gap: 0.8rem; align-items: center; }
+
+    .btn-theme-toggle, .lang-select {
+      background: transparent; color: var(--text-color); border: 1px solid var(--border-color); padding: 0.35rem 0.65rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 700;
+    }
+
+    .user-pill {
+      font-size: 0.75rem; font-weight: 700; color: var(--brand-red); background: #FDF2F4; padding: 0.3rem 0.6rem; border-radius: 4px; display: none; align-items: center; gap: 0.4rem; border: 1px solid #F87171;
+    }
+    .btn-power-off { background: #EF4444; color: #FFF; border: none; width: 22px; height: 22px; border-radius: 3px; cursor: pointer; font-size: 0.75rem; }
+
+    .main-nav {
+      background: linear-gradient(rgba(14, 116, 144, 0.9), rgba(15, 23, 42, 0.95)), 
+                  url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1400&q=80') center/cover no-repeat;
+      color: #FFFFFF; position: sticky; top: 0; z-index: 200; width: 100%; padding: 0 5%; border-bottom: 3px solid var(--brand-red);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    .nav-container { display: flex; align-items: center; justify-content: space-between; gap: 1rem; max-width: 1300px; margin: 0 auto; flex-wrap: wrap; }
+    
+    .nav-links { display: flex; list-style: none; flex-wrap: wrap; }
+    .nav-links li a {
+      display: block; padding: 0.95rem 0.9rem; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; color: #FFFFFF; transition: 0.2s;
+    }
+    .nav-links li a:hover, .nav-links li.active a { background: var(--brand-red); color: #FFFFFF; }
+    
+    .nav-actions { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; }
+    
+    .admin-action-btn {
+      display: none; background: var(--brand-red); color: #FFFFFF; padding: 0.65rem 0.9rem; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; border-radius: 4px; align-items: center; gap: 0.4rem; border: none; cursor: pointer; white-space: nowrap;
+    }
+    .admin-action-btn.visible-admin { display: inline-flex !important; }
+    .btn-admin-monitor { background: #111827; border: 1px solid var(--brand-red); }
+    
+    .btn-encuesta-top {
+      background: var(--brand-red); color: #FFFFFF; padding: 0.75rem 1rem; font-size: 0.72rem; font-weight: 900; text-transform: uppercase; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.4rem; border: none; cursor: pointer; white-space: nowrap;
+    }
+
+    @media (max-width: 768px) {
+      .top-bar { flex-direction: column; align-items: flex-start; gap: 0.8rem; padding: 1rem 0; }
+      .header-right { width: 100%; justify-content: space-between; }
+      .nav-container { flex-direction: column; align-items: stretch; padding: 0.5rem 0; }
+      .nav-links { justify-content: center; width: 100%; }
+      .nav-links li a { padding: 0.6rem 0.4rem; font-size: 0.65rem; }
+      .nav-actions { justify-content: center; width: 100%; margin-bottom: 0.5rem; }
+    }
+
+    .admin-monitor-overlay {
+      position: fixed; inset: 0; background: var(--bg-color); z-index: 5000; display: none; flex-direction: column; overflow-y: auto; color: var(--text-color); padding: 2rem;
+    }
+    .admin-monitor-overlay.active { display: flex; }
+    .monitor-card {
+      background: var(--card-bg); border: 1px solid var(--brand-gray); border-radius: 12px; padding: 2rem; max-width: 1100px; margin: 0 auto; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    .monitor-table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.82rem; }
+    .monitor-table th, .monitor-table td { padding: 10px 12px; border-bottom: 1px solid var(--brand-gray); text-align: left; }
+    .monitor-table th { background: var(--brand-red); color: #FFF; text-transform: uppercase; font-size: 0.7rem; }
+    #mapaNormalDetalle { width: 100%; height: 280px; border-radius: 8px; border: 1px solid var(--brand-gray); margin-top: 1rem; }
+
+    .main-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin-top: 1.8rem; }
+    @media (min-width: 992px) { .main-grid { grid-template-columns: 2fr 1fr; gap: 2rem; } }
+
+    .hero-slider-container {
+      position: relative; border-radius: 10px; overflow: hidden; min-height: 480px; background: #000; border: 1px solid var(--brand-gray); display: flex; flex-direction: column; justify-content: flex-end;
+    }
+    .slide-img-real {
+      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; display: block;
+    }
+    .slide-overlay {
+      position: relative; z-index: 2; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 60%); padding: 2.5rem; color: #FFFFFF; width: 100%;
+    }
+    .slide-content { max-width: 95%; background: rgba(0,0,0,0.75); padding: 1.5rem; border-radius: 8px; }
+    
+    .badge { background: var(--brand-red); font-size: 0.75rem; font-weight: 800; padding: 0.35rem 0.75rem; border-radius: 4px; text-transform: uppercase; margin-bottom: 0.8rem; display: inline-block; color: #FFF; }
+    .slide-content h2 { font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 800; margin-bottom: 0.8rem; }
+    .slide-content p { font-size: 0.92rem; color: #E5E7EB; margin-bottom: 1.2rem; }
+    .btn-leer { background: var(--brand-red); color: #FFF; padding: 0.7rem 1.2rem; font-weight: 800; border: none; border-radius: 4px; cursor: pointer; text-transform: uppercase; font-size: 0.78rem; }
+
+    .sidebar-widget { border: 1px solid var(--brand-gray); border-radius: 10px; overflow: hidden; margin-bottom: 1.5rem; background: var(--card-bg); }
+    .widget-header { background: var(--brand-red); color: #FFF; padding: 0.95rem 1.25rem; font-size: 0.9rem; font-weight: 800; text-transform: uppercase; }
+    .widget-content { padding: 1.4rem; }
+    .poll-question { font-size: 1.05rem; font-weight: 800; margin-bottom: 1.1rem; color: var(--text-color); }
+    .btn-votar { width: 100%; background: var(--brand-red); color: #FFF; border: none; padding: 0.85rem; font-weight: 800; text-transform: uppercase; border-radius: 6px; cursor: pointer; }
+
+    .article-sheet { max-width: 960px; margin: 2rem auto; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 3rem; box-shadow: 0 10px 30px rgba(0,0,0,0.06); }
+    .qa-block { background: var(--bg-color); padding: 2rem; border-radius: 8px; border-left: 5px solid var(--brand-red); margin-bottom: 2rem; border: 1px solid var(--border-color); }
+
+    .nosotros-section, .contacto-section { margin-top: 3.5rem; background: var(--card-bg); border: 1px solid var(--brand-gray); border-radius: 10px; padding: 2.5rem; }
+    .nosotros-grid, .contacto-grid { display: grid; grid-template-columns: 1fr; gap: 2rem; margin-top: 1.5rem; }
+    @media (min-width: 768px) { .nosotros-grid, .contacto-grid { grid-template-columns: 1fr 1fr; } }
+    .nosotros-card, .dir-box { background: var(--bg-color); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 8px; }
+    .nosotros-card h4, .dir-box h5 { color: var(--brand-red); font-weight: 900; margin-bottom: 0.5rem; }
+
+    #mapaOficinasContacto { width: 100%; height: 300px; border-radius: 8px; border: 1px solid var(--brand-gray); margin-top: 1rem; position: relative; z-index: 1; }
+
+    /* Botones Flotantes */
+    .subscribe-float-btn {
+      position: fixed; right: 20px; bottom: 215px; z-index: 2900;
+      background: #15803D; color: #FFF; width: 45px; height: 45px;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: transform 0.2s; cursor: pointer;
+    }
+    .facebook-float-btn, .twitter-float-btn {
+      position: fixed; right: 20px; z-index: 2900; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: #FFF; text-decoration: none; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: transform 0.2s; font-weight: 900;
+    }
+    .facebook-float-btn { bottom: 155px; background: #1877F2; }
+    .twitter-float-btn { bottom: 100px; background: #000000; border: 1px solid #444; }
+    .subscribe-float-btn:hover, .facebook-float-btn:hover, .twitter-float-btn:hover { transform: scale(1.1); }
+
+    /* Chatbot */
+    .chatbot-float-trigger {
+      position: fixed; bottom: 35px; right: 20px; z-index: 3000;
+      background: var(--brand-red); color: #FFF; width: 50px; height: 50px;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,0.3); transition: transform 0.2s;
+    }
+    .chatbot-float-trigger:hover { transform: scale(1.08); }
+    
+    .chatbot-window {
+      position: fixed; bottom: 95px; right: 20px; z-index: 3000;
+      width: 340px; background: var(--card-bg); border: 1px solid var(--brand-gray);
+      border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); display: none;
+      flex-direction: column; overflow: hidden;
+    }
+    .chatbot-window.active { display: flex; }
+    .chatbot-header { background: var(--brand-red); color: #FFF; padding: 0.8rem 1rem; font-weight: 800; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; }
+    .chatbot-body { padding: 1rem; height: 260px; overflow-y: auto; font-size: 0.82rem; display: flex; flex-direction: column; gap: 0.8rem; background: var(--bg-color); }
+    .chat-msg { padding: 0.6rem 0.8rem; border-radius: 8px; max-width: 85%; line-height: 1.4; }
+    .chat-msg.bot { background: var(--card-bg); color: var(--text-color); border: 1px solid var(--border-color); align-self: flex-start; }
+    .chat-msg.user { background: var(--brand-red); color: #FFF; align-self: flex-end; }
+    .chatbot-footer { padding: 0.6rem; background: var(--card-bg); border-top: 1px solid var(--border-color); display: flex; gap: 0.4rem; }
+    .chatbot-footer input { flex-grow: 1; padding: 0.5rem; border: 1px solid var(--brand-gray); border-radius: 4px; background: var(--bg-color); color: var(--text-color); font-size: 0.8rem; }
+    .chatbot-footer button { background: var(--brand-red); color: #FFF; border: none; padding: 0 0.8rem; border-radius: 4px; cursor: pointer; font-weight: 800; }
+
+    footer { background-color: var(--brand-dark); color: #FFFFFF; padding-top: 3rem; margin-top: 4rem; }
+    .footer-top { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1.5rem; padding-bottom: 2rem; border-bottom: 1px solid #262626; max-width: 1300px; margin: 0 auto; padding: 0 1.5rem 2rem; }
+    @media (min-width: 768px) { .footer-top { flex-direction: row; justify-content: space-between; text-align: left; } }
+    .footer-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.2rem; font-size: 0.85rem; color: #D1D5DB; font-weight: 600; }
+    .footer-bottom { display: flex; justify-content: space-between; align-items: center; text-align: center; font-size: 0.75rem; color: #9CA3AF; padding: 1.5rem; max-width: 1300px; margin: 0 auto; border-top: 1px solid #1f2937; }
+
+    .modal-overlay, .modal-overlay-civica { position: fixed; inset: 0; background: rgba(10, 10, 10, 0.85); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 0.8rem; }
+    .modal-overlay.active, .modal-overlay-civica.active { display: flex; }
+    .modal-box { width: 100%; max-width: 600px; background: var(--card-bg); color: var(--text-color); border-radius: 12px; padding: 0; position: relative; border: 1px solid var(--brand-gray); overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+    .btn-close { position: absolute; top: 1rem; right: 1rem; background: rgba(0,0,0,0.5); border: none; font-size: 1.2rem; color: #FFF; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; }
+    .input-group { margin-bottom: 1rem; text-align: left; }
+    .input-group label { display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem; }
+    .input-group input, .input-group textarea, .input-group select { width: 100%; padding: 0.75rem; border: 1px solid var(--brand-gray); background: var(--bg-color); color: var(--text-color); border-radius: 6px; }
+    
+    .btn-votar-activo { 
+      width: 100%; background: var(--brand-red) !important; color: #FFF !important; border: none; padding: 0.95rem; border-radius: 8px; font-weight: 800; cursor: pointer !important; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="splash-screen" id="splashScreen">
+    <div class="splash-content">
+      <div class="splash-logo-main"><span class="logo-mu">mu</span><span class="logo-es">es</span>tra.mx</div>
+      <div class="splash-sub">opiniones <span style="font-size: 1.4em; font-weight: 900; vertical-align: middle;">+</span> datos</div>
+      <p>Información verídica y opinión ciudadana.</p>
+    </div>
+  </div>
+
+  <script>
+    setTimeout(() => {
+      const s = document.getElementById('splashScreen');
+      if(s) { s.classList.add('fade-out'); setTimeout(() => s.remove(), 600); }
+    }, 1500);
+  </script>
+
+  <header class="top-bar-wrapper">
+    <div class="top-bar">
+      <a class="brand-logo" ondblclick="abrirAdminConLogin()" onclick="navegarA('inicio')" title="Doble clic para entrar al Admin">
+        <div class="logo-main-text"><span class="logo-mu">mu</span><span class="logo-es">es</span>tra.mx</div>
+        <div class="logo-sub-text">opiniones <span style="font-size: 1.4em; font-weight: 900; vertical-align: middle;">+</span> datos</div>
+      </a>
+      <div class="meta-center" id="dynamicDateDisplay">Estadística Abierta y Opinión Pública</div>
+      <div class="header-right">
+        <select class="lang-select" onchange="cambiarIdioma(this.value)">
+          <option value="es">ESP</option>
+          <option value="en">ENG</option>
+        </select>
+        <button class="btn-theme-toggle" onclick="toggleTheme()"><i class="fa-solid fa-circle-half-stroke"></i></button>
+        <div class="user-pill" id="userPill">
+          <i class="fa-solid fa-user-shield"></i> <span id="userEmailText">Admin</span>
+          <button class="btn-power-off" onclick="cerrarSesion()" title="Cerrar Sesión"><i class="fa-solid fa-power-off"></i></button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="main-nav">
+    <div class="nav-container">
+      <ul class="nav-links" id="navLinksMenu">
+        <li class="active" id="link-inicio"><a href="#inicio" onclick="navegarA('inicio'); return false;">Inicio</a></li>
+        <li id="link-mananera"><a href="#mananera" onclick="navegarA('mananera'); return false;">La Mañanera</a></li>
+        <li id="link-entrevista"><a href="#entrevista" onclick="navegarA('entrevista'); return false;">Entrevistas</a></li>
+        <li id="link-nosotros"><a href="#nosotros" onclick="navegarA('nosotros'); return false;">Nosotros</a></li>
+        <li id="link-noticias"><a href="#noticias" onclick="navegarA('noticias'); return false;">Noticias</a></li>
+        <li id="link-contacto"><a href="#contacto" onclick="navegarA('contacto'); return false;">Contacto</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button class="admin-action-btn btn-admin-monitor" id="btnAdminMonitor" onclick="abrirMonitorCompleto()">
+          <i class="fa-solid fa-map-location-dot"></i> 📊 Monitor Admin
+        </button>
+        <button class="admin-action-btn" id="btnAdminAddNews" onclick="toggleModal('noticiaModal', true)">
+          <i class="fa-solid fa-plus"></i> Publicar Noticia
+        </button>
+        <button class="btn-encuesta-top" onclick="abrirEncuestaCivica()">
+          <i class="fa-solid fa-square-poll-vertical"></i> Participa en la Encuesta
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="view-section active-view" id="seccion-inicio">
+    <main class="container">
+      <div class="main-grid">
+        <section class="hero-slider-container">
+          <img src="https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=1200&q=80" class="slide-img-real" alt="Mapa INE Procesos Electorales">
+          <div class="slide-overlay">
+            <div class="slide-content">
+              <span class="badge">Mapa Electoral 2026-2027 // INE</span>
+              <h2>Procesos Electorales Locales: 19,609 cargos en disputa</h2>
+              <p>Consulta los detalles y la cartografía oficial de gubernaturas, diputaciones y presidencias municipales.</p>
+              <button class="btn-leer" onclick="abrirEncuestaCivica()">Participar en la Encuesta</button>
+            </div>
+          </div>
+        </section>
+
+        <aside class="sidebar">
+          <div class="sidebar-widget" style="border: 2px solid #0EA5E9; overflow: hidden; text-align: center; background: #0A0A0A;">
+            <a onclick="navegarA('entrevista')">
+              <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=600&q=80" alt="Patrocinador Futura Movilidad" style="width: 100%; height: auto; max-height: 180px; object-fit: cover; display: block; cursor: pointer;">
+            </a>
+            <div style="padding: 0.8rem; background: var(--card-bg);">
+              <span class="badge" style="font-size: 0.65rem; margin-bottom: 0.3rem;">Patrocinio</span>
+              <h5 style="font-size: 0.82rem; font-weight: 800; color: var(--text-color); margin-bottom: 0.4rem;">Movilidad Eléctrica Futura</h5>
+              <a onclick="navegarA('entrevista')" class="btn-votar-activo" style="display:inline-block; padding: 0.4rem; font-size: 0.7rem; text-align:center;">Ver Entrevista</a>
+            </div>
+          </div>
+
+          <div class="sidebar-widget">
+            <div class="widget-header"><i class="fa-solid fa-chart-column"></i> Encuesta 15 de Septiembre</div>
+            <div class="widget-content">
+              <div style="font-size: 0.82rem; color: var(--brand-red); font-weight: 800; margin-bottom: 0.4rem;">Playa del Carmen, Quintana Roo</div>
+              <div class="poll-question" style="font-size: 0.95rem;">¿Quién crees que deba ser la candidata o el candidato de MORENA VERDE PT para la Presidencia Municipal en 2027?</div>
+              <button class="btn-votar" onclick="abrirEncuestaCivica()">Participar en la Encuesta</button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <div class="view-section" id="seccion-mananera">
+    <main class="container">
+      <section class="nosotros-section">
+        <h3 style="font-family:var(--font-serif); font-size:1.8rem; font-weight:800; margin-bottom:1.5rem;"><i class="fa-brands fa-youtube" style="color:#FF0000;"></i> Transmisión Oficial / La Mañanera</h3>
+        <p style="color:var(--text-muted); margin-bottom:1.5rem;">Sintoniza todas las mañanas el pulso político de la nación y las declaraciones oficiales en tiempo real.</p>
+        <div style="text-align:center; padding:3rem; background:#000; border-radius:10px;">
+          <a href="https://www.youtube.com/@GobiernoDeMexico/live" target="_blank" style="background:#FF0000; color:#FFF; padding:1rem 2rem; font-weight:900; border-radius:6px; display:inline-block; text-transform:uppercase;"><i class="fa-brands fa-youtube"></i> Ver Transmisión en Directo</a>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="view-section" id="seccion-entrevista">
+    <main class="container">
+      <article class="article-sheet">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
+          <span class="badge" style="margin-bottom:0;">ENTREVISTA | MOVILIDAD ELÉCTRICA</span>
+          <button onclick="copiarEnlaceSeccion('entrevista')" style="background:#25D366; color:#FFF; border:none; padding:0.4rem 0.8rem; border-radius:4px; font-size:0.75rem; font-weight:800; cursor:pointer;">
+            <i class="fa-solid fa-share-nodes"></i> Copiar Enlace para Compartir
+          </button>
+        </div>
+
+        <h1 style="font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 900; line-height: 1.2; margin-bottom: 1rem; color: var(--text-color);">
+          Futura apuesta por una movilidad eléctrica más accesible y cercana para las familias mexicanas
+        </h1>
+        <p style="font-size: 0.95rem; font-weight: 700; color: var(--brand-red); margin-bottom: 1.8rem; border-bottom: 2px solid var(--border-color); padding-bottom: 1rem;">
+          Entrevista con la Lic. Adriana Hernández Bautista, gerente de ventas de Futura.
+        </p>
+
+        <div style="margin-bottom: 2rem; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); background: #000;">
+          <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1000&q=80" alt="Lic. Adriana Hernández" style="width: 100%; max-height: 480px; object-fit: cover; display: block;">
+          <p style="font-size: 0.78rem; color: #FFF; padding: 0.6rem 1rem; background: rgba(0,0,0,0.85); text-align: center;">
+            Lic. Adriana Hernández Bautista, gerente de ventas de Futura, en el showroom de la empresa.
+          </p>
+        </div>
+
+        <div style="font-size: 1rem; line-height: 1.7; color: var(--text-muted); margin-bottom: 2rem;">
+          <p style="margin-bottom: 1rem;">La movilidad eléctrica comienza a ganar terreno entre los consumidores que buscan reducir sus gastos de transporte, acceder a vehículos con mayor tecnología y encontrar alternativas más eficientes para sus recorridos diarios. Para conocer cómo está evolucionando este mercado y qué propone Futura, conversamos con la Lic. Adriana Hernández Bautista, gerente de ventas de la empresa.</p>
+          <blockquote style="border-left: 4px solid var(--brand-red); padding-left: 1rem; font-style: italic; font-weight: 800; color: var(--text-color); margin: 1.5rem 0;">
+            “La movilidad eléctrica ya es una opción real para muchas familias mexicanas.”
+          </blockquote>
+        </div>
+      </article>
+    </main>
+  </div>
+
+  <div class="view-section" id="seccion-nosotros">
+    <main class="container">
+      <section class="nosotros-section">
+        <h3 style="font-family:var(--font-serif); font-size:1.8rem; font-weight:800; margin-bottom:0.5rem;"><i class="fa-solid fa-users-viewfinder" style="color:var(--brand-red);"></i> ¿Quiénes Somos? | MUESTRA.MX</h3>
+        <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom: 1.5rem;">Compromiso con la veracidad y la estadística abierta. Especialistas en opinión pública.</p>
+        <div class="nosotros-grid">
+          <div class="nosotros-card">
+            <h4>Tipos de Encuestas</h4>
+            <p>Encuestas de preferencia electoral, sondeos rápidos de opinión y consultas ciudadanas estructuradas.</p>
+          </div>
+          <div class="nosotros-card">
+            <h4>Consultoría Especializada</h4>
+            <p>Estudios demoscópicos especializados desde municipios hasta nivel estatal.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="view-section" id="seccion-noticias">
+    <main class="container">
+      <section style="margin-top: 3.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:baseline; border-bottom:3px solid var(--text-color); padding-bottom:0.6rem; margin-bottom:1.5rem;">
+          <h3 style="font-family:var(--font-serif); font-size:1.8rem; font-weight:800;">ÚLTIMAS NOTICIAS Y ANÁLISIS</h3>
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:1.5rem;" id="newsFeedGrid"></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="view-section" id="seccion-contacto">
+    <main class="container">
+      <section class="contacto-section">
+        <h3 style="font-family:var(--font-serif); font-size:1.8rem; font-weight:800; margin-bottom:0.5rem;"><i class="fa-solid fa-address-book" style="color:var(--brand-red);"></i> Directorio, Ubicaciones y Contacto</h3>
+        <p style="color:var(--text-muted); margin-bottom:1.5rem; font-size:0.9rem;">Consulta nuestras oficinas de operación y envíanos tus comentarios.</p>
+        
+        <div class="contacto-grid">
+          <div>
+            <div class="dir-box">
+              <h5><i class="fa-solid fa-location-dot"></i> Oficina Tijuana, B.C.</h5>
+              <p>Paseo de los Héroes 9188, Interior 104, Zona Río.</p>
+            </div>
+            <div class="dir-box" style="margin-top:1rem;">
+              <h5><i class="fa-solid fa-location-dot"></i> Oficina Oaxaca de Juárez</h5>
+              <p>Blvd. La Paz 108, Col. Colinas de La Soledad.</p>
+            </div>
+            
+            <div style="margin-top: 1.5rem;">
+              <h5 style="font-size:0.85rem; font-weight:800; margin-bottom:0.5rem; color:var(--text-color);">Mapa de Oficinas</h5>
+              <div id="mapaOficinasContacto"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="nosotros-card">
+              <h4 style="margin-bottom:1rem;">Envíanos un Mensaje Directo</h4>
+              <form name="contacto" method="POST" onsubmit="enviarContacto(event)">
+                <div class="input-group">
+                  <label>Nombre</label>
+                  <input type="text" id="contactoNombre" name="nombre" placeholder="Tu nombre..." required>
+                </div>
+                <div class="input-group">
+                  <label>Correo electrónico</label>
+                  <input type="email" id="contactoCorreo" name="email" placeholder="tucorreo@dominio.com" required>
+                </div>
+                <div class="input-group">
+                  <label>Mensaje</label>
+                  <textarea id="contactoMensaje" name="mensaje" rows="4" placeholder="Escribe tu consulta..." required></textarea>
+                </div>
+                <button type="submit" class="btn-votar-activo">Enviar Mensaje</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <a href="#contacto" onclick="navegarA('contacto'); return false;" class="subscribe-float-btn" title="Suscríbete al Boletín"><i class="fa-solid fa-envelope-open-text"></i></a>
+  <a href="https://www.facebook.com/muestra.mx/" target="_blank" class="facebook-float-btn" title="Síguenos en Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+  <a href="https://x.com/muestramx" target="_blank" class="twitter-float-btn" title="Síguenos en X">𝕏</a>
+
+  <div class="chatbot-float-trigger" onclick="toggleChatbot()" title="Asistente Virtual"><i class="fa-solid fa-comments"></i></div>
+  <div class="chatbot-window" id="chatbotWindow">
+    <div class="chatbot-header">
+      <span><i class="fa-solid fa-robot"></i> Asistente Muestra.mx</span>
+      <button onclick="toggleChatbot()" style="background:none; border:none; color:#FFF; cursor:pointer; font-size:1rem;">&times;</button>
+    </div>
+    <div class="chatbot-body" id="chatbotBody">
+      <div class="chat-msg bot">¡Hola! Soy tu asistente virtual de muestra.mx. ¿En qué puedo ayudarte hoy sobre nuestras encuestas o noticias?</div>
+    </div>
+    <div class="chatbot-footer">
+      <input type="text" id="chatInputUser" placeholder="Escribe una pregunta..." onkeypress="if(event.key === 'Enter') enviarMensajeChat()">
+      <button onclick="enviarMensajeChat()"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+  </div>
+
+  <div class="admin-monitor-overlay" id="adminMonitorModal">
+    <div class="monitor-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid var(--brand-gray); padding-bottom:1rem; margin-bottom:1.5rem;">
+        <h2><i class="fa-solid fa-shield-halved" style="color:var(--brand-red);"></i> PANEL DE MONITOREO Y REGISTROS (NUBE)</h2>
+        <button onclick="cerrarMonitorCompleto()" style="background:#111827; color:#FFF; border:none; padding:0.5rem 1rem; border-radius:4px; font-weight:800; cursor:pointer;">Volver al Portal</button>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem;">
+        <div>
+          <h3 style="font-size:0.95rem; font-weight:800; margin-bottom:0.5rem;"><i class="fa-solid fa-earth-americas"></i> Mapa Electoral / Cartografía</h3>
+          <div id="mapaNormalDetalle"></div>
+        </div>
+        <div>
+          <h3 style="font-size:0.95rem; font-weight:800; margin-bottom:0.5rem;"><i class="fa-solid fa-newspaper"></i> Administrar Noticias</h3>
+          <div class="input-group">
+            <select id="selectNoticiaBorrar" style="margin-bottom:0.5rem;"></select>
+          </div>
+          <div style="display:flex; gap:0.5rem;">
+            <button onclick="borrarNoticiaSeleccionada()" style="background:#EF4444; color:#FFF; border:none; padding:0.5rem; border-radius:4px; font-weight:800; cursor:pointer; flex-grow:1; font-size:0.75rem;">Eliminar Noticia</button>
+            <button onclick="restaurarNoticiasDefault()" style="background:#64748B; color:#FFF; border:none; padding:0.5rem; border-radius:4px; font-weight:800; cursor:pointer; font-size:0.75rem;">Restaurar Originales</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:2rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <h3 style="font-size:1rem; font-weight:800;">Registros en la Nube (<span id="adminTotalVotosCount" style="color:var(--brand-red);">0</span>)</h3>
+          <button onclick="descargarReporteCSV()" style="background:#15803D; color:#FFF; border:none; padding:0.5rem 1rem; border-radius:6px; font-weight:800; cursor:pointer; font-size:0.75rem;"><i class="fa-solid fa-file-excel"></i> Exportar CSV</button>
+        </div>
+        <div style="max-height: 220px; overflow-y: auto; border: 1px solid var(--brand-gray); border-radius: 8px;">
+          <table class="monitor-table">
+            <thead>
+              <tr><th>Fecha y Hora</th><th>Aspirante Elegido</th><th>Zona / IP</th></tr>
+            </thead>
+            <tbody id="easyTableBody">
+              <tr><td colspan="3" style="text-align:center; color:var(--text-muted);">Cargando registros...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay-civica" id="civicaModal">
+    <div class="modal-box">
+      <button class="btn-close" onclick="toggleModal('civicaModal', false)">&times;</button>
+      
+      <div style="position: relative; height: 130px; background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=800&q=80') center/cover no-repeat; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #FFF; padding: 1rem;">
+        <span style="background: var(--brand-red); font-size: 0.68rem; font-weight: 900; padding: 0.25rem 0.6rem; border-radius: 4px; text-transform: uppercase; margin-bottom: 0.4rem;"><i class="fa-solid fa-bullhorn"></i> Sondeo Oficial Abierto</span>
+        <h2 style="font-size: 1.25rem; font-weight: 900; text-shadow: 0 2px 4px rgba(0,0,0,0.6);">Playa del Carmen, Quintana Roo (2027)</h2>
+      </div>
+
+      <div style="padding: 1.5rem;">
+        <div id="civicaAlertaSeguridad" style="display:none; padding:0.75rem; border-radius:6px; font-size:0.85rem; font-weight:700; margin-bottom:1rem; text-align:center;"></div>
+        
+        <div style="font-size: 0.95rem; font-weight: 800; text-align: center; margin-bottom: 1.2rem; color: var(--text-color); line-height: 1.4;">
+          ¿Quién crees que deba ser la candidata o el candidato de MORENA VERDE PT para la Presidencia Municipal en 2027?
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; margin-bottom: 1.5rem;" id="civicaCardsGrid">
+          <div class="civica-choice" onclick="seleccionarCivica(0)" style="border:2px solid var(--brand-red); padding:0.9rem; border-radius:8px; background:#FDF2F4; cursor:pointer; transition: 0.2s;"><h4 style="font-size:0.88rem; font-weight:800;">A) Estefanía Mercado</h4></div>
+          <div class="civica-choice" onclick="seleccionarCivica(1)" style="border:2px solid var(--brand-gray); padding:0.9rem; border-radius:8px; background:var(--card-bg); cursor:pointer; transition: 0.2s;"><h4 style="font-size:0.88rem; font-weight:800;">B) Mirella Diaz</h4></div>
+          <div class="civica-choice" onclick="seleccionarCivica(2)" style="border:2px solid var(--brand-gray); padding:0.9rem; border-radius:8px; background:var(--card-bg); cursor:pointer; transition: 0.2s;"><h4 style="font-size:0.88rem; font-weight:800;">C) Orlando Muñoz</h4></div>
+          <div class="civica-choice" onclick="seleccionarCivica(3)" style="border:2px solid var(--brand-gray); padding:0.9rem; border-radius:8px; background:var(--card-bg); cursor:pointer; transition: 0.2s;"><h4 style="font-size:0.88rem; font-weight:800;">D) Arturo Castro</h4></div>
+        </div>
+
+        <button class="btn-votar-activo" id="btnCivicaVotar" onclick="votarCivicaNube()">Emitir mi Voto</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="noticiaModal">
+    <div class="modal-box" style="max-width:550px; padding: 2rem;">
+      <button class="btn-close" onclick="toggleModal('noticiaModal', false)">&times;</button>
+      <h3 style="font-size: 1.2rem; margin-bottom: 1rem; font-family:var(--font-serif);">Publicar Nueva Noticia</h3>
+      <form onsubmit="guardarNoticia(event)">
+        <div class="input-group"><label>Categoría</label><select id="noticiaCat"><option value="NACIONAL">Nacional</option><option value="NOTICIAS">Noticias</option><option value="QUINTANA ROO">Quintana Roo</option><option value="MOVILIDAD">Movilidad</option></select></div>
+        <div class="input-group"><label>Título</label><input type="text" id="noticiaTitulo" required></div>
+        <div class="input-group"><label>Imagen (URL)</label><input type="text" id="noticiaFile" required></div>
+        <div class="input-group"><label>Contenido</label><textarea id="noticiaCuerpo" rows="4" required></textarea></div>
+        <button type="submit" class="btn-votar-activo">Publicar</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal-box" style="max-width:380px; text-align:center; padding: 2rem;">
+      <button class="btn-close" onclick="toggleModal('loginModal', false)">&times;</button>
+      <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem;">Acceso Administrativo</h3>
+      <div id="loginError" style="display:none; background:#FEE2E2; color:#991B1B; padding:0.5rem; border-radius:4px; font-size:0.75rem; margin-bottom:0.8rem;"></div>
+      <form onsubmit="procesarLogin(event)">
+        <div class="input-group"><label>Correo</label><input type="email" id="correoInput" required></div>
+        <div class="input-group"><label>Contraseña</label><input type="password" id="passInput" required></div>
+        <button type="submit" class="btn-votar-activo">Entrar</button>
+      </form>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-top">
+      <div>
+        <div class="logo-main-text" style="color:#FFF;"><span class="logo-mu">mu</span><span class="logo-es">es</span>tra.mx</div>
+        <div class="logo-sub-text" style="color:#9CA3AF;">opiniones <span style="font-size: 1.4em; font-weight: 900; vertical-align: middle;">+</span> datos</div>
+      </div>
+      <div class="footer-nav">
+        <a href="#inicio" onclick="navegarA('inicio'); return false;">Inicio</a>
+        <a href="#mananera" onclick="navegarA('mananera'); return false;">La Mañanera</a>
+        <a href="#entrevista" onclick="navegarA('entrevista'); return false;">Entrevistas</a>
+        <a href="#nosotros" onclick="navegarA('nosotros'); return false;">Nosotros</a>
+        <a href="#noticias" onclick="navegarA('noticias'); return false;">Noticias</a>
+        <a href="#contacto" onclick="navegarA('contacto'); return false;">Contacto</a>
+        <a href="https://x.com/muestramx" target="_blank" style="color: #fff; font-weight: bold;">𝕏 @muestramx</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© 2026 muestra.mx | Todos los derechos reservados.</div>
+      <div>Compromiso con la veracidad y la estadística abierta.</div>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, query } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCTKcMeBVPK6WHqMQbEFjqt2ErvPPbAPBA",
+      authDomain: "muestramx-61d39.firebaseapp.com",
+      projectId: "muestramx-61d39",
+      storageBucket: "muestramx-61d39.firebasestorage.app",
+      messagingSenderId: "225645214792",
+      appId: "1:225645214792:web:025d60e43e41c8da6a2c7d",
+      measurementId: "G-JDNNWJNXN2"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let ipDetectada = '127.0.0.1';
+    let deviceFingerprint = '';
+    let userLat = 21.1619; 
+    let userLng = -86.8515;
+
+    function generarHuellaDispositivo() {
+      const nav = window.navigator;
+      const screen = window.screen;
+      const raw = [nav.userAgent, nav.language, screen.colorDepth, screen.width + 'x' + screen.height, new Date().getTimezoneOffset()].join('###');
+      let hash = 0;
+      for (let i = 0; i < raw.length; i++) {
+        hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+        hash |= 0;
+      }
+      return 'DEV-' + Math.abs(hash).toString(16).toUpperCase();
+    }
+
+    async function inicializarSeguridadYDatos() {
+      deviceFingerprint = generarHuellaDispositivo();
+      try {
+        const res = await fetch('https://ipapi.co/json/');
+        const data = await res.json();
+        if (data.ip) ipDetectada = data.ip;
+        if (data.latitude && data.longitude) {
+          userLat = Number(data.latitude);
+          userLng = Number(data.longitude);
+        }
+      } catch (err) {
+        ipDetectada = 'IP-LOCAL-' + Math.floor(Math.random() * 10000);
+      }
+    }
+
+    let mapaContactoInstancia = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      inicializarSeguridadYDatos();
+      renderizarNoticias();
+      if (localStorage.getItem('muestra_admin') === 'true') {
+        activarModoAdmin();
+      }
+
+      setTimeout(() => {
+        abrirEncuestaCivica();
+      }, 400);
+
+      const hash = window.location.hash.replace('#', '');
+      if (hash && document.getElementById('seccion-' + hash)) {
+        navegarA(hash);
+      }
+    });
+
+    window.navegarA = function(seccionId) {
+      document.querySelectorAll('.view-section').forEach(el => {
+        el.classList.remove('active-view');
+      });
+      document.querySelectorAll('.nav-links li').forEach(li => {
+        li.classList.remove('active');
+      });
+
+      const target = document.getElementById('seccion-' + seccionId);
+      const linkTarget = document.getElementById('link-' + seccionId);
+
+      if (target) {
+        target.classList.add('active-view');
+        if (linkTarget) linkTarget.classList.add('active');
+        history.pushState(null, null, '#' + seccionId);
+        window.scrollTo(0, 0);
+
+        if (seccionId === 'contacto') {
+          setTimeout(() => {
+            if (!mapaContactoInstancia) {
+              mapaContactoInstancia = L.map('mapaOficinasContacto').setView([23.6345, -102.5528], 4);
+              L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 18,
+                attribution: '&copy; OpenStreetMap'
+              }).addTo(mapaContactoInstancia);
+              
+              L.marker([32.5311, -117.0308]).addTo(mapaContactoInstancia).bindPopup('<b>Oficina Tijuana, B.C.</b>');
+              L.marker([17.0732, -96.7266]).addTo(mapaContactoInstancia).bindPopup('<b>Oficina Oaxaca de Juárez</b>');
+            } else {
+              mapaContactoInstancia.invalidateSize();
+            }
+          }, 300);
+        }
+      }
+    }
+
+    window.toggleChatbot = function() {
+      const win = document.getElementById('chatbotWindow');
+      win.classList.toggle('active');
+    }
+
+    window.enviarMensajeChat = function() {
+      const input = document.getElementById('chatInputUser');
+      const texto = input.value.trim();
+      if(!texto) return;
+
+      const body = document.getElementById('chatbotBody');
+      body.innerHTML += `<div class="chat-msg user">${texto}</div>`;
+      input.value = '';
+      body.scrollTop = body.scrollHeight;
+
+      setTimeout(() => {
+        let respuesta = "Gracias por escribirnos. Nuestro equipo analiza tu comentario para los próximos reportes.";
+        const tLower = texto.toLowerCase();
+        if(tLower.includes('encuesta') || tLower.includes('votar') || tLower.includes('playa')) {
+          respuesta = "Puedes participar en la encuesta haciendo clic en el botón rojo superior 'Participa en la Encuesta'.";
+        } else if(tLower.includes('contacto') || tLower.includes('oficina')) {
+          respuesta = "Tenemos oficinas en Tijuana y Oaxaca de Juárez. Revisa la sección 'Contacto' en el menú.";
+        }
+        body.innerHTML += `<div class="chat-msg bot">${respuesta}</div>`;
+        body.scrollTop = body.scrollHeight;
+      }, 600);
+    }
+
+    window.enviarContacto = function(e) {
+      e.preventDefault();
+      alert('¡Mensaje enviado con éxito! Nos pondremos en contacto pronto.');
+      e.target.reset();
+    }
+
+    window.copiarEnlaceSeccion = function(seccionId) {
+      const url = window.location.origin + window.location.pathname + '#' + seccionId;
+      navigator.clipboard.writeText(url).then(() => {
+        alert('¡Enlace copiado al portapapeles!');
+      });
+    }
+
+    window.toggleTheme = function() {
+      const current = document.documentElement.getAttribute('data-theme');
+      document.documentElement.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+    }
+
+    window.cambiarIdioma = function(lang) {
+      alert(lang === 'en' ? 'English mode selected.' : 'Modo en Español seleccionado.');
+    }
+
+    const NOTICIAS_DEFAULT = [
+      { cat: "NACIONAL", tit: "Procesos Electorales Locales 2026-2027: 19,609 cargos en disputa", img: "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=800&q=80", fecha: "15 de septiembre de 2026", cuerpo: "El INE ha publicado el Plan Integral para los Procesos Electorales Locales." },
+      { cat: "NOSOTROS", tit: "MUESTRA.MX: Compromiso con la veracidad y la estadística abierta", img: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80", fecha: "15 de septiembre de 2026", cuerpo: "Somos un equipo especializado en opinión pública y consultoría estratégica." }
+    ];
+
+    function renderizarNoticias() {
+      const grid = document.getElementById('newsFeedGrid');
+      if(!grid) return;
+      grid.innerHTML = '';
+      const noticias = JSON.parse(localStorage.getItem('muestra_noticias') || 'null') || NOTICIAS_DEFAULT;
+      noticias.forEach(n => {
+        grid.innerHTML += `
+          <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:8px; overflow:hidden; display:flex; flex-direction:column;">
+            <img src="${n.img}" alt="${n.cat}" style="width:100%; height:160px; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f'">
+            <div style="padding:1.2rem; display:flex; flex-direction:column; flex-grow:1;">
+              <span style="font-size:0.7rem; font-weight:900; color:var(--brand-red); text-transform:uppercase; margin-bottom:0.4rem;">${n.cat}</span>
+              <h4 style="font-size:0.98rem; font-weight:800; margin-bottom:0.8rem; color:var(--text-color);">${n.tit}</h4>
+              <p style="font-size:0.78rem; color:var(--text-muted);">${n.cuerpo}</p>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    window.guardarNoticia = function(e) {
+      e.preventDefault();
+      const cat = document.getElementById('noticiaCat').value;
+      const tit = document.getElementById('noticiaTitulo').value;
+      const img = document.getElementById('noticiaFile').value;
+      const cuerpo = document.getElementById('noticiaCuerpo').value;
+      
+      const nueva = { cat, tit, img, fecha: "15 de septiembre de 2026", cuerpo };
+      let noticias = JSON.parse(localStorage.getItem('muestra_noticias') || 'null') || NOTICIAS_DEFAULT;
+      noticias.unshift(nueva);
+      localStorage.setItem('muestra_noticias', JSON.stringify(noticias));
+      
+      renderizarNoticias();
+      toggleModal('noticiaModal', false);
+      alert('¡Noticia publicada correctamente!');
+      e.target.reset();
+    }
+
+    const OPCIONES_NOMBRES = ["Estefanía Mercado", "Mirella Diaz", "Orlando Muñoz", "Arturo Castro"];
+    let civicaOpcionSeleccionada = 0;
+    
+    window.seleccionarCivica = function(idx) {
+      civicaOpcionSeleccionada = idx;
+      const choices = document.querySelectorAll('.civica-choice');
+      choices.forEach((c, i) => {
+        if (i === idx) {
+          c.style.borderColor = 'var(--brand-red)';
+          c.style.background = '#FDF2F4';
+        } else {
+          c.style.borderColor = 'var(--border-color)';
+          c.style.background = 'var(--card-bg)';
+        }
+      });
+    }
+
+    window.abrirEncuestaCivica = function() {
+      const alerta = document.getElementById('civicaAlertaSeguridad');
+      alerta.style.display = 'none';
+      toggleModal('civicaModal', true);
+    }
+
+    window.votarCivicaNube = async function() {
+      const yaVotoLocal = localStorage.getItem('voto_registrado_' + deviceFingerprint);
+      if (yaVotoLocal) {
+        const alerta = document.getElementById('civicaAlertaSeguridad');
+        alerta.style.display = 'block';
+        alerta.style.background = '#FEE2E2';
+        alerta.style.color = '#991B1B';
+        alerta.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Ya has participado en este sondeo.';
+        return;
+      }
+
+      const nuevoRegistro = {
+        fecha: new Date().toLocaleString('es-MX'),
+        opcion: OPCIONES_NOMBRES[civicaOpcionSeleccionada],
+        ip: ipDetectada,
+        deviceId: deviceFingerprint,
+        zona: "IP: " + ipDetectada,
+        lat: Number(userLat),
+        lng: Number(userLng),
+        timestamp: Date.now()
+      };
+
+      try {
+        await addDoc(collection(db, "votos_muestra"), nuevoRegistro);
+        localStorage.setItem('voto_registrado_' + deviceFingerprint, 'true');
+        const alerta = document.getElementById('civicaAlertaSeguridad');
+        alerta.style.display = 'block';
+        alerta.style.background = '#F0FDF4';
+        alerta.style.color = '#15803D';
+        alerta.innerHTML = '<i class="fa-solid fa-circle-check"></i> ¡Voto registrado con éxito!';
+        setTimeout(() => { toggleModal('civicaModal', false); }, 1500);
+      } catch (e) {
+        alert("Error al registrar tu voto.");
+      }
+    }
+
+    let monitorMapInstance = null;
+    window.abrirMonitorCompleto = function() {
+      if (localStorage.getItem('muestra_admin') === 'true') {
+        mostrarPanelAdmin();
+      } else {
+        toggleModal('loginModal', true);
+      }
+    }
+
+    window.abrirAdminConLogin = function() {
+      if (localStorage.getItem('muestra_admin') === 'true') {
+        mostrarPanelAdmin();
+      } else {
+        toggleModal('loginModal', true);
+      }
+    }
+
+    window.cerrarMonitorCompleto = function() {
+      document.getElementById('adminMonitorModal').classList.remove('active');
+    }
+
+    async function mostrarPanelAdmin() {
+      let listaVotosNube = [];
+      try {
+        const q = query(collection(db, "votos_muestra"));
+        const querySnapshot = await getDocs(q);
+        querySnapshot.forEach((doc) => { listaVotosNube.push(doc.data()); });
+
+        document.getElementById('adminTotalVotosCount').textContent = listaVotosNube.length;
+        const tbody = document.getElementById('easyTableBody');
+        tbody.innerHTML = '';
+        if (listaVotosNube.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">Sin votos.</td></tr>`;
+        } else {
+          listaVotosNube.forEach(r => {
+            tbody.innerHTML += `<tr><td>${r.fecha}</td><td><strong>${r.opcion}</strong></td><td>${r.zona}</td></tr>`;
+          });
+        }
+      } catch(e) {}
+
+      poblarSelectorBorrarNoticias();
+      document.getElementById('adminMonitorModal').classList.add('active');
+
+      setTimeout(() => {
+        if (!monitorMapInstance) {
+          monitorMapInstance = L.map('mapaNormalDetalle').setView([21.1619, -86.8515], 7);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(monitorMapInstance);
+        } else {
+          monitorMapInstance.invalidateSize();
+        }
+        listaVotosNube.forEach(v => {
+          if (v.lat && v.lng) {
+            L.marker([Number(v.lat), Number(v.lng)]).addTo(monitorMapInstance).bindPopup(`<b>${v.opcion}</b>`);
+          }
+        });
+      }, 300);
+    }
+
+    function poblarSelectorBorrarNoticias() {
+      const select = document.getElementById('selectNoticiaBorrar');
+      if (!select) return;
+      const noticias = JSON.parse(localStorage.getItem('muestra_noticias') || 'null') || NOTICIAS_DEFAULT;
+      select.innerHTML = '';
+      noticias.noticias?.forEach ?? noticias.forEach((n, idx) => {
+        select.innerHTML += `<option value="${idx}">${n.tit}</option>`;
+      });
+    }
+
+    window.borrarNoticiaSeleccionada = function() {
+      const idx = document.getElementById('selectNoticiaBorrar').value;
+      let noticias = JSON.parse(localStorage.getItem('muestra_noticias') || 'null') || NOTICIAS_DEFAULT;
+      noticias.splice(idx, 1);
+      localStorage.setItem('muestra_noticias', JSON.stringify(noticias));
+      renderizarNoticias();
+      poblarSelectorBorrarNoticias();
+      alert('Noticia eliminada correctamente.');
+    }
+
+    window.restaurarNoticiasDefault = function() {
+      localStorage.removeItem('muestra_noticias');
+      renderizarNoticias();
+      poblarSelectorBorrarNoticias();
+      alert('Noticias restauradas al estado original.');
+    }
+
+    window.toggleModal = function(modalId, abrir) {
+      const m = document.getElementById(modalId);
+      if (m) {
+        if (abrir) m.classList.add('active');
+        else m.classList.remove('active');
+      }
+    }
+
+    window.procesarLogin = function(e) {
+      e.preventDefault();
+      const correo = document.getElementById('correoInput').value.trim();
+      const pass = document.getElementById('passInput').value.trim();
+
+      if (correo === 'admin@muestra.mx' && pass === 'muestra2026') {
+        localStorage.setItem('muestra_admin', 'true');
+        toggleModal('loginModal', false);
+        activarModoAdmin();
+        mostrarPanelAdmin();
+      } else {
+        const err = document.getElementById('loginError');
+        err.style.display = 'block';
+        err.textContent = 'Credenciales incorrectas.';
+      }
+    }
+
+    function activarModoAdmin() {
+      document.querySelectorAll('.admin-action-btn').forEach(b => b.classList.add('visible-admin'));
+      const pill = document.getElementById('userPill');
+      if(pill) pill.style.display = 'inline-flex';
+    }
+
+    window.cerrarSesion = function() {
+      localStorage.removeItem('muestra_admin');
+      location.reload();
+    }
+
+    window.descargarReporteCSV = async function() {
+      try {
+        const q = query(collection(db, "votos_muestra"));
+        const querySnapshot = await getDocs(q);
+        let csvContent = "data:text/csv;charset=utf-8,Fecha,Aspirante,IP,Dispositivo\r\n";
+        querySnapshot.forEach((doc) => {
+          const d = doc.data();
+          csvContent += `"${d.fecha}","${d.opcion}","${d.ip}","${d.deviceId}"\r\n`;
+        });
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "reporte_votos_muestra.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch(e) {
+        alert("Error al exportar reporte.");
+      }
+    }
+  </script>
+</body>
+</html>
