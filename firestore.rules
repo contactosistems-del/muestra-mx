@@ -1,0 +1,15 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /votos_muestra/{document} {
+      allow read, write: if true;
+    }
+
+    match /votos_tulum_2027/{document} {
+      allow read, write: if true;
+    }
+
+  }
+}
