@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MUESTRA.MX | Encuesta Tulum 2027</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f4f6f9; margin: 0; padding: 0; color: #333; }
+        header { background: #990000; color: white; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; }
+        .container { max-width: 800px; margin: 30px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h2 { text-align: center; color: #2c3e50; margin-bottom: 25px; line-height: 1.4; }
+        .candidates-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .candidate-card { border: 2px solid #e2e8f0; border-radius: 10px; padding: 15px; text-align: center; cursor: pointer; transition: all 0.3s ease; background: #fff; }
+        .candidate-card:hover, .candidate-card.selected { border-color: #990000; background: #fff5f5; transform: translateY(-3px); }
+        .candidate-card img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 3px solid #ddd; }
+        .candidate-card h4 { margin: 10px 0 5px; font-size: 16px; color: #1a202c; }
+        .btn-votar { display: block; width: 100%; background: #990000; color: white; border: none; padding: 14px; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+        .btn-votar:hover { background: #7a0000; }
+        .chart-container { margin-top: 40px; position: relative; height: 350px; width: 100%; }
+    </style>
+</head>
+<body>
+
+<header>muestra.mx - Opinión Pública</header>
+
+<div class="container">
+    <h2>¿A quién prefieres como candidato(a) de Morena en 2027 a la Presidencia Municipal de Tulum, Quintana Roo?</h2>
+    
+    <div class="candidates-grid" id="formVotos">
+        <div class="candidate-card" onclick="seleccionar('Romualda Dzul', this)">
+            <img src="../../romualda.jpg" alt="Romualda Dzul">
+            <h4>Romualda Dzul</h4>
+        </div>
+        <div class="candidate-card" onclick="seleccionar('Fili Tah', this)">
+            <img src="../../Izulfili.jpg" alt="Fili Tah">
+            <h4>Fili Tah</h4>
+        </div>
+        <div class="candidate-card" onclick="seleccionar('Jorge Portilla', this)">
+            <img src="../../jorge.jpg" alt="Jorge Portilla">
+            <h4>Jorge Portilla</h4>
+        </div>
+        <div class="candidate-card" onclick="seleccionar('Ileana', this)">
+            <img src="../../ileana.jpg" alt="Ileana">
+            <h4>Ileana</h4>
+        </div>
+    </div>
+
+    <button class="btn-votar" onclick="enviarVoto()">Emitir Voto</button>
+
+    <div class="chart-container">
+        <canvas id="graficaVotos"></canvas>
+    </div>
+</div>
+
+<script>
+    // Configuración de Firebase
+    const firebaseConfig = {
+        apiKey: "TU_API_KEY",
+        authDomain: "TU_AUTH_DOMAIN",
+        projectId: "TU_PROJECT_ID"
+    };
+    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+    const db = firebase.firestore();
+
+    let candidatoSeleccionado = "";
+
+    function seleccionar(nombre, elemento) {
+        document.querySelectorAll('.candidate-card').forEach(c => c.classList.remove('selected'));
+        elemento.classList.add('selected');
+        candidatoSeleccionado = nombre;
+    }
+
+    function enviarVoto() {
+        if (!candidatoSeleccionado) {
+            alert("Por favor selecciona un candidato.");
+            return;
+        }
+        db.collection("votos_tulum_2027").add({
+            candidato: candidatoSeleccionado,
+            fecha: new Date().toISOString().split('T')[0],
+            ubicacion: "Tulum, Quintana Roo",
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+            alert("¡Voto registrado con éxito!");
+            candidatoSeleccionado = "";
+            document.querySelectorAll('.candidate-card').forEach(c => c.classList.remove('selected'));
+        }).catch((error) => {
+            alert("Error al registrar voto: " + error.message);
+        });
+    }
+
+    // Gráfica en tiempo real con onSnapshot
+    const ctx = document.getElementById('graficaVotos').getContext('2d');
+    const miGrafica = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Romualda Dzul', 'Fili Tah', 'Jorge Portilla', 'Ileana'],
+            datasets: [{
+                label: 'Votos en Tiempo Real',
+                data: [0, 0, 0, 0],
+                backgroundColor: ['#990000', '#2563eb', '#16a34a', '#d97706'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+
+    db.collection("votos_tulum_2027").onSnapshot((snapshot) => {
+        let vRomualda = 0, vFili = 0, vJorge = 0, vIleana = 0;
+        snapshot.forEach((doc) => {
+            let data = doc.data();
+            if (data.candidato === 'Romualda Dzul') vRomualda++;
+            if (data.candidato === 'Fili Tah') vFili++;
+            if (data.candidato === 'Jorge Portilla') vJorge++;
+            if (data.candidato === 'Ileana') vIleana++;
+        });
+        miGrafica.data.datasets[0].data = [vRomualda, vFili, vJorge, vIleana];
+        miGrafica.update();
+    });
+</script>
+
+</body>
+</html>
