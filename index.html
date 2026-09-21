@@ -336,13 +336,48 @@
           </div>
 
           <div class="sidebar-widget">
-            <div class="widget-header"><i class="fa-solid fa-chart-column"></i> Encuesta 15 de Septiembre</div>
-            <div class="widget-content">
-              <div style="font-size: 0.82rem; color: var(--brand-red); font-weight: 800; margin-bottom: 0.4rem;">Playa del Carmen, Quintana Roo</div>
-              <div class="poll-question" style="font-size: 0.95rem;">¿Quién crees que deba ser la candidata o el candidato de MORENA VERDE PT para la Presidencia Municipal en 2027?</div>
-              <button class="btn-votar" onclick="abrirEncuestaCivica()">Participar en la Encuesta</button>
-            </div>
-          </div>
+           <div class="widget-header">
+  <i class="fa-solid fa-chart-column"></i> Sondeos 2027
+</div>
+
+<div class="widget-content">
+
+  <!-- PLAYA DEL CARMEN -->
+  <div style="padding-bottom:1.2rem; margin-bottom:1.2rem; border-bottom:1px solid #ddd;">
+    <div style="font-size:0.82rem; color:var(--brand-red); font-weight:800; margin-bottom:0.4rem;">
+      Playa del Carmen, Quintana Roo
+    </div>
+
+    <div class="poll-question" style="font-size:0.95rem; margin-bottom:0.8rem;">
+      ¿Quién crees que deba ser la candidata o el candidato de MORENA VERDE PT para la Presidencia Municipal en 2027?
+    </div>
+
+    <button class="btn-votar" onclick="abrirEncuestaCivica()">
+      Participar en la Encuesta
+    </button>
+
+    <div id="resultadosPlaya" style="margin-top:1rem;"></div>
+  </div>
+
+
+  <!-- TULUM -->
+  <div>
+    <div style="font-size:0.82rem; color:var(--brand-red); font-weight:800; margin-bottom:0.4rem;">
+      Tulum, Quintana Roo
+    </div>
+
+    <div class="poll-question" style="font-size:0.95rem; margin-bottom:0.8rem;">
+      ¿A quién prefieres como candidato(a) de Morena en 2027 a la Presidencia Municipal de Tulum, Quintana Roo?
+    </div>
+
+    <button class="btn-votar" onclick="abrirEncuestaTulum()">
+      Participar en la Encuesta
+    </button>
+
+    <div id="resultadosTulum" style="margin-top:1rem;"></div>
+  </div>
+
+</div>
         </aside>
       </div>
     </main>
