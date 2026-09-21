@@ -24,10 +24,7 @@
       --border-color: #9DA19F;
       --font-sans: 'Inter', sans-serif;
       --font-logo: 'Montserrat', sans-serif;
-       <div style="text-align: center; margin: 30px auto; padding: 15px;">
-    <a href="/" style="background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; margin-right: 10px;">Playa del Carmen 2027</a>
-    <a href="/encuestas/tulum-2027/" style="background: #990000; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Tulum 2027</a>
-</div>
+       
     }
 
     [data-theme="dark"] {
@@ -298,9 +295,9 @@
     <button class="btn-encuesta-top" onclick="abrirEncuestaCivica()">
         <i class="fa-solid fa-square-poll-vertical"></i> Playa del Carmen
     </button>
-    <a href="/encuestas/tulum-2027/" class="btn-encuesta-top" style="background: #111; border: 2px solid #ff4d4d; color: #ff4d4d; text-decoration: none; display: inline-flex; align-items: center; padding: 8px 15px; border-radius: 4px;">
-        <i class="fa-solid fa-square-poll-vertical"></i> Tulum 2027
-    </a>
+<a href="#" onclick="abrirEncuestaTulum(); return false;" class="btn-encuesta-top" style="background: #111; border: 2px solid #ff4d4d; color: #fff;">
+  <i class="fa-solid fa-square-poll-vertical"></i> Tulum 2027
+</a>
 </div>
 
         
@@ -596,7 +593,54 @@
       </div>
     </div>
   </div>
+  <!-- MODAL ENCUESTA TULUM 2027 -->
+  <div class="modal-overlay-civica" id="tulumModal">
+    <div class="modal-box">
+      <button class="btn-close" onclick="toggleModal('tulumModal', false)">&times;</button>
 
+      <div style="font-size:0.82rem; color:var(--brand-red); font-weight:800; text-align:center; margin-bottom:0.5rem;">
+        Tulum, Quintana Roo
+      </div>
+
+      <h3 style="text-align:center; margin-bottom:1rem;">
+        Encuesta Tulum 2027
+      </h3>
+
+      <div id="tulumAlertaSeguridad" style="display:none; padding:0.75rem; border-radius:6px; font-size:0.85rem; font-weight:700; margin-bottom:1rem; text-align:center;"></div>
+
+      <div style="font-size:0.95rem; font-weight:800; text-align:center; margin-bottom:1.2rem; color:var(--text-color); line-height:1.4;">
+        ¿A quién prefieres como candidato(a) de Morena en 2027 a la Presidencia Municipal de Tulum, Quintana Roo?
+      </div>
+
+      <div id="tulumCardsGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; margin-bottom:1.5rem;">
+
+        <div class="civica-choice" onclick="seleccionarTulum(0)" style="border:2px solid var(--brand-gray); padding:0.8rem; border-radius:8px; background:var(--card-bg); cursor:pointer; text-align:center;">
+          <img src="/encuestas/tulum-2027/romualda.jpg" alt="Romualda Dzul" style="width:100%; height:130px; object-fit:cover; border-radius:6px; margin-bottom:0.5rem;">
+          <h4>Romualda Dzul</h4>
+        </div>
+
+        <div class="civica-choice" onclick="seleccionarTulum(1)" style="border:2px solid var(--brand-gray); padding:0.8rem; border-radius:8px; background:var(--card-bg); cursor:pointer; text-align:center;">
+          <img src="/encuestas/tulum-2027/Izulfili.jpg" alt="Fili Tah" style="width:100%; height:130px; object-fit:cover; border-radius:6px; margin-bottom:0.5rem;">
+          <h4>Fili Tah</h4>
+        </div>
+
+        <div class="civica-choice" onclick="seleccionarTulum(2)" style="border:2px solid var(--brand-gray); padding:0.8rem; border-radius:8px; background:var(--card-bg); cursor:pointer; text-align:center;">
+          <img src="/encuestas/tulum-2027/jorge.jpg" alt="Jorge Portilla" style="width:100%; height:130px; object-fit:cover; border-radius:6px; margin-bottom:0.5rem;">
+          <h4>Jorge Portilla</h4>
+        </div>
+
+        <div class="civica-choice" onclick="seleccionarTulum(3)" style="border:2px solid var(--brand-gray); padding:0.8rem; border-radius:8px; background:var(--card-bg); cursor:pointer; text-align:center;">
+          <img src="/encuestas/tulum-2027/ileana.jpg" alt="Ileana" style="width:100%; height:130px; object-fit:cover; border-radius:6px; margin-bottom:0.5rem;">
+          <h4>Ileana</h4>
+        </div>
+
+      </div>
+
+      <button class="btn-votar-activo" id="btnTulumVotar" onclick="votarTulumNube()">
+        Emitir mi Voto
+      </button>
+    </div>
+  </div>
   <div class="modal-overlay" id="noticiaModal">
     <div class="modal-box" style="max-width:550px; padding: 2rem;">
       <button class="btn-close" onclick="toggleModal('noticiaModal', false)">&times;</button>
@@ -902,7 +946,99 @@
         alert("Error al registrar tu voto.");
       }
     }
+    // ===== ENCUESTA TULUM 2027 =====
+    let tulumOpcionSeleccionada = null;
 
+    const TULUM_NOMBRES = [
+      "Romualda Dzul",
+      "Fili Tah",
+      "Jorge Portilla",
+      "Ileana"
+    ];
+
+    window.abrirEncuestaTulum = function() {
+      tulumOpcionSeleccionada = null;
+
+      const alerta = document.getElementById('tulumAlertaSeguridad');
+      if (alerta) {
+        alerta.style.display = 'none';
+      }
+
+      document.querySelectorAll('#tulumCardsGrid .civica-choice').forEach((card) => {
+        card.style.borderColor = 'var(--brand-gray)';
+        card.style.background = 'var(--card-bg)';
+      });
+
+      toggleModal('tulumModal', true);
+    };
+
+    window.seleccionarTulum = function(indice) {
+      tulumOpcionSeleccionada = indice;
+
+      document.querySelectorAll('#tulumCardsGrid .civica-choice').forEach((card, i) => {
+        if (i === indice) {
+          card.style.borderColor = 'var(--brand-red)';
+          card.style.background = '#FDF2F4';
+        } else {
+          card.style.borderColor = 'var(--brand-gray)';
+          card.style.background = 'var(--card-bg)';
+        }
+      });
+    };
+
+    window.votarTulumNube = async function() {
+      const alerta = document.getElementById('tulumAlertaSeguridad');
+
+      if (tulumOpcionSeleccionada === null) {
+        alerta.style.display = 'block';
+        alerta.style.background = '#FEF3C7';
+        alerta.style.color = '#92400E';
+        alerta.innerHTML = 'Selecciona una opción antes de emitir tu voto.';
+        return;
+      }
+
+      const claveVotoTulum = 'voto_tulum_2027_' + deviceFingerprint;
+      const yaVotoLocal = localStorage.getItem(claveVotoTulum);
+
+      if (yaVotoLocal) {
+        alerta.style.display = 'block';
+        alerta.style.background = '#FEE2E2';
+        alerta.style.color = '#991B1B';
+        alerta.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Ya has participado en la encuesta de Tulum.';
+        return;
+      }
+
+      const nuevoRegistro = {
+        fecha: new Date().toLocaleString('es-MX'),
+        opcion: TULUM_NOMBRES[tulumOpcionSeleccionada],
+        ip: ipDetectada,
+        deviceId: deviceFingerprint,
+        zona: "Tulum, Quintana Roo",
+        lat: Number(userLat),
+        lng: Number(userLng),
+        timestamp: Date.now()
+      };
+
+      try {
+        await addDoc(collection(db, "votos_tulum_2027"), nuevoRegistro);
+
+        localStorage.setItem(claveVotoTulum, 'true');
+
+        alerta.style.display = 'block';
+        alerta.style.background = '#F0FDF4';
+        alerta.style.color = '#15803D';
+        alerta.innerHTML = '<i class="fa-solid fa-circle-check"></i> ¡Voto registrado con éxito!';
+
+        setTimeout(() => {
+          toggleModal('tulumModal', false);
+        }, 1500);
+
+      } catch (e) {
+        alert("Error al registrar tu voto.");
+      }
+    };
+
+    
     let monitorMapInstance = null;
     window.abrirMonitorCompleto = function() {
       if (localStorage.getItem('muestra_admin') === 'true') {
@@ -1046,8 +1182,7 @@
     }
   </script>
 <div style="position: fixed; bottom: 20px; right: 20px; z-index: 999999;">
-    <a href="/encuestas/tulum-2027/" style="background: #ff4d4d; color: white; padding: 12px 20px; border-radius: 30px; font-weight: bold; text-decoration: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-family: sans-serif;">🌴 Ir a Encuesta Tulum 2027</a>
-</div>
+<a href="#" onclick="abrirEncuestaTulum(); return false;" style="background: #ff4d4d; color: white; padding: 12px 20px; border-radius: 30px; font-weight: bold; text-decoration: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-family: sans-serif;">🌴 Encuesta Tulum 2027</a></div>
 </div>
 </body>
 </html>
