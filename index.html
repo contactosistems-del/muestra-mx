@@ -1033,9 +1033,10 @@
           toggleModal('tulumModal', false);
         }, 1500);
 
-      } catch (e) {
-        alert("Error al registrar tu voto.");
-      }
+    } catch (e) {
+  console.error("ERROR FIREBASE TULUM:", e);
+  alert("Error al registrar tu voto: " + e.message);
+}
     };
 
     
