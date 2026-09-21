@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/encuesta-tulum",
+      "destination": "/index.html"
+    }
+  ]
+}
