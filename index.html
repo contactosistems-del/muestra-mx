@@ -615,22 +615,22 @@
       <div id="tulumCardsGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; margin-bottom:1.5rem;">
 
         <div class="civica-choice" onclick="seleccionarTulum(0)" style="border:2px solid var(--brand-gray); padding:0.8rem; border-radius:8px; background:var(--card-bg); cursor:pointer; text-align:center;">
-          <img src="/encuestas/tulum-2027/romualda.jpg" alt="Romualda Dzul" style="width:100%; height:130px; object-fit:cover; border-radius:6px; margin-bottom:0.5rem;">
+          <img src="/encuestas/tulum-2027/romualda.jpg" alt="Romualda Dzul" style="width:100%; height:220px; object-fit:contain; border-radius:6px; margin-bottom:0.5rem;">
           <h4>Romualda Dzul</h4>
         </div>
 
         <div class="civica-choice" onclick="seleccionarTulum(1)" style="border:2px solid var(--brand-gray); padding:0.8rem; border-radius:8px; background:var(--card-bg); cursor:pointer; text-align:center;">
-          <img src="/encuestas/tulum-2027/Izulfili.jpg" alt="Fili Tah" style="width:100%; height:130px; object-fit:cover; border-radius:6px; margin-bottom:0.5rem;">
+          <img src="/encuestas/tulum-2027/Izulfili.jpg" alt="Fili Tah" style="width:100%; height:220px; object-fit:contain; border-radius:6px; margin-bottom:0.5rem;">
           <h4>Fili Tah</h4>
         </div>
 
         <div class="civica-choice" onclick="seleccionarTulum(2)" style="border:2px solid var(--brand-gray); padding:0.8rem; border-radius:8px; background:var(--card-bg); cursor:pointer; text-align:center;">
-          <img src="/encuestas/tulum-2027/jorge.jpg" alt="Jorge Portilla" style="width:100%; height:130px; object-fit:cover; border-radius:6px; margin-bottom:0.5rem;">
+          <img src="/encuestas/tulum-2027/jorge.jpg" alt="Jorge Portilla" style="width:100%; height:220px; object-fit:contain; border-radius:6px; margin-bottom:0.5rem;">
           <h4>Jorge Portilla</h4>
         </div>
 
         <div class="civica-choice" onclick="seleccionarTulum(3)" style="border:2px solid var(--brand-gray); padding:0.8rem; border-radius:8px; background:var(--card-bg); cursor:pointer; text-align:center;">
-          <img src="/encuestas/tulum-2027/ileana.jpg" alt="Ileana" style="width:100%; height:130px; object-fit:cover; border-radius:6px; margin-bottom:0.5rem;">
+          <img src="/encuestas/tulum-2027/ileana.jpg" alt="Ileana" style="width:100%; height:220px; object-fit:contain; border-radius:6px; margin-bottom:0.5rem;">
           <h4>Ileana</h4>
         </div>
 
@@ -859,7 +859,7 @@
       noticias.forEach(n => {
         grid.innerHTML += `
           <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:8px; overflow:hidden; display:flex; flex-direction:column;">
-            <img src="${n.img}" alt="${n.cat}" style="width:100%; height:160px; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f'">
+            <img src="${n.img}" alt="${n.cat}" style="width:100%; height:160px; object-fit:contain;" onerror="this.src='https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f'">
             <div style="padding:1.2rem; display:flex; flex-direction:column; flex-grow:1;">
               <span style="font-size:0.7rem; font-weight:900; color:var(--brand-red); text-transform:uppercase; margin-bottom:0.4rem;">${n.cat}</span>
               <h4 style="font-size:0.98rem; font-weight:800; margin-bottom:0.8rem; color:var(--text-color);">${n.tit}</h4>
