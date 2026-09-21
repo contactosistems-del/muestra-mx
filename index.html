@@ -954,7 +954,9 @@
       "Ileana"
     ];
 
-    window.abrirEncuestaTulum = function() {
+    window.abrirEncuestaTulum = function() { 
+      const botonFlotanteTulum = document.getElementById('botonFlotanteTulum');
+if (botonFlotanteTulum) botonFlotanteTulum.style.display = 'none';
       tulumOpcionSeleccionada = null;
 
       const alerta = document.getElementById('tulumAlertaSeguridad');
@@ -1180,8 +1182,7 @@
       }
     }
   </script>
-<div style="position: fixed;bottom: 80px;; right: 20px; z-index: 999999;">
-<a href="#" onclick="abrirEncuestaTulum(); return false;" style="background: #ff4d4d; color: white; padding: 12px 20px; border-radius: 30px; font-weight: bold; text-decoration: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-family: sans-serif;">🌴 Encuesta Tulum 2027</a></div>
+<div id="botonFlotanteTulum" style="position: fixed; bottom: 80px; right: 20px; z-index: 999999;"><a href="#" onclick="abrirEncuestaTulum(); return false;" style="background: #ff4d4d; color: white; padding: 12px 20px; border-radius: 30px; font-weight: bold; text-decoration: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-family: sans-serif;">🌴 Encuesta Tulum 2027</a></div>
 </div>
   <script>
 if (window.location.pathname === '/encuesta-tulum') {
