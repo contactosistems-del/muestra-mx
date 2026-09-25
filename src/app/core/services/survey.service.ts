@@ -5,6 +5,7 @@ import { SURVEY_REPOSITORY, VOTE_REPOSITORY, type SurveyResultCounts } from '../
 import { loc } from '../i18n/localized';
 import type { I18nKey } from '../i18n/ui-dictionary';
 import { jpegToDataUrl } from '../utils/news-image';
+import { countForOption, enrichOptionsWithVoteAliases } from '../utils/survey-option';
 import { AuthService } from './auth.service';
 import { DeviceService } from './device.service';
 import { I18nService } from './i18n.service';
@@ -173,7 +174,8 @@ export class SurveyService {
   async saveSurvey(draft: SurveyDraft): Promise<void> {
     const id = this.normalizeId(draft.id);
     if (!id) throw new Error('invalid-id');
-    const options = await this.buildOptions(draft);
+    const previous = this.adminSurveys().find((item) => item.id === id) ?? this.surveyById(id) ?? null;
+    const options = await this.buildOptions(draft, previous);
     if (options.length < 2) throw new Error('need-options');
 
     const [shortEn, cityEn, titleEn, questionEn] = await Promise.all([
@@ -183,7 +185,7 @@ export class SurveyService {
       this.translator.toEnglish(draft.question),
     ]);
 
-    await this.surveyRepo.save({
+    const survey = {
       id,
       active: draft.active,
       showInNav: draft.showInNav,
@@ -194,7 +196,22 @@ export class SurveyService {
       question: loc(draft.question.trim(), questionEn),
       options,
       updatedAt: Date.now(),
+    };
+    await this.surveyRepo.save(survey);
+
+    const votes = await this.votesRepo.list(survey);
+    await this.votesRepo.rebuildResults(survey, votes, previous);
+
+    const voteNames = votes.map((vote) => vote.opcion);
+    const enrichedOptions = enrichOptionsWithVoteAliases(survey, voteNames, previous);
+    const aliasesChanged = enrichedOptions.some((opt, index) => {
+      const before = survey.options[index]?.aliases ?? [];
+      const after = opt.aliases ?? [];
+      return before.join('|') !== after.join('|');
     });
+    if (aliasesChanged) {
+      await this.surveyRepo.save({ ...survey, options: enrichedOptions, updatedAt: Date.now() });
+    }
   }
 
   async removeSurvey(id: string): Promise<void> {
@@ -205,7 +222,7 @@ export class SurveyService {
     await this.surveyRepo.seed(SURVEY_SEEDS);
   }
 
-  private async buildOptions(draft: SurveyDraft): Promise<SurveyOption[]> {
+  private async buildOptions(draft: SurveyDraft, previous?: Survey | null): Promise<SurveyOption[]> {
     const built: SurveyOption[] = [];
     for (let i = 0; i < draft.options.length; i += 1) {
       const row = draft.options[i]!;
@@ -215,11 +232,20 @@ export class SurveyService {
       if (row.imageFile) {
         imageUrl = jpegToDataUrl(await this.media.prepareNewsImage(row.imageFile));
       }
+      const id = row.id?.trim() || `opt-${i + 1}`;
       const voteValue = row.voteValue?.trim();
+      const prev = previous?.options.find((opt) => opt.id === id);
+      const aliases = new Set<string>([...(row.aliases ?? []), ...(prev?.aliases ?? [])]);
+      if (prev?.label && prev.label !== label) aliases.add(prev.label);
+      if (prev?.voteValue && prev.voteValue !== voteValue) aliases.add(prev.voteValue);
+      aliases.delete(label);
+      if (voteValue) aliases.delete(voteValue);
+      aliases.delete(id);
       built.push({
-        id: row.id?.trim() || `opt-${i + 1}`,
+        id,
         label,
         ...(voteValue ? { voteValue } : {}),
+        ...(aliases.size ? { aliases: [...aliases] } : {}),
         ...(imageUrl ? { imageUrl } : {}),
       });
     }
@@ -250,19 +276,17 @@ export class SurveyService {
   }
 
   private buildResult(survey: Survey, data?: SurveyResultCounts): SurveyResult {
-    const counts = new Map<string, number>();
-    survey.options.forEach((opt) => counts.set(opt.voteValue ?? opt.label, 0));
-    Object.entries(data?.counts ?? {}).forEach(([label, count]) => {
-      counts.set(label, Number(count) || 0);
-    });
-    const total = data?.total ?? [...counts.values()].reduce((sum, n) => sum + n, 0);
-    const options: SurveyOptionTally[] = [...counts.entries()]
-      .map(([label, count]) => ({
-        label,
-        count,
-        percent: total ? Math.round((count / total) * 1000) / 10 : 0,
-      }))
+    const raw = data?.counts ?? {};
+    const options: SurveyOptionTally[] = survey.options
+      .map((opt) => {
+        const count = countForOption(opt, raw);
+        return { label: opt.label, count, percent: 0 };
+      })
       .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+    const total = options.reduce((sum, item) => sum + item.count, 0);
+    options.forEach((item) => {
+      item.percent = total ? Math.round((item.count / total) * 1000) / 10 : 0;
+    });
     return { surveyId: survey.id, total, options };
   }
 }

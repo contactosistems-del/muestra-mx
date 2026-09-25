@@ -30,7 +30,7 @@ export interface VoteRepository {
   hasDeviceVote(survey: Survey, deviceId: string): Promise<boolean>;
   clearDeviceVotes(deviceId: string, surveyIds: string[]): Promise<void>;
   watchResults(survey: Survey, onChange: (counts: SurveyResultCounts) => void): () => void;
-  rebuildResults(survey: Survey, votes: VoteRecord[]): Promise<void>;
+  rebuildResults(survey: Survey, votes: VoteRecord[], previous?: Survey | null): Promise<void>;
 }
 
 export interface SurveyRepository {

@@ -59,10 +59,14 @@ export class FirestoreSurveyRepository implements SurveyRepository {
         if (!label) return null;
         const voteValue = String(row['voteValue'] ?? '').trim();
         const imageUrl = String(row['imageUrl'] ?? '').trim();
+        const aliases = Array.isArray(row['aliases'])
+          ? row['aliases'].map((item) => String(item ?? '').trim()).filter(Boolean)
+          : [];
         return {
           id: String(row['id'] ?? `opt-${index + 1}`),
           label,
           ...(voteValue ? { voteValue } : {}),
+          ...(aliases.length ? { aliases: [...new Set(aliases)] } : {}),
           ...(imageUrl ? { imageUrl } : {}),
         };
       })

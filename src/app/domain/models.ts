@@ -52,6 +52,7 @@ export interface SurveyOption {
   id: string;
   label: string;
   voteValue?: string;
+  aliases?: string[];
   imageUrl?: string;
 }
 
@@ -78,7 +79,14 @@ export interface SurveyDraft {
   city: string;
   title: string;
   question: string;
-  options: Array<{ id?: string; label: string; voteValue?: string; imageFile?: File | null; imageUrl?: string }>;
+  options: Array<{
+    id?: string;
+    label: string;
+    voteValue?: string;
+    aliases?: string[];
+    imageFile?: File | null;
+    imageUrl?: string;
+  }>;
 }
 
 export interface VoteRecord {

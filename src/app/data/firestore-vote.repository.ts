@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import type { Survey, VoteRecord } from '../domain/models';
 import { FIRESTORE, type SurveyResultCounts, type VoteRepository } from '../domain/tokens';
+import { matchSurveyOption, enrichOptionsWithVoteAliases } from '../core/utils/survey-option';
 
 const RESULTS = 'resultados_encuestas';
 const VOTES = 'votos';
@@ -28,15 +29,18 @@ export class FirestoreVoteRepository implements VoteRepository {
     const voteRef = doc(collection(this.db, VOTES));
     const resultRef = doc(this.db, RESULTS, survey.id);
     const deviceRef = doc(this.db, DEVICE_VOTES, this.deviceKey(survey.id, vote.deviceId));
+    const matched = matchSurveyOption(survey, vote.opcion);
+    const optionKey = matched?.id ?? vote.opcion;
+    const stored: VoteRecord = { ...vote, opcion: optionKey };
 
-    batch.set(voteRef, vote);
+    batch.set(voteRef, stored);
     batch.set(deviceRef, { surveyId: survey.id, deviceId: vote.deviceId, at: vote.timestamp });
     batch.set(
       resultRef,
       {
         surveyId: survey.id,
         total: increment(1),
-        [`counts.${vote.opcion}`]: increment(1),
+        [`counts.${optionKey}`]: increment(1),
         updatedAt: Date.now(),
       },
       { merge: true },
@@ -84,18 +88,25 @@ export class FirestoreVoteRepository implements VoteRepository {
     );
   }
 
-  async rebuildResults(survey: Survey, votes: VoteRecord[]): Promise<void> {
+  async rebuildResults(survey: Survey, votes: VoteRecord[], previous?: Survey | null): Promise<void> {
+    const voteNames = votes.map((vote) => vote.opcion);
+    const enriched = {
+      ...survey,
+      options: enrichOptionsWithVoteAliases(survey, voteNames, previous),
+    };
     const counts: Record<string, number> = {};
-    survey.options.forEach((opt) => {
-      counts[opt.voteValue ?? opt.label] = 0;
+    enriched.options.forEach((opt) => {
+      counts[opt.id] = 0;
     });
     votes.forEach((vote) => {
-      const key = vote.opcion || '—';
-      counts[key] = (counts[key] ?? 0) + 1;
+      const opt = matchSurveyOption(enriched, vote.opcion, previous);
+      if (!opt) return;
+      counts[opt.id] = (counts[opt.id] ?? 0) + 1;
     });
+    const total = Object.values(counts).reduce((sum, n) => sum + n, 0);
     await setDoc(doc(this.db, RESULTS, survey.id), {
       surveyId: survey.id,
-      total: votes.length,
+      total,
       counts,
       updatedAt: Date.now(),
     });

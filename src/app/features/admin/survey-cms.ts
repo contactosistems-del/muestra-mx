@@ -8,6 +8,7 @@ type OptionForm = {
   id: string;
   label: string;
   voteValue: string;
+  aliases: string[];
   imageUrl: string;
   preview: string;
   file: File | null;
@@ -180,6 +181,7 @@ export class SurveyCms {
       id: opt.id,
       label: opt.label,
       voteValue: opt.voteValue ?? '',
+      aliases: opt.aliases ?? [],
       imageUrl: opt.imageUrl ?? '',
       preview: opt.imageUrl ?? '',
       file: null,
@@ -224,6 +226,7 @@ export class SurveyCms {
           id: opt.id,
           label: opt.label,
           voteValue: opt.voteValue,
+          aliases: opt.aliases,
           imageUrl: opt.imageUrl,
           imageFile: opt.file,
         })),
@@ -284,6 +287,6 @@ export class SurveyCms {
   }
 
   private blankOption(id: string): OptionForm {
-    return { id, label: '', voteValue: '', imageUrl: '', preview: '', file: null };
+    return { id, label: '', voteValue: '', aliases: [], imageUrl: '', preview: '', file: null };
   }
 }

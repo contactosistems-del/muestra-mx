@@ -29,8 +29,8 @@ import { SurveyService } from '../../core/services/survey.service';
             <button
               type="button"
               class="civica-choice"
-              [class.selected]="surveys.selected() === (opt.voteValue ?? opt.label)"
-              (click)="surveys.select(opt.voteValue ?? opt.label)"
+              [class.selected]="surveys.selected() === opt.id"
+              (click)="surveys.select(opt.id)"
             >
               @if (opt.imageUrl) {
                 <span class="civica-photo">
