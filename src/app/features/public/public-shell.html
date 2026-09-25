@@ -9,19 +9,20 @@
 }
 
 @if (i18n.lang(); as lang) {
-<header class="top-bar-wrapper" [attr.lang]="lang">
-  <div class="top-bar">
+<header class="site-header" [attr.lang]="lang">
+  <div class="site-header-inner">
     <a class="brand-logo" routerLink="/" (dblclick)="onLogoDblClick()" [title]="i18n.t('adminHint')">
-      <div class="logo-main-text"><span class="logo-mu">mu</span><span class="logo-es">es</span>tra.mx</div>
-      <div class="logo-sub-text">{{ i18n.t('brandSub') }}</div>
+      <span class="logo-main-text"><span class="logo-mu">mu</span><span class="logo-es">es</span>tra.mx</span>
+      <span class="logo-sub-text">{{ i18n.t('brandSub') }}</span>
     </a>
-    <div class="meta-center">{{ i18n.t('tagline') }}</div>
-    <div class="header-right">
+
+    <div class="header-tools">
+      <p class="header-tagline">{{ i18n.t('tagline') }}</p>
       <select class="lang-select notranslate" translate="no" [value]="lang" (change)="onLangChange($event)">
         <option value="es">ESP</option>
         <option value="en">ENG</option>
       </select>
-      <button class="btn-theme-toggle" type="button" (click)="theme.toggle()">
+      <button class="btn-theme-toggle" type="button" (click)="theme.toggle()" [attr.aria-label]="i18n.t('tagline')">
         <i class="fa-solid fa-circle-half-stroke"></i>
       </button>
       @if (auth.isAdmin()) {
@@ -37,8 +38,8 @@
   </div>
 </header>
 
-<nav class="main-nav" [attr.lang]="lang">
-  <div class="nav-container">
+<nav class="site-nav" [attr.lang]="lang">
+  <div class="site-nav-inner">
     <ul class="nav-links">
       @for (link of links; track link.path) {
         <li routerLinkActive="active" [routerLinkActiveOptions]="{ exact: link.exact }">
@@ -46,21 +47,27 @@
         </li>
       }
     </ul>
-    <div class="nav-actions">
-      @if (auth.isAdmin()) {
-        <a class="admin-action-btn btn-admin-monitor visible-admin" routerLink="/admin">
-          <i class="fa-solid fa-map-location-dot"></i> {{ i18n.t('monitor') }}
-        </a>
-        <button class="admin-action-btn visible-admin" type="button" (click)="news.openCreate()">
-          <i class="fa-solid fa-plus"></i> {{ i18n.t('publishNews') }}
-        </button>
-      }
-      @for (survey of surveys.navSurveys(); track survey.id) {
-        <a class="btn-encuesta-top" [routerLink]="['/encuesta', survey.id]">
-          <i class="fa-solid fa-square-poll-vertical"></i> {{ i18n.tx(survey.shortLabel) }}
-        </a>
-      }
-    </div>
+
+    @if (auth.isAdmin() || surveys.navSurveys().length) {
+      <div class="nav-actions">
+        @if (auth.isAdmin()) {
+          <a class="nav-chip nav-chip-dark" routerLink="/admin" [title]="i18n.t('monitor')">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>{{ i18n.t('monitor') }}</span>
+          </a>
+          <button class="nav-chip" type="button" (click)="news.openCreate()" [title]="i18n.t('publishNews')">
+            <i class="fa-solid fa-plus"></i>
+            <span>{{ i18n.t('publishNews') }}</span>
+          </button>
+        }
+        @for (survey of surveys.navSurveys(); track survey.id) {
+          <a class="nav-chip" [routerLink]="['/encuesta', survey.id]" [title]="i18n.tx(survey.shortLabel)">
+            <i class="fa-solid fa-square-poll-vertical"></i>
+            <span>{{ i18n.tx(survey.shortLabel) }}</span>
+          </a>
+        }
+      </div>
+    }
   </div>
 </nav>
 }
@@ -82,22 +89,22 @@
 }
 
 @if (i18n.lang(); as lang) {
-<footer [attr.lang]="lang">
-  <div class="footer-top">
-    <div>
-      <div class="logo-main-text footer-logo"><span class="logo-mu">mu</span><span class="logo-es">es</span>tra.mx</div>
-      <div class="logo-sub-text footer-sub">{{ i18n.t('brandSub') }}</div>
+<footer class="site-footer" [attr.lang]="lang">
+  <div class="site-footer-inner">
+    <div class="footer-brand">
+      <div class="footer-logo"><span class="logo-mu">mu</span><span class="logo-es">es</span>tra.mx</div>
+      <p class="footer-tagline">{{ i18n.t('tagline') }}</p>
     </div>
-    <div class="footer-nav">
+    <nav class="footer-nav" aria-label="Footer">
       @for (link of links; track link.path) {
         <a [routerLink]="link.path">{{ i18n.t(link.key) }}</a>
       }
       <a href="https://x.com/muestramx" target="_blank" rel="noopener">𝕏 @muestramx</a>
-    </div>
+    </nav>
   </div>
-  <div class="footer-bottom">
-    <div>{{ i18n.t('footerRights') }}</div>
-    <div>{{ i18n.t('footerLine') }}</div>
+  <div class="site-footer-bottom">
+    <span>{{ i18n.t('footerRights') }}</span>
+    <span>{{ i18n.t('footerLine') }}</span>
   </div>
 </footer>
 }
