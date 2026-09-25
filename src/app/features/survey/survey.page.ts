@@ -60,15 +60,24 @@ import { SurveyService } from '../../core/services/survey.service';
     h1 { font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 900; margin-bottom: 1rem; }
     .question { font-size: 1.05rem; font-weight: 800; margin-bottom: 1.2rem; line-height: 1.4; }
     .survey-alert { padding: .75rem; border-radius: 6px; font-size: .85rem; font-weight: 700; margin-bottom: 1rem; text-align: center; background: #FEF3C7; color: #92400E; }
-    .survey-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; margin: 0 0 1.5rem; }
+    .survey-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+      gap: .8rem;
+      margin: 0 0 1.5rem;
+    }
     .civica-choice {
       border: 2px solid var(--brand-gray); padding: .8rem; border-radius: 8px; background: var(--card-bg);
       cursor: pointer; text-align: center; color: inherit; display: flex; flex-direction: column; gap: .55rem;
+      min-width: 0;
     }
     .civica-choice.selected { border-color: var(--brand-red); background: #FDF2F4; }
     .civica-photo { display: block; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 6px; background: #ececec; }
     .civica-choice img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
-    .civica-choice h4 { font-size: .9rem; font-weight: 800; }
+    .civica-choice h4 { font-size: .9rem; font-weight: 800; overflow-wrap: anywhere; }
+    @media (max-width: 480px) {
+      .survey-grid { grid-template-columns: 1fr; }
+    }
   `,
 })
 export class SurveyPage {

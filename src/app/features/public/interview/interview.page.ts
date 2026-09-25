@@ -26,7 +26,7 @@ import { I18nService } from '../../../core/services/i18n.service';
   styles: `
     .article-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
     .share-btn { background: #25D366; color: #FFF; border: none; padding: .4rem .8rem; border-radius: 4px; font-size: .75rem; font-weight: 800; cursor: pointer; }
-    h1 { font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 900; line-height: 1.2; margin-bottom: 1rem; }
+    h1 { font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 900; line-height: 1.2; margin-bottom: 1rem; overflow-wrap: anywhere; }
     .byline { font-size: .95rem; font-weight: 700; color: var(--brand-red); margin-bottom: 1.8rem; border-bottom: 2px solid var(--border-color); padding-bottom: 1rem; }
     figure { margin-bottom: 2rem; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); background: #111; }
     img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; object-position: 12% center; display: block; }

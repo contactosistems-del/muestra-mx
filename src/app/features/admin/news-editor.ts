@@ -53,11 +53,14 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
     </div>
   `,
   styles: `
-    .news-box { max-width: 550px; padding: 2rem; max-height: 90vh; overflow: auto; }
+    .news-box { max-width: 550px; padding: 2rem; max-height: 90dvh; overflow: auto; }
     .news-box h3 { font-size: 1.2rem; margin-bottom: 1rem; }
     .news-error { background: #FEE2E2; color: #991B1B; padding: .5rem; border-radius: 4px; font-size: .8rem; margin-bottom: .8rem; }
     .hint { margin-top: .45rem; font-size: .75rem; color: var(--text-muted); }
     .preview { margin-top: .6rem; width: 100%; max-height: 180px; object-fit: cover; border-radius: 8px; }
+    @media (max-width: 720px) {
+      .news-box { padding: 1rem; max-height: 90dvh; }
+    }
   `,
 })
 export class NewsEditor {

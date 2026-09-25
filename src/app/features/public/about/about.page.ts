@@ -21,7 +21,7 @@ import { I18nService } from '../../../core/services/i18n.service';
     </section>
   `,
   styles: `
-    .page-title { font-size: 1.8rem; font-weight: 800; margin-bottom: .5rem; }
+    .page-title { font-size: clamp(1.25rem, 4vw, 1.8rem); font-weight: 800; margin-bottom: .5rem; }
     .page-title i { color: var(--brand-red); }
     .muted { font-size: .9rem; color: var(--text-muted); margin-bottom: 1.5rem; }
   `,

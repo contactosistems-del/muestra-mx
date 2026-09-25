@@ -112,7 +112,7 @@ import { I18nService } from '../../core/services/i18n.service';
     .cms-lead { color: var(--text-muted); font-size: .84rem; margin: 0 0 1rem; max-width: 42rem; line-height: 1.4; }
     .cms-msg { padding: .55rem .75rem; border-radius: 6px; font-size: .8rem; font-weight: 700; margin-bottom: 1rem; background: #DCFCE7; color: #166534; }
     .cms-msg.err { background: #FEE2E2; color: #991B1B; }
-    .cms-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+    .cms-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 1rem; }
     .cms-card { background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 10px; padding: 1rem; }
     .cms-card.wide { grid-column: 1 / -1; }
     .cms-card h4 { font-size: .9rem; font-weight: 900; margin: 0 0 .8rem; color: var(--brand-red); }

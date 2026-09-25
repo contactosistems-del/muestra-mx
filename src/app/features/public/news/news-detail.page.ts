@@ -52,6 +52,9 @@ import { newsCategoryLabel } from '../../../data/catalog';
     .news-hero { margin: 0 0 1.5rem; border-radius: 10px; overflow: hidden; background: #111; border: 1px solid var(--border-color); }
     .news-hero img { display: block; width: 100%; max-height: 480px; object-fit: cover; object-position: top center; }
     .news-content p { font-size: 1.05rem; line-height: 1.7; color: var(--text-color); white-space: pre-wrap; overflow-wrap: anywhere; }
+    @media (max-width: 720px) {
+      .news-hero img { max-height: min(280px, 55vh); }
+    }
   `,
 })
 export class NewsDetailPage {

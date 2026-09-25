@@ -96,8 +96,8 @@ import { newsCategoryLabel } from '../../../data/catalog';
     }
     .home-news { margin: 2.5rem 0 1rem; }
     .results-head { border-bottom: 3px solid var(--text-color); padding-bottom: .55rem; margin-bottom: 1.2rem; }
-    .news-head { display: flex; justify-content: space-between; align-items: end; gap: 1rem; }
-    .results-head h3 { font-size: clamp(1.15rem, 2.5vw, 1.55rem); font-weight: 900; text-transform: uppercase; }
+    .news-head { display: flex; justify-content: space-between; align-items: end; gap: 1rem; flex-wrap: wrap; }
+    .results-head h3 { font-size: clamp(1.15rem, 2.5vw, 1.55rem); font-weight: 900; text-transform: uppercase; min-width: 0; overflow-wrap: anywhere; }
     .see-all { font-size: .78rem; font-weight: 800; color: var(--brand-red); text-transform: uppercase; white-space: nowrap; }
     .empty { color: var(--text-muted); font-size: .88rem; margin-bottom: 1rem; }
     .news-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 1.2rem; }

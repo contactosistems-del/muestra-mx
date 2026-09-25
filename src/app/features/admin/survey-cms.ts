@@ -115,7 +115,7 @@ type OptionForm = {
     .cms-msg { padding: .55rem .75rem; border-radius: 6px; font-size: .8rem; font-weight: 700; margin-bottom: 1rem; background: #DCFCE7; color: #166534; }
     .cms-msg.err { background: #FEE2E2; color: #991B1B; }
     .layout { display: grid; grid-template-columns: 1fr; gap: 1rem; }
-    @media (min-width: 900px) { .layout { grid-template-columns: .9fr 1.1fr; } }
+    @media (min-width: 992px) { .layout { grid-template-columns: .9fr 1.1fr; } }
     .list { display: flex; flex-direction: column; gap: .45rem; max-height: 420px; overflow: auto; }
     .list-item { text-align: left; border: 1px solid var(--border-color); background: var(--bg-color); border-radius: 8px; padding: .75rem .85rem; cursor: pointer; display: flex; flex-direction: column; gap: .2rem; }
     .list-item.active { border-color: var(--brand-red); box-shadow: inset 3px 0 0 var(--brand-red); }
@@ -123,17 +123,19 @@ type OptionForm = {
     .empty { color: var(--text-muted); font-size: .85rem; }
     .cms-card { background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 10px; padding: 1rem; }
     .cms-card h4 { font-size: .9rem; font-weight: 900; margin: 0 0 .8rem; color: var(--brand-red); }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: .75rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); gap: .75rem; }
     .flags { display: flex; gap: 1rem; flex-wrap: wrap; margin: .6rem 0 1rem; font-size: .82rem; font-weight: 700; }
-    .opts-head { display: flex; justify-content: space-between; align-items: center; margin: .5rem 0; }
+    .opts-head { display: flex; justify-content: space-between; align-items: center; margin: .5rem 0; flex-wrap: wrap; gap: .5rem; }
     .opts-head h5 { font-size: .82rem; font-weight: 900; margin: 0; }
-    .opt-row { display: grid; grid-template-columns: 1.4fr 1fr auto auto auto; gap: .45rem; align-items: center; margin-bottom: .55rem; }
+    .opt-row { display: grid; grid-template-columns: 1fr; gap: .45rem; align-items: center; margin-bottom: .55rem; }
+    @media (min-width: 992px) {
+      .opt-row { grid-template-columns: 1.4fr 1fr auto auto auto; }
+    }
     .opt-row img { width: 42px; height: 42px; object-fit: cover; border-radius: 6px; }
     .ghost, .danger { border: none; padding: .45rem .8rem; border-radius: 6px; font-weight: 800; cursor: pointer; color: #FFF; font-size: .75rem; }
     .ghost { background: #64748B; }
     .danger { background: #EF4444; }
-    .form-actions { display: flex; gap: .6rem; margin-top: 1rem; }
-    @media (max-width: 800px) { .opt-row { grid-template-columns: 1fr; } }
+    .form-actions { display: flex; gap: .6rem; margin-top: 1rem; flex-wrap: wrap; }
   `,
 })
 export class SurveyCms {

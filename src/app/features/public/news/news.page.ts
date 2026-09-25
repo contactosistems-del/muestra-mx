@@ -39,6 +39,9 @@ import { newsCategoryLabel } from '../../../data/catalog';
   `,
   styles: `
     .news-wrap { margin-top: 3.5rem; min-width: 0; }
+    @media (max-width: 720px) {
+      .news-wrap { margin-top: 1.75rem; }
+    }
     .news-head { display: flex; justify-content: space-between; border-bottom: 3px solid var(--text-color); padding-bottom: .6rem; margin-bottom: 1.5rem; min-width: 0; }
     .news-head h3 { font-size: clamp(1.2rem, 3vw, 1.8rem); font-weight: 800; text-transform: uppercase; line-height: 1.2; }
     .news-state { color: var(--text-muted); padding: 1rem 0; }

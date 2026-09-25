@@ -38,6 +38,9 @@ import { I18nService } from '../../core/services/i18n.service';
     .login-box h3 { font-size: 1.2rem; margin-bottom: .35rem; }
     .login-hint { font-size: .78rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.4; }
     .login-error { background: #FEE2E2; color: #991B1B; padding: .5rem; border-radius: 4px; font-size: .75rem; margin-bottom: .8rem; }
+    @media (max-width: 480px) {
+      .login-box { padding: 1.25rem; }
+    }
   `,
 })
 export class LoginModal {

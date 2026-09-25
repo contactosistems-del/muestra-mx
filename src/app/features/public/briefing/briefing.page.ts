@@ -16,11 +16,15 @@ import { I18nService } from '../../../core/services/i18n.service';
     </section>
   `,
   styles: `
-    .page-title { font-size: 1.8rem; font-weight: 800; margin-bottom: 1.5rem; }
+    .page-title { font-size: clamp(1.25rem, 4vw, 1.8rem); font-weight: 800; margin-bottom: 1.5rem; }
     .youtube { color: #FF0000; }
     .muted { color: var(--text-muted); margin-bottom: 1.5rem; }
     .live-box { text-align: center; padding: 3rem; background: #000; border-radius: 10px; }
     .live-btn { background: #FF0000; color: #FFF; padding: 1rem 2rem; font-weight: 900; border-radius: 6px; display: inline-block; text-transform: uppercase; }
+    @media (max-width: 720px) {
+      .live-box { padding: 1.5rem 1rem; }
+      .live-btn { width: 100%; text-align: center; padding: 0.9rem 1rem; }
+    }
   `,
 })
 export class BriefingPage {

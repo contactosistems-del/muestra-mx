@@ -51,12 +51,15 @@ import { LeafletMap } from '../../../shared/leaflet-map/leaflet-map';
     </section>
   `,
   styles: `
-    .page-title { font-size: 1.8rem; font-weight: 800; margin-bottom: .5rem; }
+    .page-title { font-size: clamp(1.25rem, 4vw, 1.8rem); font-weight: 800; margin-bottom: .5rem; }
     .page-title i { color: var(--brand-red); }
     .muted { color: var(--text-muted); margin-bottom: 1.5rem; font-size: .9rem; }
     .dir-box + .dir-box { margin-top: 1rem; }
     .map-label { font-size: .85rem; font-weight: 800; margin: 1.5rem 0 .5rem; }
-    .map-box { width: 100%; height: 300px; }
+    .map-box { width: 100%; height: 300px; min-height: 300px; position: relative; background: #e5e7eb; border-radius: 8px; overflow: hidden; }
+    @media (max-width: 720px) {
+      .map-box { height: 240px; min-height: 240px; }
+    }
     .ok { color: #15803D; font-weight: 700; }
     h4 { margin-bottom: 1rem; color: var(--brand-red); font-weight: 900; }
   `,
