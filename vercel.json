@@ -1,8 +1,7 @@
 {
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist/muestra-app/browser",
   "rewrites": [
-    {
-      "source": "/encuesta-tulum",
-      "destination": "/index.html"
-    }
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

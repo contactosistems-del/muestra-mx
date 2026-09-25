@@ -1,0 +1,103 @@
+@if (splash()) {
+  <div class="splash-screen">
+    <div class="splash-content">
+      <div class="splash-logo-main"><span class="logo-mu">mu</span><span class="logo-es">es</span>tra.mx</div>
+      <div class="splash-sub">{{ i18n.t('brandSub') }}</div>
+      <p>{{ i18n.t('splash') }}</p>
+    </div>
+  </div>
+}
+
+@if (i18n.lang(); as lang) {
+<header class="top-bar-wrapper" [attr.lang]="lang">
+  <div class="top-bar">
+    <a class="brand-logo" routerLink="/" (dblclick)="onLogoDblClick()" [title]="i18n.t('adminHint')">
+      <div class="logo-main-text"><span class="logo-mu">mu</span><span class="logo-es">es</span>tra.mx</div>
+      <div class="logo-sub-text">{{ i18n.t('brandSub') }}</div>
+    </a>
+    <div class="meta-center">{{ i18n.t('tagline') }}</div>
+    <div class="header-right">
+      <select class="lang-select notranslate" translate="no" [value]="lang" (change)="onLangChange($event)">
+        <option value="es">ESP</option>
+        <option value="en">ENG</option>
+      </select>
+      <button class="btn-theme-toggle" type="button" (click)="theme.toggle()">
+        <i class="fa-solid fa-circle-half-stroke"></i>
+      </button>
+      @if (auth.isAdmin()) {
+        <div class="user-pill visible">
+          <i class="fa-solid fa-user-shield"></i>
+          <span>{{ auth.email() }}</span>
+          <button class="btn-power-off" type="button" (click)="auth.logout()" [title]="i18n.t('logout')">
+            <i class="fa-solid fa-power-off"></i>
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</header>
+
+<nav class="main-nav" [attr.lang]="lang">
+  <div class="nav-container">
+    <ul class="nav-links">
+      @for (link of links; track link.path) {
+        <li routerLinkActive="active" [routerLinkActiveOptions]="{ exact: link.exact }">
+          <a [routerLink]="link.path">{{ i18n.t(link.key) }}</a>
+        </li>
+      }
+    </ul>
+    <div class="nav-actions">
+      @if (auth.isAdmin()) {
+        <a class="admin-action-btn btn-admin-monitor visible-admin" routerLink="/admin">
+          <i class="fa-solid fa-map-location-dot"></i> {{ i18n.t('monitor') }}
+        </a>
+        <button class="admin-action-btn visible-admin" type="button" (click)="news.editorOpen.set(true)">
+          <i class="fa-solid fa-plus"></i> {{ i18n.t('publishNews') }}
+        </button>
+      }
+      @for (survey of surveys.navSurveys(); track survey.id) {
+        <a class="btn-encuesta-top" [routerLink]="['/encuesta', survey.id]">
+          <i class="fa-solid fa-square-poll-vertical"></i> {{ i18n.tx(survey.shortLabel) }}
+        </a>
+      }
+    </div>
+  </div>
+</nav>
+}
+
+<main class="container view-section active-view">
+  <router-outlet />
+</main>
+
+<a routerLink="/contacto" class="subscribe-float-btn" [title]="i18n.t('contactFloat')"><i class="fa-solid fa-envelope-open-text"></i></a>
+<a href="https://www.facebook.com/muestra.mx/" target="_blank" rel="noopener" class="facebook-float-btn" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+<a href="https://x.com/muestramx" target="_blank" rel="noopener" class="twitter-float-btn" title="X">𝕏</a>
+<app-chatbot />
+<app-survey-modal />
+@if (loginOpen()) {
+  <app-login-modal (closed)="loginOpen.set(false)" />
+}
+@if (news.editorOpen()) {
+  <app-news-editor />
+}
+
+@if (i18n.lang(); as lang) {
+<footer [attr.lang]="lang">
+  <div class="footer-top">
+    <div>
+      <div class="logo-main-text footer-logo"><span class="logo-mu">mu</span><span class="logo-es">es</span>tra.mx</div>
+      <div class="logo-sub-text footer-sub">{{ i18n.t('brandSub') }}</div>
+    </div>
+    <div class="footer-nav">
+      @for (link of links; track link.path) {
+        <a [routerLink]="link.path">{{ i18n.t(link.key) }}</a>
+      }
+      <a href="https://x.com/muestramx" target="_blank" rel="noopener">𝕏 @muestramx</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div>{{ i18n.t('footerRights') }}</div>
+    <div>{{ i18n.t('footerLine') }}</div>
+  </div>
+</footer>
+}
