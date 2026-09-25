@@ -7,14 +7,15 @@ import { SurveyService } from '../../core/services/survey.service';
 import type { VoteRecord } from '../../domain/models';
 import { LeafletMap } from '../../shared/leaflet-map/leaflet-map';
 import { ContentCms } from './content-cms';
+import { NewsEditor } from './news-editor';
 import { SurveyCms } from './survey-cms';
 
-type AdminTab = 'results' | 'surveys' | 'content' | 'news';
+type AdminTab = 'results' | 'charts' | 'surveys' | 'content' | 'news';
 
 @Component({
   selector: 'app-admin-monitor',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, FormsModule, LeafletMap, ContentCms, SurveyCms],
+  imports: [RouterLink, FormsModule, LeafletMap, ContentCms, SurveyCms, NewsEditor],
   template: `
     <section class="admin-monitor-overlay active">
       <div class="monitor-shell">
@@ -29,8 +30,12 @@ type AdminTab = 'results' | 'surveys' | 'content' | 'news';
 
           <nav class="tabs" aria-label="Admin">
             <button type="button" class="tab" [class.active]="tab() === 'results'" (click)="setTab('results')">
-              <i class="fa-solid fa-chart-column"></i>
+              <i class="fa-solid fa-map-location-dot"></i>
               <span>{{ i18n.t('adminTabResults') }}</span>
+            </button>
+            <button type="button" class="tab" [class.active]="tab() === 'charts'" (click)="setTab('charts')">
+              <i class="fa-solid fa-chart-column"></i>
+              <span>{{ i18n.t('adminTabCharts') }}</span>
             </button>
             <button type="button" class="tab" [class.active]="tab() === 'surveys'" (click)="setTab('surveys')">
               <i class="fa-solid fa-square-poll-vertical"></i>
@@ -80,49 +85,12 @@ type AdminTab = 'results' | 'surveys' | 'content' | 'news';
               <p class="unlock-msg">{{ unlockMsg() }}</p>
             }
 
-            <div class="split">
-              <section class="block">
-                <h3>{{ i18n.t('electoralMap') }}</h3>
-                <div class="map-box">
-                  <app-leaflet-map [markers]="markers()" [center]="[21.16, -86.85]" [zoom]="6" />
-                </div>
-              </section>
-
-              <section class="block">
-                <h3>{{ i18n.t('liveResults') }}</h3>
-                <div class="results-list">
-                  @for (survey of surveys.adminSurveys(); track survey.id) {
-                    @if (surveys.resultById(survey.id); as result) {
-                      <article class="result-item">
-                        <div class="result-item-head">
-                          <strong>{{ i18n.tx(survey.title) }}</strong>
-                          <span>{{ result.total }} {{ i18n.t('totalVotes') }}</span>
-                        </div>
-                        @if (result.total === 0) {
-                          <p class="empty">{{ i18n.t('noVotesYet') }}</p>
-                        } @else {
-                          <ul class="admin-bars">
-                            @for (opt of result.options; track opt.label) {
-                              <li>
-                                <div class="bar-meta">
-                                  <span>{{ opt.label }}</span>
-                                  <strong>{{ opt.percent }}% · {{ opt.count }}</strong>
-                                </div>
-                                <div class="bar-track">
-                                  <div class="bar-fill" [style.width.%]="opt.percent"></div>
-                                </div>
-                              </li>
-                            }
-                          </ul>
-                        }
-                      </article>
-                    }
-                  } @empty {
-                    <p class="empty">{{ i18n.t('surveyEmpty') }}</p>
-                  }
-                </div>
-              </section>
-            </div>
+            <section class="block">
+              <h3>{{ i18n.t('electoralMap') }}</h3>
+              <div class="map-box map-box-wide">
+                <app-leaflet-map [markers]="markers()" [center]="[21.16, -86.85]" [zoom]="6" />
+              </div>
+            </section>
 
             <section class="block table-block">
               <h3>{{ i18n.t('cloudRecords') }}</h3>
@@ -154,6 +122,54 @@ type AdminTab = 'results' | 'surveys' | 'content' | 'news';
           </div>
         }
 
+        @if (tab() === 'charts') {
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>{{ i18n.t('adminTabCharts') }}</h2>
+                <p>{{ i18n.t('adminChartsLead') }}</p>
+              </div>
+              <div class="panel-actions">
+                <button type="button" class="ghost" [disabled]="syncing()" (click)="syncResults()">
+                  {{ syncing() ? i18n.t('syncingResults') : i18n.t('syncResults') }}
+                </button>
+              </div>
+            </div>
+
+            <div class="results-list results-list-full">
+              @for (survey of surveys.adminSurveys(); track survey.id) {
+                @if (surveys.resultById(survey.id); as result) {
+                  <article class="result-item">
+                    <div class="result-item-head">
+                      <strong>{{ i18n.tx(survey.title) }}</strong>
+                      <span>{{ result.total }} {{ i18n.t('totalVotes') }}</span>
+                    </div>
+                    @if (result.total === 0) {
+                      <p class="empty">{{ i18n.t('noVotesYet') }}</p>
+                    } @else {
+                      <ul class="admin-bars">
+                        @for (opt of result.options; track opt.label) {
+                          <li>
+                            <div class="bar-meta">
+                              <span>{{ opt.label }}</span>
+                              <strong>{{ opt.percent }}% · {{ opt.count }}</strong>
+                            </div>
+                            <div class="bar-track">
+                              <div class="bar-fill" [style.width.%]="opt.percent"></div>
+                            </div>
+                          </li>
+                        }
+                      </ul>
+                    }
+                  </article>
+                }
+              } @empty {
+                <p class="empty">{{ i18n.t('surveyEmpty') }}</p>
+              }
+            </div>
+          </div>
+        }
+
         @if (tab() === 'surveys') {
           <div class="panel">
             <app-survey-cms />
@@ -173,24 +189,43 @@ type AdminTab = 'results' | 'surveys' | 'content' | 'news';
                 <h2>{{ i18n.t('manageNews') }}</h2>
                 <p>{{ i18n.t('adminNewsLead') }}</p>
               </div>
-            </div>
-            <div class="news-box">
-              <div class="input-group">
-                <label>{{ i18n.t('newsTitle') }}</label>
-                <select name="selectedNews" [(ngModel)]="selectedNewsId">
-                  @for (item of news.items(); track item.id) {
-                    <option [value]="item.id">{{ i18n.formatDate(item.publishedAt) }} — {{ i18n.tx(item.title) }}</option>
-                  }
-                </select>
+              <div class="panel-actions">
+                <button type="button" class="export" (click)="news.openCreate()">{{ i18n.t('publishNews') }}</button>
               </div>
-              <button type="button" class="danger" (click)="askRemove()" [disabled]="!selectedNewsId">
-                {{ i18n.t('deleteNews') }}
-              </button>
             </div>
+
+            @if (news.loading()) {
+              <p class="empty">{{ i18n.t('newsLoading') }}</p>
+            } @else if (news.items().length === 0) {
+              <p class="empty">{{ i18n.t('newsEmpty') }}</p>
+            } @else {
+              <ul class="news-manage-list">
+                @for (item of news.items(); track item.id) {
+                  <li class="news-manage-item">
+                    <div class="news-manage-meta">
+                      <strong>{{ i18n.tx(item.title) }}</strong>
+                      <span>{{ i18n.formatDate(item.publishedAt) }} · {{ item.categoryId }}</span>
+                    </div>
+                    <div class="news-actions">
+                      <button type="button" class="ghost" (click)="news.openEdit(item.id)">
+                        {{ i18n.t('editNews') }}
+                      </button>
+                      <button type="button" class="danger" (click)="askRemove(item.id)">
+                        {{ i18n.t('deleteNews') }}
+                      </button>
+                    </div>
+                  </li>
+                }
+              </ul>
+            }
           </div>
         }
         </div>
       </div>
+
+      @if (news.editorOpen()) {
+        <app-news-editor />
+      }
 
       @if (confirmOpen()) {
         <div class="confirm-overlay" (click)="confirmOpen.set(false)">
@@ -275,7 +310,7 @@ type AdminTab = 'results' | 'surveys' | 'content' | 'news';
     }
     .tabs {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: .35rem;
       padding: .4rem;
       background: #0f172a;
@@ -382,7 +417,9 @@ type AdminTab = 'results' | 'surveys' | 'content' | 'news';
       color: var(--text-muted);
     }
     .map-box { height: 320px; border-radius: 8px; overflow: hidden; }
+    .map-box-wide { height: 400px; }
     .results-list { display: flex; flex-direction: column; gap: .75rem; max-height: 320px; overflow: auto; }
+    .results-list-full { max-height: none; }
     .result-item {
       padding: .75rem;
       border-radius: 8px;
@@ -403,11 +440,43 @@ type AdminTab = 'results' | 'surveys' | 'content' | 'news';
     .bar-fill { height: 100%; background: var(--brand-red); border-radius: 999px; }
     .table-block { margin-top: .2rem; }
     .table-wrap { max-height: 300px; overflow: auto; border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg); }
-    .news-box {
-      display: grid;
-      gap: .9rem;
-      max-width: 560px;
+    .news-manage-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: .75rem;
     }
+    .news-manage-item {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .75rem 1rem;
+      justify-content: space-between;
+      align-items: center;
+      padding: .9rem 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: var(--card-bg);
+    }
+    .news-manage-meta {
+      display: flex;
+      flex-direction: column;
+      gap: .25rem;
+      min-width: min(100%, 220px);
+      flex: 1;
+    }
+    .news-manage-meta strong {
+      font-size: .92rem;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+    .news-manage-meta span {
+      font-size: .75rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .news-actions { display: flex; flex-wrap: wrap; gap: .55rem; }
     .danger, .ghost, .export {
       border: none;
       padding: .55rem 1rem;
@@ -479,7 +548,6 @@ export class AdminMonitorPage implements OnInit, OnDestroy {
   async ngOnInit(): Promise<void> {
     this.stopAdmin = this.surveys.watchAdmin();
     this.votes.set(await this.surveys.listAll());
-    this.selectedNewsId = this.news.items()[0]?.id ?? '';
   }
 
   ngOnDestroy(): void {
@@ -490,9 +558,9 @@ export class AdminMonitorPage implements OnInit, OnDestroy {
     this.tab.set(next);
   }
 
-  askRemove(): void {
-    const id = this.selectedNewsId;
+  askRemove(id: string): void {
     if (!id) return;
+    this.selectedNewsId = id;
     const item = this.news.byId(id);
     this.pendingTitle.set(item ? this.i18n.tx(item.title) : '');
     this.confirmOpen.set(true);
@@ -504,7 +572,7 @@ export class AdminMonitorPage implements OnInit, OnDestroy {
     this.removing.set(true);
     try {
       await this.news.remove(id);
-      this.selectedNewsId = this.news.items().find((item) => item.id !== id)?.id ?? '';
+      this.selectedNewsId = '';
       this.confirmOpen.set(false);
       this.pendingTitle.set('');
     } finally {

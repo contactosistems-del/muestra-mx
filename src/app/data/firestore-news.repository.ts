@@ -11,6 +11,7 @@ import {
   query,
   serverTimestamp,
   Timestamp,
+  updateDoc,
 } from 'firebase/firestore';
 import { NEWS_SEEDS } from './catalog';
 import { toLocalized } from '../core/i18n/localized';
@@ -61,6 +62,16 @@ export class FirestoreNewsRepository implements NewsRepository {
       publishedAt: serverTimestamp(),
     });
     return created.id;
+  }
+
+  async update(id: string, draft: NewsDraft): Promise<void> {
+    const imageUrl = draft.imageBytes?.length ? jpegToDataUrl(draft.imageBytes) : draft.imageUrl;
+    await updateDoc(doc(this.db, COLLECTION, id), {
+      categoryId: draft.categoryId,
+      title: { es: String(draft.title.es), en: String(draft.title.en || draft.title.es) },
+      body: { es: String(draft.body.es), en: String(draft.body.en || draft.body.es) },
+      imageUrl,
+    });
   }
 
   async remove(id: string): Promise<void> {

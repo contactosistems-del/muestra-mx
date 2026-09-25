@@ -29,6 +29,7 @@ export class PublicShell {
 
   readonly links = [
     { path: '/', key: 'navHome' as const, exact: true },
+    { path: '/graficas', key: 'navCharts' as const, exact: false },
     { path: '/mananera', key: 'navBriefing' as const, exact: false },
     { path: '/entrevista', key: 'navInterviews' as const, exact: false },
     { path: '/nosotros', key: 'navAbout' as const, exact: false },

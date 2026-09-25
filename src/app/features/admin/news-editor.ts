@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { I18nService, type I18nKey } from '../../core/services/i18n.service';
 import { NewsService } from '../../core/services/news.service';
@@ -11,10 +11,10 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
   imports: [FormsModule],
   host: { class: 'notranslate', translate: 'no' },
   template: `
-    <div class="modal-overlay active" (click)="news.editorOpen.set(false)">
+    <div class="modal-overlay active" (click)="close()">
       <div class="modal-box news-box" (click)="$event.stopPropagation()">
-        <button class="btn-close" type="button" (click)="news.editorOpen.set(false)">&times;</button>
-        <h3>{{ i18n.t('newsEditorTitle') }}</h3>
+        <button class="btn-close" type="button" (click)="close()">&times;</button>
+        <h3>{{ editing() ? i18n.t('newsEditTitle') : i18n.t('newsEditorTitle') }}</h3>
         @if (error()) {
           <p class="news-error">{{ error() }}</p>
         }
@@ -34,6 +34,9 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
           <div class="input-group">
             <label>{{ i18n.t('newsImage') }}</label>
             <input type="file" name="image" accept="image/*" (change)="onFile($event)" />
+            @if (editing() && !file) {
+              <p class="hint">{{ i18n.t('newsImageKeep') }}</p>
+            }
             @if (preview()) {
               <img class="preview" [src]="preview()" alt="" />
             }
@@ -43,7 +46,7 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
             <textarea name="body" rows="4" [(ngModel)]="body" required></textarea>
           </div>
           <button class="btn-votar-activo" type="submit" [disabled]="news.busy()">
-            {{ news.busy() ? i18n.t('newsPublishing') : i18n.t('publish') }}
+            {{ news.busy() ? i18n.t('newsPublishing') : (editing() ? i18n.t('newsSave') : i18n.t('publish')) }}
           </button>
         </form>
       </div>
@@ -53,6 +56,7 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
     .news-box { max-width: 550px; padding: 2rem; max-height: 90vh; overflow: auto; }
     .news-box h3 { font-size: 1.2rem; margin-bottom: 1rem; }
     .news-error { background: #FEE2E2; color: #991B1B; padding: .5rem; border-radius: 4px; font-size: .8rem; margin-bottom: .8rem; }
+    .hint { margin-top: .45rem; font-size: .75rem; color: var(--text-muted); }
     .preview { margin-top: .6rem; width: 100%; max-height: 180px; object-fit: cover; border-radius: 8px; }
   `,
 })
@@ -61,6 +65,7 @@ export class NewsEditor {
   readonly news = inject(NewsService);
   readonly error = signal('');
   readonly preview = signal('');
+  readonly editing = signal(false);
   readonly categories: { id: string; key: I18nKey }[] = [
     { id: 'NACIONAL', key: 'catNacional' },
     { id: 'NOTICIAS', key: 'catNoticias' },
@@ -70,7 +75,38 @@ export class NewsEditor {
   categoryId = 'NACIONAL';
   title = '';
   body = '';
-  private file: File | null = null;
+  file: File | null = null;
+  private existingImageUrl = '';
+
+  constructor() {
+    effect(() => {
+      if (!this.news.editorOpen()) return;
+      const id = this.news.editingId();
+      this.error.set('');
+      this.file = null;
+      if (id) {
+        const item = this.news.byId(id);
+        if (!item) return;
+        this.editing.set(true);
+        this.categoryId = item.categoryId;
+        this.title = item.title.es;
+        this.body = item.body.es;
+        this.existingImageUrl = item.imageUrl;
+        this.preview.set(item.imageUrl);
+      } else {
+        this.editing.set(false);
+        this.categoryId = 'NACIONAL';
+        this.title = '';
+        this.body = '';
+        this.existingImageUrl = '';
+        this.preview.set('');
+      }
+    });
+  }
+
+  close(): void {
+    this.news.closeEditor();
+  }
 
   onFile(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -78,7 +114,7 @@ export class NewsEditor {
     this.error.set('');
     if (!file) {
       this.file = null;
-      this.preview.set('');
+      this.preview.set(this.existingImageUrl);
       return;
     }
     if (!file.type.startsWith('image/')) {
@@ -97,6 +133,7 @@ export class NewsEditor {
 
   private publishError(err: unknown): string {
     const message = err instanceof Error ? err.message : '';
+    if (message === 'image-required') return this.i18n.t('newsImageRequired');
     if (message === 'image-too-large') return this.i18n.t('newsImageTooLarge');
     const code = err && typeof err === 'object' && 'code' in err ? String(err.code) : '';
     if (code.includes('permission-denied')) return this.i18n.t('newsPublishDenied');
@@ -106,7 +143,11 @@ export class NewsEditor {
 
   async publish(): Promise<void> {
     this.error.set('');
-    if (!this.file) {
+    if (!this.editing() && !this.file) {
+      this.error.set(this.i18n.t('newsImageRequired'));
+      return;
+    }
+    if (this.editing() && !this.file && !this.existingImageUrl) {
       this.error.set(this.i18n.t('newsImageRequired'));
       return;
     }
@@ -116,11 +157,8 @@ export class NewsEditor {
         title: this.title,
         body: this.body,
         image: this.file,
+        existingImageUrl: this.existingImageUrl,
       });
-      this.title = '';
-      this.body = '';
-      this.file = null;
-      this.preview.set('');
     } catch (err) {
       this.error.set(this.publishError(err));
     }

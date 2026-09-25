@@ -15,6 +15,7 @@ export class NewsService {
   readonly items = signal<NewsItem[]>([]);
   readonly loading = signal(true);
   readonly editorOpen = signal(false);
+  readonly editingId = signal<string | null>(null);
   readonly busy = signal(false);
 
   constructor() {
@@ -25,24 +26,60 @@ export class NewsService {
     inject(DestroyRef).onDestroy(stop);
   }
 
-  async publish(input: { categoryId: string; title: string; body: string; image: File }): Promise<void> {
+  openCreate(): void {
+    this.editingId.set(null);
+    this.editorOpen.set(true);
+  }
+
+  openEdit(id: string): void {
+    if (!id || !this.byId(id)) return;
+    this.editingId.set(id);
+    this.editorOpen.set(true);
+  }
+
+  closeEditor(): void {
+    this.editorOpen.set(false);
+    this.editingId.set(null);
+  }
+
+  async publish(input: {
+    categoryId: string;
+    title: string;
+    body: string;
+    image: File | null;
+    existingImageUrl?: string;
+  }): Promise<void> {
     this.busy.set(true);
     try {
       const title = input.title.trim();
       const body = input.body.trim();
-      const [imageBytes, titleEn, bodyEn] = await Promise.all([
-        this.media.prepareNewsImage(input.image),
+      const editId = this.editingId();
+      const [titleEn, bodyEn] = await Promise.all([
         this.translator.toEnglish(title),
         this.translator.toEnglish(body),
       ]);
-      const id = await this.repo.add({
+      const imageBytes = input.image ? await this.media.prepareNewsImage(input.image) : undefined;
+      const draft = {
         categoryId: input.categoryId,
         title: loc(title, titleEn),
         body: loc(body, bodyEn),
-        imageUrl: '',
+        imageUrl: imageBytes ? '' : (input.existingImageUrl ?? ''),
         imageBytes,
-      });
-      this.editorOpen.set(false);
+      };
+
+      if (editId) {
+        if (!draft.imageUrl && !draft.imageBytes?.length) {
+          throw new Error('image-required');
+        }
+        await this.repo.update(editId, draft);
+        this.closeEditor();
+        await this.router.navigateByUrl(`/noticias/${editId}`);
+        return;
+      }
+
+      if (!input.image) throw new Error('image-required');
+      const id = await this.repo.add(draft);
+      this.closeEditor();
       await this.router.navigateByUrl(`/noticias/${id}`);
     } finally {
       this.busy.set(false);

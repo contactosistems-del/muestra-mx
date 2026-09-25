@@ -51,7 +51,7 @@
         <a class="admin-action-btn btn-admin-monitor visible-admin" routerLink="/admin">
           <i class="fa-solid fa-map-location-dot"></i> {{ i18n.t('monitor') }}
         </a>
-        <button class="admin-action-btn visible-admin" type="button" (click)="news.editorOpen.set(true)">
+        <button class="admin-action-btn visible-admin" type="button" (click)="news.openCreate()">
           <i class="fa-solid fa-plus"></i> {{ i18n.t('publishNews') }}
         </button>
       }

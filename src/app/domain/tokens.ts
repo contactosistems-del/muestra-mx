@@ -14,6 +14,7 @@ import type {
 export interface NewsRepository {
   watch(onChange: (items: NewsItem[]) => void): () => void;
   add(draft: NewsDraft): Promise<string>;
+  update(id: string, draft: NewsDraft): Promise<void>;
   remove(id: string): Promise<void>;
 }
 
