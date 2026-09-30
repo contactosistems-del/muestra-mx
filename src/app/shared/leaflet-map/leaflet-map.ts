@@ -17,6 +17,8 @@ export interface MapMarker {
   label: string;
 }
 
+type LeafletNS = typeof import('leaflet');
+
 @Component({
   selector: 'app-leaflet-map',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -47,6 +49,7 @@ export class LeafletMap {
   private resizeObs?: ResizeObserver;
   private refreshTimers: number[] = [];
   private syncing = false;
+  private L?: LeafletNS;
 
   constructor() {
     afterNextRender(() => void this.init());
@@ -62,10 +65,19 @@ export class LeafletMap {
     });
   }
 
+  private async leaflet(): Promise<LeafletNS> {
+    if (this.L) return this.L;
+    const mod = await import('leaflet');
+    const ns = (mod as { default?: LeafletNS }).default ?? (mod as LeafletNS);
+    this.L = ns;
+    return ns;
+  }
+
   private async init(): Promise<void> {
     const el = this.host().nativeElement;
     const box = el.closest('.map-box') ?? el.parentElement;
-    const L = await import('leaflet');
+    const L = await this.leaflet();
+    if (typeof L.map !== 'function') return;
 
     this.map = L.map(el, {
       scrollWheelZoom: false,
@@ -101,7 +113,7 @@ export class LeafletMap {
     if (!this.map || this.syncing) return;
     this.syncing = true;
     try {
-      const L = await import('leaflet');
+      const L = await this.leaflet();
       this.pins.forEach((pin) => pin.remove());
       const points = this.markers().filter(
         (item) =>

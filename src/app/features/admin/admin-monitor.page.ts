@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, OnDestroy, OnInit, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { I18nService } from '../../core/services/i18n.service';
@@ -67,58 +67,93 @@ type AdminTab = 'results' | 'charts' | 'surveys' | 'content' | 'news';
                 <button type="button" class="ghost" [disabled]="syncing()" (click)="syncResults()">
                   {{ syncing() ? i18n.t('syncingResults') : i18n.t('syncResults') }}
                 </button>
-                <button type="button" class="export" (click)="exportCsv()">{{ i18n.t('export') }}</button>
               </div>
             </div>
 
-            <div class="stats-row">
-              <div class="stat">
-                <span>{{ i18n.t('cloudRecords') }}</span>
-                <strong>{{ votes().length }}</strong>
-              </div>
-              <div class="stat">
-                <span>{{ i18n.t('adminTabSurveys') }}</span>
-                <strong>{{ surveys.adminSurveys().length }}</strong>
-              </div>
-            </div>
             @if (unlockMsg()) {
               <p class="unlock-msg">{{ unlockMsg() }}</p>
             }
 
             <section class="block">
-              <h3>{{ i18n.t('electoralMap') }}</h3>
-              <div class="map-box map-box-wide">
-                <app-leaflet-map [markers]="markers()" [center]="[21.16, -86.85]" [zoom]="6" />
-              </div>
+              <h3>{{ i18n.t('activeSurveys') }}</h3>
+              @if (activeSurveys().length === 0) {
+                <p class="empty">{{ i18n.t('noActiveSurveys') }}</p>
+              } @else {
+                <div class="survey-picker">
+                  @for (survey of activeSurveys(); track survey.id) {
+                    <button
+                      type="button"
+                      class="survey-pick"
+                      [class.active]="selectedSurveyId() === survey.id"
+                      (click)="selectSurvey(survey.id)"
+                    >
+                      <strong>{{ i18n.tx(survey.shortLabel) }}</strong>
+                      <span>{{ voteCount(survey.id) }} {{ i18n.t('surveyVotes') }}</span>
+                    </button>
+                  }
+                </div>
+              }
             </section>
 
-            <section class="block table-block">
-              <h3>{{ i18n.t('cloudRecords') }}</h3>
-              <div class="table-wrap">
-                <table class="monitor-table">
-                  <thead>
-                    <tr>
-                      <th>{{ i18n.t('colDate') }}</th>
-                      <th>{{ i18n.t('colCandidate') }}</th>
-                      <th>{{ i18n.t('colSurvey') }}</th>
-                      <th>{{ i18n.t('colZone') }}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (vote of votes(); track vote.timestamp + vote.deviceId) {
-                      <tr>
-                        <td>{{ vote.fecha }}</td>
-                        <td>{{ vote.opcion }}</td>
-                        <td>{{ vote.encuestaId }}</td>
-                        <td>{{ vote.zona }} / {{ vote.ip }}</td>
-                      </tr>
-                    } @empty {
-                      <tr><td colspan="4" class="empty">{{ i18n.t('noRecords') }}</td></tr>
-                    }
-                  </tbody>
-                </table>
+            @if (selectedSurvey(); as survey) {
+              <div class="stats-row">
+                <div class="stat">
+                  <span>{{ i18n.t('cloudRecords') }}</span>
+                  <strong>{{ selectedVotes().length }}</strong>
+                </div>
+                <div class="stat">
+                  <span>{{ i18n.tx(survey.city) }}</span>
+                  <strong>{{ selectedMarkers().length }}</strong>
+                </div>
               </div>
-            </section>
+
+              <div class="panel-actions survey-export">
+                <button type="button" class="export" (click)="exportCsv()">
+                  {{ i18n.t('exportSurveyCsv') }}
+                </button>
+              </div>
+
+              <section class="block">
+                <h3>{{ i18n.t('electoralMap') }} · {{ i18n.tx(survey.shortLabel) }}</h3>
+                <div class="map-box map-box-wide">
+                  @for (mapId of [survey.id]; track mapId) {
+                    <app-leaflet-map
+                      [markers]="selectedMarkers()"
+                      [center]="[21.16, -86.85]"
+                      [zoom]="6"
+                    />
+                  }
+                </div>
+              </section>
+
+              <section class="block table-block">
+                <h3>{{ i18n.t('cloudRecords') }} · {{ i18n.tx(survey.title) }}</h3>
+                <div class="table-wrap">
+                  <table class="monitor-table">
+                    <thead>
+                      <tr>
+                        <th>{{ i18n.t('colDate') }}</th>
+                        <th>{{ i18n.t('colCandidate') }}</th>
+                        <th>{{ i18n.t('colZone') }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (vote of selectedVotes(); track vote.timestamp + vote.deviceId) {
+                        <tr>
+                          <td>{{ vote.fecha }}</td>
+                          <td>{{ vote.opcion }}</td>
+                          <td>{{ vote.zona }} / {{ vote.ip }}</td>
+                        </tr>
+                      } @empty {
+                        <tr><td colspan="3" class="empty">{{ i18n.t('noRecords') }}</td></tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            } @else if (activeSurveys().length > 0) {
+              <p class="empty">{{ i18n.t('selectSurveyResults') }}</p>
+            }
           </div>
         }
 
@@ -448,6 +483,33 @@ type AdminTab = 'results' | 'charts' | 'surveys' | 'content' | 'news';
       letter-spacing: 0.04em;
       color: var(--text-muted);
     }
+    .survey-picker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+    }
+    .survey-pick {
+      border: 1px solid var(--border-color);
+      background: var(--card-bg);
+      color: var(--text-color);
+      border-radius: 10px;
+      padding: 0.7rem 0.9rem;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.2rem;
+      min-width: min(100%, 160px);
+      text-align: left;
+    }
+    .survey-pick strong { font-size: 0.86rem; font-weight: 900; }
+    .survey-pick span { font-size: 0.72rem; color: var(--text-muted); font-weight: 700; }
+    .survey-pick.active {
+      border-color: var(--brand-red);
+      background: color-mix(in srgb, var(--brand-red) 10%, var(--card-bg));
+      box-shadow: inset 3px 0 0 var(--brand-red);
+    }
+    .survey-export { margin: 0 0 1rem; }
     .map-box {
       height: 360px;
       min-height: 360px;
@@ -621,6 +683,7 @@ export class AdminMonitorPage implements OnInit, OnDestroy {
   readonly surveys = inject(SurveyService);
   readonly tab = signal<AdminTab>('results');
   readonly votes = signal<VoteRecord[]>([]);
+  readonly selectedSurveyId = signal('');
   readonly confirmOpen = signal(false);
   readonly removing = signal(false);
   readonly syncing = signal(false);
@@ -628,13 +691,45 @@ export class AdminMonitorPage implements OnInit, OnDestroy {
   readonly unlockMsg = signal('');
   readonly pendingTitle = signal('');
   selectedNewsId = '';
-  readonly markers = computed(() =>
-    this.votes()
+
+  readonly activeSurveys = computed(() =>
+    this.surveys.adminSurveys().filter((survey) => survey.active),
+  );
+
+  readonly selectedSurvey = computed(() => {
+    const id = this.selectedSurveyId();
+    return this.activeSurveys().find((survey) => survey.id === id) ?? null;
+  });
+
+  readonly selectedVotes = computed(() => {
+    const id = this.selectedSurveyId();
+    if (!id) return [];
+    return this.votes().filter((vote) => vote.encuestaId === id);
+  });
+
+  readonly selectedMarkers = computed(() =>
+    this.selectedVotes()
       .map((vote) => this.toMarker(vote))
       .filter((item): item is { lat: number; lng: number; label: string } => !!item),
   );
 
   private stopAdmin: (() => void) | null = null;
+  private votesKey = '';
+
+  constructor() {
+    effect(() => {
+      const key = this.surveys
+        .adminSurveys()
+        .map((survey) => survey.id)
+        .join('|');
+      if (!key || key === this.votesKey) {
+        untracked(() => this.ensureSurveySelection());
+        return;
+      }
+      this.votesKey = key;
+      untracked(() => void this.reloadVotes());
+    });
+  }
 
   private toMarker(vote: VoteRecord): { lat: number; lng: number; label: string } | null {
     let lat = Number(vote.lat);
@@ -650,13 +745,33 @@ export class AdminMonitorPage implements OnInit, OnDestroy {
     return {
       lat,
       lng,
-      label: `${vote.opcion} · ${vote.encuestaId}`,
+      label: `${vote.opcion} · ${vote.fecha}`,
     };
+  }
+
+  voteCount(surveyId: string): number {
+    return this.votes().filter((vote) => vote.encuestaId === surveyId).length;
+  }
+
+  selectSurvey(id: string): void {
+    this.selectedSurveyId.set(id);
+  }
+
+  private ensureSurveySelection(): void {
+    const active = this.activeSurveys();
+    const current = this.selectedSurveyId();
+    if (current && active.some((survey) => survey.id === current)) return;
+    this.selectedSurveyId.set(active[0]?.id ?? '');
+  }
+
+  private async reloadVotes(): Promise<void> {
+    this.votes.set(await this.surveys.listAll());
+    this.ensureSurveySelection();
   }
 
   async ngOnInit(): Promise<void> {
     this.stopAdmin = this.surveys.watchAdmin();
-    this.votes.set(await this.surveys.listAll());
+    await this.reloadVotes();
   }
 
   ngOnDestroy(): void {
@@ -665,6 +780,7 @@ export class AdminMonitorPage implements OnInit, OnDestroy {
 
   setTab(next: AdminTab): void {
     this.tab.set(next);
+    if (next === 'results') this.ensureSurveySelection();
   }
 
   askRemove(id: string): void {
@@ -707,22 +823,34 @@ export class AdminMonitorPage implements OnInit, OnDestroy {
     try {
       await this.surveys.syncPublicResults();
       this.votes.set(await this.surveys.listAll());
+      this.ensureSurveySelection();
     } finally {
       this.syncing.set(false);
     }
   }
 
   exportCsv(): void {
+    const survey = this.selectedSurvey();
     const rows = [
-      ['fecha', 'opcion', 'encuesta', 'zona', 'ip', 'deviceId'],
-      ...this.votes().map((vote) => [vote.fecha, vote.opcion, vote.encuestaId, vote.zona, vote.ip, vote.deviceId]),
+      ['fecha', 'opcion', 'encuesta', 'zona', 'ip', 'deviceId', 'lat', 'lng'],
+      ...this.selectedVotes().map((vote) => [
+        vote.fecha,
+        vote.opcion,
+        vote.encuestaId,
+        vote.zona,
+        vote.ip,
+        vote.deviceId,
+        vote.lat ?? '',
+        vote.lng ?? '',
+      ]),
     ];
     const csv = rows.map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'votos-muestra.csv';
+    const slug = survey?.id || 'encuesta';
+    a.download = `votos-${slug}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
