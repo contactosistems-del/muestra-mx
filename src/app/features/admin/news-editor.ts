@@ -82,7 +82,7 @@ export class NewsEditor {
   title = '';
   body = '';
   file: File | null = null;
-  private existingImageUrl = '';
+  existingImageUrl = '';
 
   constructor() {
     effect(() => {
