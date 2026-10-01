@@ -19,20 +19,30 @@ import { newsCategoryLabel } from '../../../data/catalog';
             <span class="badge">{{ i18n.tx(content.featured().badge) }}</span>
             <h2>{{ i18n.tx(content.featured().title) }}</h2>
             <p>{{ i18n.tx(content.featured().text) }}</p>
-            <a class="btn-leer" [routerLink]="content.featured().ctaPath">{{ i18n.t('takeSurvey') }}</a>
+            @if (content.featured().ctaPath) {
+              <a class="btn-leer" [routerLink]="content.featured().ctaPath">{{ i18n.t('takeSurvey') }}</a>
+            }
           </div>
         </div>
       </section>
 
       <aside>
         <div class="sidebar-widget sponsor-card">
-          <a [routerLink]="content.sponsor().linkPath" class="sponsor-media">
-            <img [src]="content.sponsor().imageUrl" [alt]="i18n.t('sponsorAlt')" />
-          </a>
+          @if (content.sponsor().linkPath) {
+            <a [routerLink]="content.sponsor().linkPath" class="sponsor-media">
+              <img [src]="content.sponsor().imageUrl" [alt]="i18n.t('sponsorAlt')" />
+            </a>
+          } @else {
+            <div class="sponsor-media">
+              <img [src]="content.sponsor().imageUrl" [alt]="i18n.t('sponsorAlt')" />
+            </div>
+          }
           <div class="sponsor-body">
             <span class="badge">{{ i18n.tx(content.sponsor().badge) }}</span>
             <h5>{{ i18n.tx(content.sponsor().name) }}</h5>
-            <a [routerLink]="content.sponsor().linkPath" class="btn-votar-activo sponsor-cta">{{ i18n.t('seeInterview') }}</a>
+            @if (content.sponsor().linkPath) {
+              <a [routerLink]="content.sponsor().linkPath" class="btn-votar-activo sponsor-cta">{{ i18n.t('seeInterview') }}</a>
+            }
           </div>
         </div>
 

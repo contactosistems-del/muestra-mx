@@ -15,7 +15,6 @@ export const routes: Routes = [
       { path: 'noticias/:id', loadComponent: () => import('./features/public/news/news-detail.page').then((m) => m.NewsDetailPage) },
       { path: 'contacto', loadComponent: () => import('./features/public/contact/contact.page').then((m) => m.ContactPage) },
       { path: 'encuesta/:id', loadComponent: () => import('./features/survey/survey.page').then((m) => m.SurveyPage) },
-      { path: 'encuesta-tulum', redirectTo: 'encuesta/tulum-2027', pathMatch: 'full' },
     ],
   },
   {

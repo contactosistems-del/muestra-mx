@@ -1,6 +1,6 @@
 import { ASSETS } from '../core/constants/assets';
 import { loc } from '../core/i18n/localized';
-import { Interview, LocalizedString, NewsDraft, Office, Survey } from '../domain/models';
+import { Interview, LocalizedString, NewsDraft, Office } from '../domain/models';
 
 export const HERO = {
   badge: loc('Mapa Electoral 2026-2027 // INE', '2026-2027 Electoral Map // INE'),
@@ -77,49 +77,6 @@ export const INTERVIEW: Interview = {
     'Electric mobility is already a real option for many Mexican families.',
   ),
 };
-
-export const SURVEY_SEEDS: Survey[] = [
-  {
-    id: 'playa-2027',
-    active: true,
-    showInNav: true,
-    sortOrder: 10,
-    shortLabel: loc('Playa del Carmen', 'Playa del Carmen'),
-    city: loc('Playa del Carmen, Quintana Roo', 'Playa del Carmen, Quintana Roo'),
-    title: loc('Playa del Carmen 2027', 'Playa del Carmen 2027'),
-    question: loc(
-      '¿Quién crees que deba ser la candidata o el candidato de MORENA VERDE PT para la Presidencia Municipal en 2027?',
-      'Who do you think should be the MORENA VERDE PT nominee for Municipal President in 2027?',
-    ),
-    options: [
-      { id: 'a', label: 'Estefanía Mercado' },
-      { id: 'b', label: 'Mirella Diaz' },
-      { id: 'c', label: 'Orlando Muñoz' },
-      { id: 'd', label: 'Arturo Castro' },
-    ],
-    updatedAt: 0,
-  },
-  {
-    id: 'tulum-2027',
-    active: true,
-    showInNav: true,
-    sortOrder: 20,
-    shortLabel: loc('Tulum 2027', 'Tulum 2027'),
-    city: loc('Tulum, Quintana Roo', 'Tulum, Quintana Roo'),
-    title: loc('Encuesta Tulum 2027', 'Tulum 2027 Survey'),
-    question: loc(
-      '¿A quién prefieres como candidato(a) de Morena en 2027 a la Presidencia Municipal de Tulum, Quintana Roo?',
-      'Whom do you prefer as Morena’s 2027 nominee for Municipal President of Tulum, Quintana Roo?',
-    ),
-    options: [
-      { id: 'a', label: 'Romualda Dzul', imageUrl: ASSETS.images.surveys.tulum.romualda },
-      { id: 'b', label: 'Fili Tah', imageUrl: ASSETS.images.surveys.tulum.fili },
-      { id: 'c', label: 'Jorge Portilla', imageUrl: ASSETS.images.surveys.tulum.jorge },
-      { id: 'd', label: 'Iliana Canul', voteValue: 'Ileana', imageUrl: ASSETS.images.surveys.tulum.iliana },
-    ],
-    updatedAt: 0,
-  },
-];
 
 export const OFFICES: Office[] = [
   {

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, type NgForm } from '@angular/forms';
 import { I18nService, type I18nKey } from '../../core/services/i18n.service';
 import { NewsService } from '../../core/services/news.service';
 
@@ -18,21 +18,21 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
         @if (error()) {
           <p class="news-error">{{ error() }}</p>
         }
-        <form (ngSubmit)="publish()">
+        <form #newsForm="ngForm" (ngSubmit)="publish(newsForm)">
           <div class="input-group">
-            <label>{{ i18n.t('newsCategory') }}</label>
-            <select name="category" [(ngModel)]="categoryId">
+            <label class="req">{{ i18n.t('newsCategory') }}</label>
+            <select name="category" [(ngModel)]="categoryId" required>
               @for (cat of categories; track cat.id) {
                 <option [value]="cat.id">{{ i18n.t(cat.key) }}</option>
               }
             </select>
           </div>
           <div class="input-group">
-            <label>{{ i18n.t('newsTitleField') }}</label>
+            <label class="req">{{ i18n.t('newsTitleField') }}</label>
             <input name="title" [(ngModel)]="title" required />
           </div>
           <div class="input-group">
-            <label>{{ i18n.t('newsImage') }}</label>
+            <label class="req">{{ i18n.t('newsImage') }}</label>
             <input type="file" name="image" accept="image/*" (change)="onFile($event)" />
             @if (editing() && !file) {
               <p class="hint">{{ i18n.t('newsImageKeep') }}</p>
@@ -42,7 +42,7 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
             }
           </div>
           <div class="input-group">
-            <label>{{ i18n.t('newsBody') }}</label>
+            <label class="req">{{ i18n.t('newsBody') }}</label>
             <textarea name="body" rows="4" [(ngModel)]="body" required></textarea>
           </div>
           <button class="btn-votar-activo" type="submit" [disabled]="news.busy()">
@@ -58,6 +58,7 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
     .news-error { background: #FEE2E2; color: #991B1B; padding: .5rem; border-radius: 4px; font-size: .8rem; margin-bottom: .8rem; }
     .hint { margin-top: .45rem; font-size: .75rem; color: var(--text-muted); }
     .preview { margin-top: .6rem; width: 100%; max-height: 180px; object-fit: cover; border-radius: 8px; }
+    label.req::after { content: ' *'; color: var(--brand-red); }
     @media (max-width: 720px) {
       .news-box { padding: 1rem; max-height: 90dvh; }
     }
@@ -144,8 +145,13 @@ export class NewsEditor {
     return detail ? `${this.i18n.t('newsPublishError')} ${detail}` : this.i18n.t('newsPublishError');
   }
 
-  async publish(): Promise<void> {
+  async publish(form: NgForm): Promise<void> {
     this.error.set('');
+    form.control.markAllAsTouched();
+    if (form.invalid || !this.title.trim() || !this.body.trim() || !this.categoryId.trim()) {
+      this.error.set(this.i18n.t('formRequired'));
+      return;
+    }
     if (!this.editing() && !this.file) {
       this.error.set(this.i18n.t('newsImageRequired'));
       return;

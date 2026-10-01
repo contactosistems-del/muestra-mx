@@ -19,14 +19,14 @@ export class ContentService {
     title: HERO.title,
     text: HERO.text,
     imageUrl: ASSETS.images.editorial.mapaIne,
-    ctaPath: '/encuesta/playa-2027',
+    ctaPath: '',
   });
   readonly interview = signal<Interview>(INTERVIEW);
   readonly sponsor = signal<SponsorContent>({
     badge: loc('Patrocinio', 'Sponsor'),
     name: loc('Movilidad Eléctrica Futura', 'Futura Electric Mobility'),
     imageUrl: ASSETS.images.sponsors.futura,
-    linkPath: '/entrevista',
+    linkPath: '',
   });
   readonly busy = signal(false);
 
@@ -48,17 +48,21 @@ export class ContentService {
   }): Promise<void> {
     this.busy.set(true);
     try {
+      if (!input.badge.trim() || !input.title.trim() || !input.text.trim() || !input.ctaPath.trim()) {
+        throw new Error('fields-required');
+      }
       const [badgeEn, titleEn, textEn, imageUrl] = await Promise.all([
         this.translator.toEnglish(input.badge),
         this.translator.toEnglish(input.title),
         this.translator.toEnglish(input.text),
         this.resolveImage(input.image, this.featured().imageUrl),
       ]);
+      if (!imageUrl) throw new Error('image-required');
       await this.repo.saveFeatured({
         badge: loc(input.badge, badgeEn),
         title: loc(input.title, titleEn),
         text: loc(input.text, textEn),
-        ctaPath: input.ctaPath.trim() || '/encuesta/playa-2027',
+        ctaPath: input.ctaPath.trim(),
         imageUrl,
       });
     } finally {
@@ -77,6 +81,16 @@ export class ContentService {
   }): Promise<void> {
     this.busy.set(true);
     try {
+      if (
+        !input.category.trim() ||
+        !input.title.trim() ||
+        !input.interviewee.trim() ||
+        !input.caption.trim() ||
+        !input.intro.trim() ||
+        !input.quote.trim()
+      ) {
+        throw new Error('fields-required');
+      }
       const [categoryEn, titleEn, intervieweeEn, captionEn, introEn, quoteEn, imageUrl] = await Promise.all([
         this.translator.toEnglish(input.category),
         this.translator.toEnglish(input.title),
@@ -86,6 +100,7 @@ export class ContentService {
         this.translator.toEnglish(input.quote),
         this.resolveImage(input.image, this.interview().imageUrl),
       ]);
+      if (!imageUrl) throw new Error('image-required');
       await this.repo.saveInterview({
         category: loc(input.category, categoryEn),
         title: loc(input.title, titleEn),
@@ -108,15 +123,19 @@ export class ContentService {
   }): Promise<void> {
     this.busy.set(true);
     try {
+      if (!input.badge.trim() || !input.name.trim() || !input.linkPath.trim()) {
+        throw new Error('fields-required');
+      }
       const [badgeEn, nameEn, imageUrl] = await Promise.all([
         this.translator.toEnglish(input.badge),
         this.translator.toEnglish(input.name),
         this.resolveImage(input.image, this.sponsor().imageUrl),
       ]);
+      if (!imageUrl) throw new Error('image-required');
       await this.repo.saveSponsor({
         badge: loc(input.badge, badgeEn),
         name: loc(input.name, nameEn),
-        linkPath: input.linkPath.trim() || '/entrevista',
+        linkPath: input.linkPath.trim(),
         imageUrl,
       });
     } finally {

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, type NgForm } from '@angular/forms';
 import { OFFICES } from '../../../data/catalog';
 import { I18nService } from '../../../core/services/i18n.service';
 import { LeafletMap } from '../../../shared/leaflet-map/leaflet-map';
@@ -30,17 +30,17 @@ import { LeafletMap } from '../../../shared/leaflet-map/leaflet-map';
           @if (sent()) {
             <p class="ok">{{ i18n.t('sent') }}</p>
           } @else {
-            <form (ngSubmit)="submit()">
+            <form #contactForm="ngForm" (ngSubmit)="submit(contactForm)">
               <div class="input-group">
-                <label>{{ i18n.t('name') }}</label>
+                <label class="req">{{ i18n.t('name') }}</label>
                 <input name="name" [(ngModel)]="name" required />
               </div>
               <div class="input-group">
-                <label>{{ i18n.t('email') }}</label>
+                <label class="req">{{ i18n.t('email') }}</label>
                 <input type="email" name="email" [(ngModel)]="email" required />
               </div>
               <div class="input-group">
-                <label>{{ i18n.t('message') }}</label>
+                <label class="req">{{ i18n.t('message') }}</label>
                 <textarea name="message" rows="4" [(ngModel)]="message" required></textarea>
               </div>
               <button class="btn-votar-activo" type="submit">{{ i18n.t('send') }}</button>
@@ -62,6 +62,7 @@ import { LeafletMap } from '../../../shared/leaflet-map/leaflet-map';
     }
     .ok { color: #15803D; font-weight: 700; }
     h4 { margin-bottom: 1rem; color: var(--brand-red); font-weight: 900; }
+    label.req::after { content: ' *'; color: var(--brand-red); }
   `,
 })
 export class ContactPage {
@@ -75,7 +76,9 @@ export class ContactPage {
   email = '';
   message = '';
 
-  submit(): void {
+  submit(form: NgForm): void {
+    form.control.markAllAsTouched();
+    if (form.invalid || !this.name.trim() || !this.email.trim() || !this.message.trim()) return;
     this.sent.set(true);
   }
 }

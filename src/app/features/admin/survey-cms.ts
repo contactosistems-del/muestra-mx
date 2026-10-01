@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, type NgForm } from '@angular/forms';
 import { I18nService } from '../../core/services/i18n.service';
 import { SurveyService } from '../../core/services/survey.service';
 import type { Survey, SurveyDraft } from '../../domain/models';
@@ -27,7 +27,6 @@ type OptionForm = {
         </div>
         <div class="head-actions">
           <button type="button" class="ghost" (click)="newSurvey()">{{ i18n.t('surveyNew') }}</button>
-          <button type="button" class="ghost" [disabled]="busy()" (click)="seed()">{{ i18n.t('surveySeed') }}</button>
         </div>
       </div>
 
@@ -47,32 +46,32 @@ type OptionForm = {
           }
         </div>
 
-        <form class="cms-card" (ngSubmit)="save()">
+        <form class="cms-card" #surveyForm="ngForm" (ngSubmit)="save(surveyForm)">
         <h4>{{ editingId() ? i18n.t('surveyEdit') : i18n.t('surveyNew') }}</h4>
         <div class="grid">
           <div class="input-group">
-            <label>{{ i18n.t('surveyId') }}</label>
+            <label class="req">{{ i18n.t('surveyId') }}</label>
             <input name="id" [(ngModel)]="formId" [disabled]="!!editingId()" required placeholder="cancun-2027" />
           </div>
           <div class="input-group">
-            <label>{{ i18n.t('surveyShort') }}</label>
+            <label class="req">{{ i18n.t('surveyShort') }}</label>
             <input name="short" [(ngModel)]="formShort" required />
           </div>
           <div class="input-group">
-            <label>{{ i18n.t('surveyCity') }}</label>
+            <label class="req">{{ i18n.t('surveyCity') }}</label>
             <input name="city" [(ngModel)]="formCity" required />
           </div>
           <div class="input-group">
-            <label>{{ i18n.t('surveySort') }}</label>
-            <input name="sort" type="number" [(ngModel)]="formSort" />
+            <label class="req">{{ i18n.t('surveySort') }}</label>
+            <input name="sort" type="number" [(ngModel)]="formSort" required />
           </div>
         </div>
         <div class="input-group">
-          <label>{{ i18n.t('newsTitleField') }}</label>
+          <label class="req">{{ i18n.t('newsTitleField') }}</label>
           <input name="title" [(ngModel)]="formTitle" required />
         </div>
         <div class="input-group">
-          <label>{{ i18n.t('surveyQuestion') }}</label>
+          <label class="req">{{ i18n.t('surveyQuestion') }}</label>
           <textarea name="question" rows="2" [(ngModel)]="formQuestion" required></textarea>
         </div>
         <div class="flags">
@@ -86,12 +85,21 @@ type OptionForm = {
         </div>
         @for (opt of options; track $index; let i = $index) {
           <div class="opt-row">
-            <input [name]="'label' + i" [(ngModel)]="opt.label" [placeholder]="i18n.t('surveyCandidateName')" required />
-            <input [name]="'vote' + i" [(ngModel)]="opt.voteValue" [placeholder]="i18n.t('surveyVoteValue')" />
-            <input type="file" accept="image/*" (change)="onOptionFile($event, i)" />
-            @if (opt.preview) {
-              <img [src]="opt.preview" alt="" />
-            }
+            <div class="input-group">
+              <label class="req">{{ i18n.t('surveyCandidateName') }}</label>
+              <input [name]="'label' + i" [(ngModel)]="opt.label" required />
+            </div>
+            <div class="input-group">
+              <label class="req">{{ i18n.t('surveyVoteValue') }}</label>
+              <input [name]="'vote' + i" [(ngModel)]="opt.voteValue" required />
+            </div>
+            <div class="input-group">
+              <label class="req">{{ i18n.t('surveyCandidatePhoto') }}</label>
+              <input type="file" accept="image/*" (change)="onOptionFile($event, i)" />
+              @if (opt.preview) {
+                <img [src]="opt.preview" alt="" />
+              }
+            </div>
             <button type="button" class="danger" (click)="removeOption(i)" [disabled]="options.length <= 2">×</button>
           </div>
         }
@@ -127,11 +135,12 @@ type OptionForm = {
     .flags { display: flex; gap: 1rem; flex-wrap: wrap; margin: .6rem 0 1rem; font-size: .82rem; font-weight: 700; }
     .opts-head { display: flex; justify-content: space-between; align-items: center; margin: .5rem 0; flex-wrap: wrap; gap: .5rem; }
     .opts-head h5 { font-size: .82rem; font-weight: 900; margin: 0; }
-    .opt-row { display: grid; grid-template-columns: 1fr; gap: .45rem; align-items: center; margin-bottom: .55rem; }
+    .opt-row { display: grid; grid-template-columns: 1fr; gap: .45rem; align-items: end; margin-bottom: .75rem; padding-bottom: .75rem; border-bottom: 1px solid var(--border-color); }
     @media (min-width: 992px) {
-      .opt-row { grid-template-columns: 1.4fr 1fr auto auto auto; }
+      .opt-row { grid-template-columns: 1.2fr 1fr 1fr auto; }
     }
-    .opt-row img { width: 42px; height: 42px; object-fit: cover; border-radius: 6px; }
+    .opt-row img { width: 42px; height: 42px; object-fit: cover; border-radius: 6px; margin-top: .35rem; }
+    label.req::after { content: ' *'; color: var(--brand-red); }
     .ghost, .danger { border: none; padding: .45rem .8rem; border-radius: 6px; font-weight: 800; cursor: pointer; color: #FFF; font-size: .75rem; }
     .ghost { background: #64748B; }
     .danger { background: #EF4444; }
@@ -210,10 +219,50 @@ export class SurveyCms {
     current.preview = file ? URL.createObjectURL(file) : current.imageUrl;
   }
 
-  async save(): Promise<void> {
-    this.busy.set(true);
+  private fail(message: string): void {
+    this.messageError.set(true);
+    this.message.set(message);
+  }
+
+  private validateForm(form: NgForm): boolean {
+    form.control.markAllAsTouched();
+    if (form.invalid) {
+      this.fail(this.i18n.t('formRequired'));
+      return false;
+    }
+    if (
+      !this.formId.trim() ||
+      !this.formShort.trim() ||
+      !this.formCity.trim() ||
+      !this.formTitle.trim() ||
+      !this.formQuestion.trim() ||
+      this.formSort === null ||
+      this.formSort === undefined ||
+      Number.isNaN(Number(this.formSort))
+    ) {
+      this.fail(this.i18n.t('formRequired'));
+      return false;
+    }
+    const ready = this.options.filter(
+      (opt) => opt.label.trim() && opt.voteValue.trim() && (opt.file || opt.imageUrl.trim()),
+    );
+    if (ready.length < 2) {
+      this.fail(this.i18n.t('surveyNeedOptions'));
+      return false;
+    }
+    if (this.options.some((opt) => !opt.label.trim() || !opt.voteValue.trim() || !(opt.file || opt.imageUrl.trim()))) {
+      this.fail(this.i18n.t('surveyNeedCandidateFields'));
+      return false;
+    }
+    return true;
+  }
+
+  async save(form: NgForm): Promise<void> {
     this.message.set('');
     this.messageError.set(false);
+    if (!this.validateForm(form)) return;
+
+    this.busy.set(true);
     try {
       const draft: SurveyDraft = {
         id: this.formId,
@@ -246,7 +295,8 @@ export class SurveyCms {
     } catch (err) {
       this.messageError.set(true);
       const msg = err instanceof Error ? err.message : '';
-      if (msg === 'need-options') this.message.set(this.i18n.t('surveyNeedOptions'));
+      if (msg === 'need-options' || msg === 'need-candidate-fields') this.message.set(this.i18n.t('surveyNeedCandidateFields'));
+      else if (msg === 'fields-required') this.message.set(this.i18n.t('formRequired'));
       else if (msg === 'invalid-id') this.message.set(this.i18n.t('surveyInvalidId'));
       else {
         const code = err && typeof err === 'object' && 'code' in err ? String(err.code) : '';
@@ -265,21 +315,6 @@ export class SurveyCms {
       await this.surveys.removeSurvey(id);
       this.newSurvey();
       this.message.set(this.i18n.t('cmsSaved'));
-    } catch {
-      this.messageError.set(true);
-      this.message.set(this.i18n.t('cmsError'));
-    } finally {
-      this.busy.set(false);
-    }
-  }
-
-  async seed(): Promise<void> {
-    this.busy.set(true);
-    this.message.set('');
-    this.messageError.set(false);
-    try {
-      await this.surveys.seedDefaults();
-      this.message.set(this.i18n.t('surveySeeded'));
     } catch {
       this.messageError.set(true);
       this.message.set(this.i18n.t('cmsError'));

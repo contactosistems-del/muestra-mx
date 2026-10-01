@@ -45,10 +45,6 @@ export class FirestoreSurveyRepository implements SurveyRepository {
     await deleteDoc(doc(this.db, COLLECTION, id));
   }
 
-  async seed(items: Survey[]): Promise<void> {
-    await Promise.all(items.map((item) => this.save({ ...item, updatedAt: Date.now() })));
-  }
-
   private toSurvey(id: string, data: Record<string, unknown>): Survey {
     const rawOptions = Array.isArray(data['options']) ? data['options'] : [];
     const options: SurveyOption[] = rawOptions

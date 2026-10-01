@@ -172,32 +172,30 @@ type AdminTab = 'results' | 'charts' | 'surveys' | 'content' | 'news';
             </div>
 
             <div class="results-list results-list-full">
-              @for (survey of surveys.adminSurveys(); track survey.id) {
-                @if (surveys.resultById(survey.id); as result) {
-                  <article class="result-item">
-                    <div class="result-item-head">
-                      <strong>{{ i18n.tx(survey.title) }}</strong>
-                      <span>{{ result.total }} {{ i18n.t('totalVotes') }}</span>
-                    </div>
-                    @if (result.total === 0) {
-                      <p class="empty">{{ i18n.t('noVotesYet') }}</p>
-                    } @else {
-                      <ul class="admin-bars">
-                        @for (opt of result.options; track opt.label) {
-                          <li>
-                            <div class="bar-meta">
-                              <span>{{ opt.label }}</span>
-                              <strong>{{ opt.percent }}% · {{ opt.count }}</strong>
-                            </div>
-                            <div class="bar-track">
-                              <div class="bar-fill" [style.width.%]="opt.percent"></div>
-                            </div>
-                          </li>
-                        }
-                      </ul>
-                    }
-                  </article>
-                }
+              @for (row of surveys.adminResults(); track row.survey.id) {
+                <article class="result-item">
+                  <div class="result-item-head">
+                    <strong>{{ i18n.tx(row.survey.title) }}</strong>
+                    <span>{{ row.result.total }} {{ i18n.t('totalVotes') }}</span>
+                  </div>
+                  @if (row.result.total === 0) {
+                    <p class="empty">{{ i18n.t('noVotesYet') }}</p>
+                  } @else {
+                    <ul class="admin-bars">
+                      @for (opt of row.result.options; track opt.label) {
+                        <li>
+                          <div class="bar-meta">
+                            <span>{{ opt.label }}</span>
+                            <strong>{{ opt.percent }}% · {{ opt.count }}</strong>
+                          </div>
+                          <div class="bar-track">
+                            <div class="bar-fill" [style.width.%]="opt.percent"></div>
+                          </div>
+                        </li>
+                      }
+                    </ul>
+                  }
+                </article>
               } @empty {
                 <p class="empty">{{ i18n.t('surveyEmpty') }}</p>
               }
@@ -772,6 +770,11 @@ export class AdminMonitorPage implements OnInit, OnDestroy {
   async ngOnInit(): Promise<void> {
     this.stopAdmin = this.surveys.watchAdmin();
     await this.reloadVotes();
+    try {
+      await this.surveys.syncPublicResults();
+    } catch {
+      /* los votos del panel ya cargaron; el público se alinea en el siguiente intento */
+    }
   }
 
   ngOnDestroy(): void {
