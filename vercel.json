@@ -2,20 +2,6 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist/muestra-app/browser",
   "rewrites": [
-    {
-      "source": "/encuesta/:id",
-      "has": [
-        {
-          "type": "header",
-          "key": "user-agent",
-          "value": "(?i).*(meta-externalagent|meta-externalfetcher|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|whatsapp|telegrambot|discordbot|pinterest|googlebot|bingbot|applebot).*"
-        }
-      ],
-      "destination": "/api/og-encuesta?id=:id"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
