@@ -36,7 +36,11 @@ import { I18nService } from '../../core/services/i18n.service';
           </div>
           <div class="input-group">
             <label class="req">{{ i18n.t('newsImage') }}</label>
-            <input type="file" accept="image/*" (change)="onFeaturedFile($event)" />
+            <label class="file-field">
+              <input type="file" accept="image/*" (change)="onFeaturedFile($event)" />
+              <span class="file-btn">{{ i18n.t('chooseFile') }}</span>
+              <span class="file-name">{{ featuredFileName() || (featuredHasImage() ? i18n.t('newsImageKeep') : i18n.t('noFileSelected')) }}</span>
+            </label>
             @if (featuredPreview()) {
               <img class="preview" [src]="featuredPreview()" alt="" />
             }
@@ -60,7 +64,11 @@ import { I18nService } from '../../core/services/i18n.service';
           </div>
           <div class="input-group">
             <label class="req">{{ i18n.t('newsImage') }}</label>
-            <input type="file" accept="image/*" (change)="onSponsorFile($event)" />
+            <label class="file-field">
+              <input type="file" accept="image/*" (change)="onSponsorFile($event)" />
+              <span class="file-btn">{{ i18n.t('chooseFile') }}</span>
+              <span class="file-name">{{ sponsorFileName() || (sponsorHasImage() ? i18n.t('newsImageKeep') : i18n.t('noFileSelected')) }}</span>
+            </label>
             @if (sponsorPreview()) {
               <img class="preview" [src]="sponsorPreview()" alt="" />
             }
@@ -96,7 +104,11 @@ import { I18nService } from '../../core/services/i18n.service';
           </div>
           <div class="input-group">
             <label class="req">{{ i18n.t('newsImage') }}</label>
-            <input type="file" accept="image/*" (change)="onInterviewFile($event)" />
+            <label class="file-field">
+              <input type="file" accept="image/*" (change)="onInterviewFile($event)" />
+              <span class="file-btn">{{ i18n.t('chooseFile') }}</span>
+              <span class="file-name">{{ interviewFileName() || (interviewHasImage() ? i18n.t('newsImageKeep') : i18n.t('noFileSelected')) }}</span>
+            </label>
             @if (interviewPreview()) {
               <img class="preview" [src]="interviewPreview()" alt="" />
             }
@@ -128,19 +140,23 @@ export class ContentCms {
   readonly featuredPreview = signal('');
   readonly sponsorPreview = signal('');
   readonly interviewPreview = signal('');
+  readonly featuredFileName = signal('');
+  readonly sponsorFileName = signal('');
+  readonly interviewFileName = signal('');
+  readonly featuredHasImage = signal(false);
+  readonly sponsorHasImage = signal(false);
+  readonly interviewHasImage = signal(false);
 
   featuredBadge = '';
   featuredTitle = '';
   featuredText = '';
   featuredCta = '';
   private featuredFile: File | null = null;
-  private featuredHasImage = false;
 
   sponsorBadge = '';
   sponsorName = '';
   sponsorLink = '';
   private sponsorFile: File | null = null;
-  private sponsorHasImage = false;
 
   interviewCategory = '';
   interviewTitle = '';
@@ -149,7 +165,6 @@ export class ContentCms {
   interviewIntro = '';
   interviewQuote = '';
   private interviewFile: File | null = null;
-  private interviewHasImage = false;
 
   constructor() {
     const featured = this.content.featured();
@@ -158,14 +173,14 @@ export class ContentCms {
     this.featuredText = featured.text.es;
     this.featuredCta = featured.ctaPath;
     this.featuredPreview.set(featured.imageUrl);
-    this.featuredHasImage = !!featured.imageUrl;
+    this.featuredHasImage.set(!!featured.imageUrl);
 
     const sponsor = this.content.sponsor();
     this.sponsorBadge = sponsor.badge.es;
     this.sponsorName = sponsor.name.es;
     this.sponsorLink = sponsor.linkPath;
     this.sponsorPreview.set(sponsor.imageUrl);
-    this.sponsorHasImage = !!sponsor.imageUrl;
+    this.sponsorHasImage.set(!!sponsor.imageUrl);
 
     const interview = this.content.interview();
     this.interviewCategory = interview.category.es;
@@ -175,35 +190,38 @@ export class ContentCms {
     this.interviewIntro = interview.intro.es;
     this.interviewQuote = interview.quote.es;
     this.interviewPreview.set(interview.imageUrl);
-    this.interviewHasImage = !!interview.imageUrl;
+    this.interviewHasImage.set(!!interview.imageUrl);
   }
 
   onFeaturedFile(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
     this.featuredFile = file;
+    this.featuredFileName.set(file?.name ?? '');
     this.featuredPreview.set(file ? URL.createObjectURL(file) : this.content.featured().imageUrl);
-    this.featuredHasImage = !!(file || this.content.featured().imageUrl);
+    this.featuredHasImage.set(!!(file || this.content.featured().imageUrl));
   }
 
   onSponsorFile(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
     this.sponsorFile = file;
+    this.sponsorFileName.set(file?.name ?? '');
     this.sponsorPreview.set(file ? URL.createObjectURL(file) : this.content.sponsor().imageUrl);
-    this.sponsorHasImage = !!(file || this.content.sponsor().imageUrl);
+    this.sponsorHasImage.set(!!(file || this.content.sponsor().imageUrl));
   }
 
   onInterviewFile(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
     this.interviewFile = file;
+    this.interviewFileName.set(file?.name ?? '');
     this.interviewPreview.set(file ? URL.createObjectURL(file) : this.content.interview().imageUrl);
-    this.interviewHasImage = !!(file || this.content.interview().imageUrl);
+    this.interviewHasImage.set(!!(file || this.content.interview().imageUrl));
   }
 
   async saveFeatured(form: NgForm): Promise<void> {
     if (
       !this.guardForm(
         form,
-        this.featuredHasImage || !!this.featuredFile,
+        this.featuredHasImage() || !!this.featuredFile,
         !!(this.featuredBadge.trim() && this.featuredTitle.trim() && this.featuredText.trim() && this.featuredCta.trim()),
       )
     ) {
@@ -218,7 +236,8 @@ export class ContentCms {
         image: this.featuredFile,
       });
       this.featuredFile = null;
-      this.featuredHasImage = true;
+      this.featuredFileName.set('');
+      this.featuredHasImage.set(true);
     });
   }
 
@@ -226,7 +245,7 @@ export class ContentCms {
     if (
       !this.guardForm(
         form,
-        this.sponsorHasImage || !!this.sponsorFile,
+        this.sponsorHasImage() || !!this.sponsorFile,
         !!(this.sponsorBadge.trim() && this.sponsorName.trim() && this.sponsorLink.trim()),
       )
     ) {
@@ -240,7 +259,8 @@ export class ContentCms {
         image: this.sponsorFile,
       });
       this.sponsorFile = null;
-      this.sponsorHasImage = true;
+      this.sponsorFileName.set('');
+      this.sponsorHasImage.set(true);
     });
   }
 
@@ -248,7 +268,7 @@ export class ContentCms {
     if (
       !this.guardForm(
         form,
-        this.interviewHasImage || !!this.interviewFile,
+        this.interviewHasImage() || !!this.interviewFile,
         !!(
           this.interviewCategory.trim() &&
           this.interviewTitle.trim() &&
@@ -272,7 +292,8 @@ export class ContentCms {
         image: this.interviewFile,
       });
       this.interviewFile = null;
-      this.interviewHasImage = true;
+      this.interviewFileName.set('');
+      this.interviewHasImage.set(true);
     });
   }
 

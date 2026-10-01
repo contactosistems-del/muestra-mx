@@ -33,10 +33,11 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
           </div>
           <div class="input-group">
             <label class="req">{{ i18n.t('newsImage') }}</label>
-            <input type="file" name="image" accept="image/*" (change)="onFile($event)" />
-            @if (editing() && !file) {
-              <p class="hint">{{ i18n.t('newsImageKeep') }}</p>
-            }
+            <label class="file-field">
+              <input type="file" name="image" accept="image/*" (change)="onFile($event)" />
+              <span class="file-btn">{{ i18n.t('chooseFile') }}</span>
+              <span class="file-name">{{ fileName() || (existingImageUrl ? i18n.t('newsImageKeep') : i18n.t('noFileSelected')) }}</span>
+            </label>
             @if (preview()) {
               <img class="preview" [src]="preview()" alt="" />
             }
@@ -69,6 +70,7 @@ export class NewsEditor {
   readonly news = inject(NewsService);
   readonly error = signal('');
   readonly preview = signal('');
+  readonly fileName = signal('');
   readonly editing = signal(false);
   readonly categories: { id: string; key: I18nKey }[] = [
     { id: 'NACIONAL', key: 'catNacional' },
@@ -80,7 +82,7 @@ export class NewsEditor {
   title = '';
   body = '';
   file: File | null = null;
-  private existingImageUrl = '';
+  existingImageUrl = '';
 
   constructor() {
     effect(() => {
@@ -88,6 +90,7 @@ export class NewsEditor {
       const id = this.news.editingId();
       this.error.set('');
       this.file = null;
+      this.fileName.set('');
       if (id) {
         const item = this.news.byId(id);
         if (!item) return;
@@ -118,6 +121,7 @@ export class NewsEditor {
     this.error.set('');
     if (!file) {
       this.file = null;
+      this.fileName.set('');
       this.preview.set(this.existingImageUrl);
       return;
     }
@@ -132,6 +136,7 @@ export class NewsEditor {
       return;
     }
     this.file = file;
+    this.fileName.set(file.name);
     this.preview.set(URL.createObjectURL(file));
   }
 

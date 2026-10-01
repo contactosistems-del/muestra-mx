@@ -12,6 +12,7 @@ type OptionForm = {
   imageUrl: string;
   preview: string;
   file: File | null;
+  fileName: string;
 };
 
 @Component({
@@ -95,7 +96,11 @@ type OptionForm = {
             </div>
             <div class="input-group">
               <label class="req">{{ i18n.t('surveyCandidatePhoto') }}</label>
-              <input type="file" accept="image/*" (change)="onOptionFile($event, i)" />
+              <label class="file-field">
+                <input type="file" accept="image/*" (change)="onOptionFile($event, i)" />
+                <span class="file-btn">{{ i18n.t('chooseFile') }}</span>
+                <span class="file-name">{{ opt.fileName || (opt.imageUrl ? i18n.t('newsImageKeep') : i18n.t('noFileSelected')) }}</span>
+              </label>
               @if (opt.preview) {
                 <img [src]="opt.preview" alt="" />
               }
@@ -137,7 +142,7 @@ type OptionForm = {
     .opts-head h5 { font-size: .82rem; font-weight: 900; margin: 0; }
     .opt-row { display: grid; grid-template-columns: 1fr; gap: .45rem; align-items: end; margin-bottom: .75rem; padding-bottom: .75rem; border-bottom: 1px solid var(--border-color); }
     @media (min-width: 992px) {
-      .opt-row { grid-template-columns: 1.2fr 1fr 1fr auto; }
+      .opt-row { grid-template-columns: 1.2fr 1fr minmax(12rem, 1.4fr) auto; }
     }
     .opt-row img { width: 42px; height: 42px; object-fit: cover; border-radius: 6px; margin-top: .35rem; }
     label.req::after { content: ' *'; color: var(--brand-red); }
@@ -196,6 +201,7 @@ export class SurveyCms {
       imageUrl: opt.imageUrl ?? '',
       preview: opt.imageUrl ?? '',
       file: null,
+      fileName: '',
     }));
     if (this.options.length < 2) {
       this.options.push(this.blankOption(`opt-${this.options.length + 1}`));
@@ -216,6 +222,7 @@ export class SurveyCms {
     const current = this.options[index];
     if (!current) return;
     current.file = file;
+    current.fileName = file?.name ?? '';
     current.preview = file ? URL.createObjectURL(file) : current.imageUrl;
   }
 
@@ -324,6 +331,6 @@ export class SurveyCms {
   }
 
   private blankOption(id: string): OptionForm {
-    return { id, label: '', voteValue: '', aliases: [], imageUrl: '', preview: '', file: null };
+    return { id, label: '', voteValue: '', aliases: [], imageUrl: '', preview: '', file: null, fileName: '' };
   }
 }
