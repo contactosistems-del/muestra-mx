@@ -12,7 +12,12 @@ import { I18nService } from '../../core/services/i18n.service';
       <h3>{{ i18n.t('cmsTitle') }}</h3>
       <p class="cms-lead">{{ i18n.t('cmsLead') }}</p>
       @if (message()) {
-        <p class="cms-msg" [class.err]="messageError()">{{ message() }}</p>
+        <div class="cms-alert-overlay" (click)="clearMessage()">
+          <div class="cms-alert-box" [class.err]="messageError()" (click)="$event.stopPropagation()" role="alertdialog" aria-modal="true">
+            <p class="cms-alert-text">{{ message() }}</p>
+            <button type="button" class="cms-alert-btn" (click)="clearMessage()">{{ i18n.t('alertOk') }}</button>
+          </div>
+        </div>
       }
 
       <div class="cms-grid">
@@ -122,8 +127,6 @@ import { I18nService } from '../../core/services/i18n.service';
     .cms-block { margin: 0; border: none; padding: 0; }
     .cms-block > h3 { margin: 0 0 .3rem; font-size: 1.05rem; font-weight: 900; }
     .cms-lead { color: var(--text-muted); font-size: .84rem; margin: 0 0 1rem; max-width: 42rem; line-height: 1.4; }
-    .cms-msg { padding: .55rem .75rem; border-radius: 6px; font-size: .8rem; font-weight: 700; margin-bottom: 1rem; background: #DCFCE7; color: #166534; }
-    .cms-msg.err { background: #FEE2E2; color: #991B1B; }
     .cms-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 1rem; }
     .cms-card { background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 10px; padding: 1rem; }
     .cms-card.wide { grid-column: 1 / -1; }
@@ -310,6 +313,11 @@ export class ContentCms {
       return false;
     }
     return true;
+  }
+
+  clearMessage(): void {
+    this.message.set('');
+    this.messageError.set(false);
   }
 
   private async run(action: () => Promise<void>): Promise<void> {

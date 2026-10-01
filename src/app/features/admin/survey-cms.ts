@@ -32,7 +32,12 @@ type OptionForm = {
       </div>
 
       @if (message()) {
-        <p class="cms-msg" [class.err]="messageError()">{{ message() }}</p>
+        <div class="cms-alert-overlay" (click)="clearMessage()">
+          <div class="cms-alert-box" [class.err]="messageError()" (click)="$event.stopPropagation()" role="alertdialog" aria-modal="true">
+            <p class="cms-alert-text">{{ message() }}</p>
+            <button type="button" class="cms-alert-btn" (click)="clearMessage()">{{ i18n.t('alertOk') }}</button>
+          </div>
+        </div>
       }
 
       <div class="layout">
@@ -125,8 +130,6 @@ type OptionForm = {
     .head h3 { margin: 0 0 .3rem; font-size: 1.05rem; font-weight: 900; }
     .head-actions { display: flex; gap: .5rem; }
     .cms-lead { color: var(--text-muted); font-size: .84rem; margin: 0; max-width: 40rem; line-height: 1.4; }
-    .cms-msg { padding: .55rem .75rem; border-radius: 6px; font-size: .8rem; font-weight: 700; margin-bottom: 1rem; background: #DCFCE7; color: #166534; }
-    .cms-msg.err { background: #FEE2E2; color: #991B1B; }
     .layout { display: grid; grid-template-columns: 1fr; gap: 1rem; }
     @media (min-width: 992px) { .layout { grid-template-columns: .9fr 1.1fr; } }
     .list { display: flex; flex-direction: column; gap: .45rem; max-height: 420px; overflow: auto; }
@@ -229,6 +232,11 @@ export class SurveyCms {
   private fail(message: string): void {
     this.messageError.set(true);
     this.message.set(message);
+  }
+
+  clearMessage(): void {
+    this.message.set('');
+    this.messageError.set(false);
   }
 
   private validateForm(form: NgForm): boolean {
