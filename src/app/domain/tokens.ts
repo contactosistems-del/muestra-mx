@@ -38,7 +38,6 @@ export interface SurveyRepository {
   watchAll(onChange: (items: Survey[]) => void): () => void;
   save(survey: Survey): Promise<void>;
   remove(id: string): Promise<void>;
-  seed(items: Survey[]): Promise<void>;
 }
 
 export interface ContentRepository {

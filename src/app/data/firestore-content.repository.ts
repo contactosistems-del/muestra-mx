@@ -13,14 +13,14 @@ const FEATURED_DEFAULT: FeaturedContent = {
   title: HERO.title,
   text: HERO.text,
   imageUrl: ASSETS.images.editorial.mapaIne,
-  ctaPath: '/encuesta/playa-2027',
+  ctaPath: '',
 };
 
 const SPONSOR_DEFAULT: SponsorContent = {
   badge: loc('Patrocinio', 'Sponsor'),
   name: loc('Movilidad Eléctrica Futura', 'Futura Electric Mobility'),
   imageUrl: ASSETS.images.sponsors.futura,
-  linkPath: '/entrevista',
+  linkPath: '',
 };
 
 @Injectable()
@@ -80,7 +80,7 @@ export class FirestoreContentRepository implements ContentRepository {
       title: toLocalized(data['title'], FEATURED_DEFAULT.title.es),
       text: toLocalized(data['text'], FEATURED_DEFAULT.text.es),
       imageUrl: String(data['imageUrl'] || FEATURED_DEFAULT.imageUrl),
-      ctaPath: String(data['ctaPath'] || FEATURED_DEFAULT.ctaPath),
+      ctaPath: String(data['ctaPath'] ?? '').trim(),
     };
   }
 
@@ -101,7 +101,7 @@ export class FirestoreContentRepository implements ContentRepository {
       badge: toLocalized(data['badge'], SPONSOR_DEFAULT.badge.es),
       name: toLocalized(data['name'], SPONSOR_DEFAULT.name.es),
       imageUrl: String(data['imageUrl'] || SPONSOR_DEFAULT.imageUrl),
-      linkPath: String(data['linkPath'] || SPONSOR_DEFAULT.linkPath),
+      linkPath: String(data['linkPath'] ?? '').trim(),
     };
   }
 }

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, output, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, type NgForm } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { I18nService } from '../../core/services/i18n.service';
 
@@ -17,13 +17,13 @@ import { I18nService } from '../../core/services/i18n.service';
         @if (error()) {
           <div class="login-error">{{ error() }}</div>
         }
-        <form (ngSubmit)="submit()">
+        <form #loginForm="ngForm" (ngSubmit)="submit(loginForm)">
           <div class="input-group">
-            <label>{{ i18n.t('email') }}</label>
+            <label class="req">{{ i18n.t('email') }}</label>
             <input type="email" name="email" [(ngModel)]="email" autocomplete="username" required />
           </div>
           <div class="input-group">
-            <label>{{ i18n.t('password') }}</label>
+            <label class="req">{{ i18n.t('password') }}</label>
             <input type="password" name="password" [(ngModel)]="password" autocomplete="current-password" required />
           </div>
           <button class="btn-votar-activo" type="submit" [disabled]="auth.busy()">
@@ -38,6 +38,7 @@ import { I18nService } from '../../core/services/i18n.service';
     .login-box h3 { font-size: 1.2rem; margin-bottom: .35rem; }
     .login-hint { font-size: .78rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.4; }
     .login-error { background: #FEE2E2; color: #991B1B; padding: .5rem; border-radius: 4px; font-size: .75rem; margin-bottom: .8rem; }
+    label.req::after { content: ' *'; color: var(--brand-red); }
     @media (max-width: 480px) {
       .login-box { padding: 1.25rem; }
     }
@@ -51,8 +52,13 @@ export class LoginModal {
   email = '';
   password = '';
 
-  async submit(): Promise<void> {
+  async submit(form: NgForm): Promise<void> {
     this.error.set('');
+    form.control.markAllAsTouched();
+    if (form.invalid || !this.email.trim() || !this.password.trim()) {
+      this.error.set(this.i18n.t('formRequired'));
+      return;
+    }
     const result = await this.auth.login(this.email, this.password);
     if (result === 'ok') {
       this.password = '';

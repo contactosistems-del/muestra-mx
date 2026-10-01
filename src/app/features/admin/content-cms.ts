@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, type NgForm } from '@angular/forms';
 import { ContentService } from '../../core/services/content.service';
 import { I18nService } from '../../core/services/i18n.service';
 
@@ -16,26 +16,26 @@ import { I18nService } from '../../core/services/i18n.service';
       }
 
       <div class="cms-grid">
-        <form class="cms-card" (ngSubmit)="saveFeatured()">
+        <form class="cms-card" #featuredForm="ngForm" (ngSubmit)="saveFeatured(featuredForm)">
           <h4>{{ i18n.t('cmsFeatured') }}</h4>
           <div class="input-group">
-            <label>{{ i18n.t('newsCategory') }} / badge</label>
+            <label class="req">{{ i18n.t('newsCategory') }} / badge</label>
             <input name="fBadge" [(ngModel)]="featuredBadge" required />
           </div>
           <div class="input-group">
-            <label>{{ i18n.t('newsTitleField') }}</label>
+            <label class="req">{{ i18n.t('newsTitleField') }}</label>
             <input name="fTitle" [(ngModel)]="featuredTitle" required />
           </div>
           <div class="input-group">
-            <label>{{ i18n.t('newsBody') }}</label>
+            <label class="req">{{ i18n.t('newsBody') }}</label>
             <textarea name="fText" rows="3" [(ngModel)]="featuredText" required></textarea>
           </div>
           <div class="input-group">
-            <label>{{ i18n.t('cmsCtaPath') }}</label>
-            <input name="fCta" [(ngModel)]="featuredCta" placeholder="/encuesta/playa-2027" />
+            <label class="req">{{ i18n.t('cmsCtaPath') }}</label>
+            <input name="fCta" [(ngModel)]="featuredCta" required placeholder="/encuesta/tu-id" />
           </div>
           <div class="input-group">
-            <label>{{ i18n.t('newsImage') }}</label>
+            <label class="req">{{ i18n.t('newsImage') }}</label>
             <input type="file" accept="image/*" (change)="onFeaturedFile($event)" />
             @if (featuredPreview()) {
               <img class="preview" [src]="featuredPreview()" alt="" />
@@ -44,22 +44,22 @@ import { I18nService } from '../../core/services/i18n.service';
           <button class="btn-votar-activo" type="submit" [disabled]="content.busy()">{{ i18n.t('cmsSave') }}</button>
         </form>
 
-        <form class="cms-card" (ngSubmit)="saveSponsor()">
+        <form class="cms-card" #sponsorForm="ngForm" (ngSubmit)="saveSponsor(sponsorForm)">
           <h4>{{ i18n.t('cmsSponsor') }}</h4>
           <div class="input-group">
-            <label>{{ i18n.t('sponsor') }}</label>
+            <label class="req">{{ i18n.t('sponsor') }}</label>
             <input name="sBadge" [(ngModel)]="sponsorBadge" required />
           </div>
           <div class="input-group">
-            <label>{{ i18n.t('sponsorName') }}</label>
+            <label class="req">{{ i18n.t('sponsorName') }}</label>
             <input name="sName" [(ngModel)]="sponsorName" required />
           </div>
           <div class="input-group">
-            <label>{{ i18n.t('cmsLinkPath') }}</label>
-            <input name="sLink" [(ngModel)]="sponsorLink" placeholder="/entrevista" />
+            <label class="req">{{ i18n.t('cmsLinkPath') }}</label>
+            <input name="sLink" [(ngModel)]="sponsorLink" required placeholder="/ruta" />
           </div>
           <div class="input-group">
-            <label>{{ i18n.t('newsImage') }}</label>
+            <label class="req">{{ i18n.t('newsImage') }}</label>
             <input type="file" accept="image/*" (change)="onSponsorFile($event)" />
             @if (sponsorPreview()) {
               <img class="preview" [src]="sponsorPreview()" alt="" />
@@ -68,34 +68,34 @@ import { I18nService } from '../../core/services/i18n.service';
           <button class="btn-votar-activo" type="submit" [disabled]="content.busy()">{{ i18n.t('cmsSave') }}</button>
         </form>
 
-        <form class="cms-card wide" (ngSubmit)="saveInterview()">
+        <form class="cms-card wide" #interviewForm="ngForm" (ngSubmit)="saveInterview(interviewForm)">
           <h4>{{ i18n.t('cmsInterview') }}</h4>
           <div class="input-group">
-            <label>{{ i18n.t('newsCategory') }}</label>
+            <label class="req">{{ i18n.t('newsCategory') }}</label>
             <input name="iCat" [(ngModel)]="interviewCategory" required />
           </div>
           <div class="input-group">
-            <label>{{ i18n.t('newsTitleField') }}</label>
+            <label class="req">{{ i18n.t('newsTitleField') }}</label>
             <input name="iTitle" [(ngModel)]="interviewTitle" required />
           </div>
           <div class="input-group">
-            <label>{{ i18n.t('cmsInterviewee') }}</label>
+            <label class="req">{{ i18n.t('cmsInterviewee') }}</label>
             <input name="iPerson" [(ngModel)]="interviewPerson" required />
           </div>
           <div class="input-group">
-            <label>{{ i18n.t('cmsCaption') }}</label>
+            <label class="req">{{ i18n.t('cmsCaption') }}</label>
             <input name="iCap" [(ngModel)]="interviewCaption" required />
           </div>
           <div class="input-group">
-            <label>{{ i18n.t('newsBody') }}</label>
+            <label class="req">{{ i18n.t('newsBody') }}</label>
             <textarea name="iIntro" rows="4" [(ngModel)]="interviewIntro" required></textarea>
           </div>
           <div class="input-group">
-            <label>{{ i18n.t('cmsQuote') }}</label>
+            <label class="req">{{ i18n.t('cmsQuote') }}</label>
             <textarea name="iQuote" rows="2" [(ngModel)]="interviewQuote" required></textarea>
           </div>
           <div class="input-group">
-            <label>{{ i18n.t('newsImage') }}</label>
+            <label class="req">{{ i18n.t('newsImage') }}</label>
             <input type="file" accept="image/*" (change)="onInterviewFile($event)" />
             @if (interviewPreview()) {
               <img class="preview" [src]="interviewPreview()" alt="" />
@@ -117,6 +117,7 @@ import { I18nService } from '../../core/services/i18n.service';
     .cms-card.wide { grid-column: 1 / -1; }
     .cms-card h4 { font-size: .9rem; font-weight: 900; margin: 0 0 .8rem; color: var(--brand-red); }
     .preview { margin-top: .5rem; width: 100%; max-height: 140px; object-fit: cover; border-radius: 8px; }
+    label.req::after { content: ' *'; color: var(--brand-red); }
   `,
 })
 export class ContentCms {
@@ -133,11 +134,13 @@ export class ContentCms {
   featuredText = '';
   featuredCta = '';
   private featuredFile: File | null = null;
+  private featuredHasImage = false;
 
   sponsorBadge = '';
   sponsorName = '';
   sponsorLink = '';
   private sponsorFile: File | null = null;
+  private sponsorHasImage = false;
 
   interviewCategory = '';
   interviewTitle = '';
@@ -146,6 +149,7 @@ export class ContentCms {
   interviewIntro = '';
   interviewQuote = '';
   private interviewFile: File | null = null;
+  private interviewHasImage = false;
 
   constructor() {
     const featured = this.content.featured();
@@ -154,12 +158,14 @@ export class ContentCms {
     this.featuredText = featured.text.es;
     this.featuredCta = featured.ctaPath;
     this.featuredPreview.set(featured.imageUrl);
+    this.featuredHasImage = !!featured.imageUrl;
 
     const sponsor = this.content.sponsor();
     this.sponsorBadge = sponsor.badge.es;
     this.sponsorName = sponsor.name.es;
     this.sponsorLink = sponsor.linkPath;
     this.sponsorPreview.set(sponsor.imageUrl);
+    this.sponsorHasImage = !!sponsor.imageUrl;
 
     const interview = this.content.interview();
     this.interviewCategory = interview.category.es;
@@ -169,27 +175,40 @@ export class ContentCms {
     this.interviewIntro = interview.intro.es;
     this.interviewQuote = interview.quote.es;
     this.interviewPreview.set(interview.imageUrl);
+    this.interviewHasImage = !!interview.imageUrl;
   }
 
   onFeaturedFile(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
     this.featuredFile = file;
     this.featuredPreview.set(file ? URL.createObjectURL(file) : this.content.featured().imageUrl);
+    this.featuredHasImage = !!(file || this.content.featured().imageUrl);
   }
 
   onSponsorFile(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
     this.sponsorFile = file;
     this.sponsorPreview.set(file ? URL.createObjectURL(file) : this.content.sponsor().imageUrl);
+    this.sponsorHasImage = !!(file || this.content.sponsor().imageUrl);
   }
 
   onInterviewFile(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
     this.interviewFile = file;
     this.interviewPreview.set(file ? URL.createObjectURL(file) : this.content.interview().imageUrl);
+    this.interviewHasImage = !!(file || this.content.interview().imageUrl);
   }
 
-  async saveFeatured(): Promise<void> {
+  async saveFeatured(form: NgForm): Promise<void> {
+    if (
+      !this.guardForm(
+        form,
+        this.featuredHasImage || !!this.featuredFile,
+        !!(this.featuredBadge.trim() && this.featuredTitle.trim() && this.featuredText.trim() && this.featuredCta.trim()),
+      )
+    ) {
+      return;
+    }
     await this.run(async () => {
       await this.content.saveFeatured({
         badge: this.featuredBadge,
@@ -199,10 +218,20 @@ export class ContentCms {
         image: this.featuredFile,
       });
       this.featuredFile = null;
+      this.featuredHasImage = true;
     });
   }
 
-  async saveSponsor(): Promise<void> {
+  async saveSponsor(form: NgForm): Promise<void> {
+    if (
+      !this.guardForm(
+        form,
+        this.sponsorHasImage || !!this.sponsorFile,
+        !!(this.sponsorBadge.trim() && this.sponsorName.trim() && this.sponsorLink.trim()),
+      )
+    ) {
+      return;
+    }
     await this.run(async () => {
       await this.content.saveSponsor({
         badge: this.sponsorBadge,
@@ -211,10 +240,27 @@ export class ContentCms {
         image: this.sponsorFile,
       });
       this.sponsorFile = null;
+      this.sponsorHasImage = true;
     });
   }
 
-  async saveInterview(): Promise<void> {
+  async saveInterview(form: NgForm): Promise<void> {
+    if (
+      !this.guardForm(
+        form,
+        this.interviewHasImage || !!this.interviewFile,
+        !!(
+          this.interviewCategory.trim() &&
+          this.interviewTitle.trim() &&
+          this.interviewPerson.trim() &&
+          this.interviewCaption.trim() &&
+          this.interviewIntro.trim() &&
+          this.interviewQuote.trim()
+        ),
+      )
+    ) {
+      return;
+    }
     await this.run(async () => {
       await this.content.saveInterview({
         category: this.interviewCategory,
@@ -226,7 +272,23 @@ export class ContentCms {
         image: this.interviewFile,
       });
       this.interviewFile = null;
+      this.interviewHasImage = true;
     });
+  }
+
+  private guardForm(form: NgForm, hasImage: boolean, extraOk = true): boolean {
+    form.control.markAllAsTouched();
+    if (form.invalid || !extraOk) {
+      this.messageError.set(true);
+      this.message.set(this.i18n.t('formRequired'));
+      return false;
+    }
+    if (!hasImage) {
+      this.messageError.set(true);
+      this.message.set(this.i18n.t('cmsImageRequired'));
+      return false;
+    }
+    return true;
   }
 
   private async run(action: () => Promise<void>): Promise<void> {

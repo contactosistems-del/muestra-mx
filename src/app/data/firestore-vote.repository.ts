@@ -5,12 +5,11 @@ import {
   doc,
   getDoc,
   getDocs,
-  increment,
   onSnapshot,
   query,
+  runTransaction,
   setDoc,
   where,
-  writeBatch,
 } from 'firebase/firestore';
 import type { Survey, VoteRecord } from '../domain/models';
 import { FIRESTORE, type SurveyResultCounts, type VoteRepository } from '../domain/tokens';
@@ -25,7 +24,6 @@ export class FirestoreVoteRepository implements VoteRepository {
   private readonly db = inject(FIRESTORE);
 
   async add(survey: Survey, vote: VoteRecord): Promise<void> {
-    const batch = writeBatch(this.db);
     const voteRef = doc(collection(this.db, VOTES));
     const resultRef = doc(this.db, RESULTS, survey.id);
     const deviceRef = doc(this.db, DEVICE_VOTES, this.deviceKey(survey.id, vote.deviceId));
@@ -33,19 +31,26 @@ export class FirestoreVoteRepository implements VoteRepository {
     const optionKey = matched?.id ?? vote.opcion;
     const stored: VoteRecord = { ...vote, opcion: optionKey };
 
-    batch.set(voteRef, stored);
-    batch.set(deviceRef, { surveyId: survey.id, deviceId: vote.deviceId, at: vote.timestamp });
-    batch.set(
-      resultRef,
-      {
+    await runTransaction(this.db, async (tx) => {
+      const resultSnap = await tx.get(resultRef);
+      const prev = resultSnap.exists() ? (resultSnap.data() as Record<string, unknown>) : {};
+      const prevCounts = (prev['counts'] as Record<string, unknown>) || {};
+      const counts: Record<string, number> = {};
+      Object.entries(prevCounts).forEach(([key, value]) => {
+        counts[key] = Number(value) || 0;
+      });
+      counts[optionKey] = (counts[optionKey] ?? 0) + 1;
+      const total = Object.values(counts).reduce((sum, n) => sum + n, 0);
+
+      tx.set(voteRef, stored);
+      tx.set(deviceRef, { surveyId: survey.id, deviceId: vote.deviceId, at: vote.timestamp });
+      tx.set(resultRef, {
         surveyId: survey.id,
-        total: increment(1),
-        [`counts.${optionKey}`]: increment(1),
+        total,
+        counts,
         updatedAt: Date.now(),
-      },
-      { merge: true },
-    );
-    await batch.commit();
+      });
+    });
   }
 
   async list(survey: Survey): Promise<VoteRecord[]> {

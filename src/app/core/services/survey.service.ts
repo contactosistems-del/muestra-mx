@@ -1,5 +1,4 @@
 import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
-import { SURVEY_SEEDS } from '../../data/catalog';
 import type { Survey, SurveyDraft, SurveyOption, SurveyOptionTally, SurveyResult, VoteRecord } from '../../domain/models';
 import { SURVEY_REPOSITORY, VOTE_REPOSITORY, type SurveyResultCounts } from '../../domain/tokens';
 import { loc } from '../i18n/localized';
@@ -36,7 +35,16 @@ export class SurveyService {
   readonly publicCounts = signal<Record<string, SurveyResultCounts>>({});
   readonly navSurveys = computed(() => this.surveys().filter((item) => item.showInNav));
   readonly results = computed(() =>
-    this.surveys().map((survey) => this.buildResult(survey, this.publicCounts()[survey.id])),
+    this.surveys().map((survey) => ({
+      survey,
+      result: this.buildResult(survey, this.publicCounts()[survey.id]),
+    })),
+  );
+  readonly adminResults = computed(() =>
+    this.adminSurveys().map((survey) => ({
+      survey,
+      result: this.buildResult(survey, this.publicCounts()[survey.id]),
+    })),
   );
 
   private resultStops: Array<() => void> = [];
@@ -44,7 +52,7 @@ export class SurveyService {
   constructor() {
     const stopActive = this.surveyRepo.watchActive((items) => {
       this.surveys.set(items);
-      this.resubscribeResults(items);
+      this.refreshResultWatches();
     });
     inject(DestroyRef).onDestroy(() => {
       stopActive();
@@ -58,9 +66,7 @@ export class SurveyService {
     this.stopAdminWatch();
     this.adminWatchStop = this.surveyRepo.watchAll((items) => {
       this.adminSurveys.set(items);
-      const byId = new Map<string, Survey>();
-      [...this.surveys(), ...items].forEach((item) => byId.set(item.id, item));
-      this.resubscribeResults([...byId.values()]);
+      this.refreshResultWatches();
     });
     return () => this.stopAdminWatch();
   }
@@ -125,9 +131,10 @@ export class SurveyService {
         this.statusKey.set('alreadyVoted');
         return;
       }
+      const opcion = this.selected()!;
       await this.votesRepo.add(survey, {
         fecha: new Date().toISOString(),
-        opcion: this.selected()!,
+        opcion,
         ip: ctx.ip,
         deviceId: ctx.fingerprint,
         zona: `${ctx.lat.toFixed(2)},${ctx.lng.toFixed(2)}`,
@@ -136,6 +143,15 @@ export class SurveyService {
         timestamp: Date.now(),
         encuestaId: survey.id,
       });
+      this.bumpLocalCount(survey, opcion);
+      if (this.auth.isAdmin()) {
+        try {
+          const votes = await this.votesRepo.list(survey);
+          await this.votesRepo.rebuildResults(survey, votes);
+        } catch {
+          /* el conteo del voto ya quedó escrito arriba */
+        }
+      }
       this.device.markVoted(survey.id);
       this.statusKey.set('voteOk');
     } catch {
@@ -174,7 +190,24 @@ export class SurveyService {
   async saveSurvey(draft: SurveyDraft): Promise<void> {
     const id = this.normalizeId(draft.id);
     if (!id) throw new Error('invalid-id');
+    if (
+      !draft.shortLabel.trim() ||
+      !draft.city.trim() ||
+      !draft.title.trim() ||
+      !draft.question.trim() ||
+      draft.sortOrder === null ||
+      draft.sortOrder === undefined ||
+      Number.isNaN(Number(draft.sortOrder))
+    ) {
+      throw new Error('fields-required');
+    }
+
     const previous = this.adminSurveys().find((item) => item.id === id) ?? this.surveyById(id) ?? null;
+    for (const row of draft.options) {
+      if (!row.label.trim() || !String(row.voteValue ?? '').trim() || !(row.imageFile || String(row.imageUrl ?? '').trim())) {
+        throw new Error('need-candidate-fields');
+      }
+    }
     const options = await this.buildOptions(draft, previous);
     if (options.length < 2) throw new Error('need-options');
 
@@ -218,10 +251,6 @@ export class SurveyService {
     await this.surveyRepo.remove(id);
   }
 
-  async seedDefaults(): Promise<void> {
-    await this.surveyRepo.seed(SURVEY_SEEDS);
-  }
-
   private async buildOptions(draft: SurveyDraft, previous?: Survey | null): Promise<SurveyOption[]> {
     const built: SurveyOption[] = [];
     for (let i = 0; i < draft.options.length; i += 1) {
@@ -234,19 +263,21 @@ export class SurveyService {
       }
       const id = row.id?.trim() || `opt-${i + 1}`;
       const voteValue = row.voteValue?.trim();
+      if (!voteValue) continue;
+      if (!imageUrl) continue;
       const prev = previous?.options.find((opt) => opt.id === id);
       const aliases = new Set<string>([...(row.aliases ?? []), ...(prev?.aliases ?? [])]);
       if (prev?.label && prev.label !== label) aliases.add(prev.label);
       if (prev?.voteValue && prev.voteValue !== voteValue) aliases.add(prev.voteValue);
       aliases.delete(label);
-      if (voteValue) aliases.delete(voteValue);
+      aliases.delete(voteValue);
       aliases.delete(id);
       built.push({
         id,
         label,
-        ...(voteValue ? { voteValue } : {}),
+        voteValue,
         ...(aliases.size ? { aliases: [...aliases] } : {}),
-        ...(imageUrl ? { imageUrl } : {}),
+        imageUrl,
       });
     }
     return built;
@@ -266,6 +297,15 @@ export class SurveyService {
     return this.device.hasVoted(survey.id);
   }
 
+  private refreshResultWatches(): void {
+    const byId = new Map<string, Survey>();
+    this.surveys().forEach((item) => byId.set(item.id, item));
+    if (this.adminWatchStop) {
+      this.adminSurveys().forEach((item) => byId.set(item.id, item));
+    }
+    this.resubscribeResults([...byId.values()]);
+  }
+
   private resubscribeResults(surveys: Survey[]): void {
     this.resultStops.forEach((stop) => stop());
     this.resultStops = surveys.map((survey) =>
@@ -273,6 +313,21 @@ export class SurveyService {
         this.publicCounts.update((current) => ({ ...current, [survey.id]: counts }));
       }),
     );
+  }
+
+  private bumpLocalCount(survey: Survey, opcion: string): void {
+    const matched = survey.options.find((opt) => opt.id === opcion);
+    const optionKey = matched?.id ?? opcion;
+    this.publicCounts.update((current) => {
+      const prev = current[survey.id];
+      const counts = { ...(prev?.counts ?? {}) };
+      counts[optionKey] = (counts[optionKey] ?? 0) + 1;
+      const total = Object.values(counts).reduce((sum, n) => sum + n, 0);
+      return {
+        ...current,
+        [survey.id]: { surveyId: survey.id, total, counts },
+      };
+    });
   }
 
   private buildResult(survey: Survey, data?: SurveyResultCounts): SurveyResult {

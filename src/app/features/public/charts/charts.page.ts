@@ -15,39 +15,37 @@ import { SurveyService } from '../../../core/services/survey.service';
       </div>
 
       <div class="results-grid">
-        @for (survey of surveys.surveys(); track survey.id) {
-          @if (surveys.resultById(survey.id); as result) {
-            <article class="result-card">
-              <div class="result-top">
-                <div>
-                  <div class="poll-city">{{ i18n.tx(survey.city) }}</div>
-                  <h4>{{ i18n.tx(survey.title) }}</h4>
-                </div>
-                <div class="result-total">
-                  <strong>{{ result.total }}</strong>
-                  <span>{{ i18n.t('totalVotes') }}</span>
-                </div>
+        @for (row of surveys.results(); track row.survey.id) {
+          <article class="result-card">
+            <div class="result-top">
+              <div>
+                <div class="poll-city">{{ i18n.tx(row.survey.city) }}</div>
+                <h4>{{ i18n.tx(row.survey.title) }}</h4>
               </div>
-              @if (result.total === 0) {
-                <p class="empty">{{ i18n.t('noVotesYet') }}</p>
-              } @else {
-                <ul class="bars">
-                  @for (opt of result.options; track opt.label) {
-                    <li>
-                      <div class="bar-meta">
-                        <span>{{ opt.label }}</span>
-                        <strong>{{ opt.percent }}%</strong>
-                      </div>
-                      <div class="bar-track">
-                        <div class="bar-fill" [style.width.%]="opt.percent"></div>
-                      </div>
-                    </li>
-                  }
-                </ul>
-              }
-              <a class="btn-votar result-cta" [routerLink]="['/encuesta', survey.id]">{{ i18n.t('takeSurvey') }}</a>
-            </article>
-          }
+              <div class="result-total">
+                <strong>{{ row.result.total }}</strong>
+                <span>{{ i18n.t('totalVotes') }}</span>
+              </div>
+            </div>
+            @if (row.result.total === 0) {
+              <p class="empty">{{ i18n.t('noVotesYet') }}</p>
+            } @else {
+              <ul class="bars">
+                @for (opt of row.result.options; track opt.label) {
+                  <li>
+                    <div class="bar-meta">
+                      <span>{{ opt.label }}</span>
+                      <strong>{{ opt.percent }}%</strong>
+                    </div>
+                    <div class="bar-track">
+                      <div class="bar-fill" [style.width.%]="opt.percent"></div>
+                    </div>
+                  </li>
+                }
+              </ul>
+            }
+            <a class="btn-votar result-cta" [routerLink]="['/encuesta', row.survey.id]">{{ i18n.t('takeSurvey') }}</a>
+          </article>
         } @empty {
           <p class="empty">{{ i18n.t('surveyEmpty') }}</p>
         }
