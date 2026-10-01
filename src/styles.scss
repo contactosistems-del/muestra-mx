@@ -625,6 +625,53 @@ button, select, input, textarea { font-family: inherit; }
   overflow-wrap: anywhere;
   pointer-events: none;
 }
+.cms-alert-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.cms-alert-box {
+  width: min(100%, 420px);
+  background: var(--card-bg);
+  color: var(--text-color);
+  border-radius: 12px;
+  padding: 1.25rem 1.35rem;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--border-color);
+  text-align: center;
+}
+.cms-alert-box.err {
+  border-color: #F87171;
+}
+.cms-alert-box.err .cms-alert-text {
+  color: #991B1B;
+}
+.cms-alert-box:not(.err) .cms-alert-text {
+  color: #166534;
+}
+.cms-alert-text {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+.cms-alert-box .cms-alert-btn {
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  background: var(--brand-red);
+  color: #fff;
+  text-transform: uppercase;
+  font-size: 0.82rem;
+}
 .btn-votar-activo {
   width: 100%; background: var(--brand-red) !important; color: #FFF !important; border: none; padding: 0.95rem; border-radius: 8px;
   font-weight: 800; cursor: pointer; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 0.5px;
