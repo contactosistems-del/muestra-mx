@@ -49,10 +49,19 @@ button, select, input, textarea { font-family: inherit; }
   display: flex; align-items: center; justify-content: center; z-index: 9999;
 }
 
-.splash-content { text-align: center; color: #FFFFFF; padding: 2.5rem; max-width: 520px; }
+.splash-content { text-align: center; color: #FFFFFF; padding: 2.5rem 1rem; max-width: 520px; width: 100%; }
 .splash-logo-main {
-  font-family: var(--font-logo); font-size: clamp(3.2rem, 7vw, 4.8rem); font-weight: 900; letter-spacing: -3px;
-  line-height: 0.9; color: #FFFFFF; text-transform: lowercase; margin-bottom: 0.8rem;
+  font-family: var(--font-logo);
+  font-size: clamp(2.4rem, 11vw, 4.8rem);
+  font-weight: 900;
+  letter-spacing: -3px;
+  line-height: 0.9;
+  color: #FFFFFF;
+  text-transform: lowercase;
+  margin-bottom: 0.8rem;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: keep-all;
 }
 .splash-logo-main .logo-es { color: var(--brand-red); }
 .splash-sub {
@@ -91,6 +100,9 @@ button, select, input, textarea { font-family: inherit; }
   letter-spacing: -1px;
   color: var(--text-color);
   text-transform: lowercase;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: keep-all;
 }
 .logo-es { color: var(--brand-red); }
 .logo-sub-text {
@@ -358,6 +370,9 @@ button, select, input, textarea { font-family: inherit; }
   text-transform: lowercase;
   line-height: 1;
   margin-bottom: 0.4rem;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: keep-all;
 }
 .footer-tagline {
   margin: 0;
