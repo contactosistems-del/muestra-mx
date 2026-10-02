@@ -22,10 +22,6 @@ import { SurveyService } from '../../../core/services/survey.service';
                 <div class="poll-city">{{ i18n.tx(row.survey.city) }}</div>
                 <h4>{{ i18n.tx(row.survey.title) }}</h4>
               </div>
-              <div class="result-total">
-                <strong>{{ row.result.total }}</strong>
-                <span>{{ i18n.t('totalVotes') }}</span>
-              </div>
             </div>
             @if (row.result.total === 0) {
               <p class="empty">{{ i18n.t('noVotesYet') }}</p>
@@ -65,12 +61,9 @@ import { SurveyService } from '../../../core/services/survey.service';
     .muted { color: var(--text-muted); font-size: .92rem; line-height: 1.45; max-width: 42rem; }
     .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 1.2rem; }
     .result-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 1.1rem; }
-    .result-top { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; margin-bottom: 1rem; flex-wrap: wrap; }
+    .result-top { margin-bottom: 1rem; }
     .result-top h4 { font-size: 1rem; font-weight: 900; line-height: 1.25; min-width: 0; overflow-wrap: anywhere; }
     .poll-city { font-size: .82rem; color: var(--brand-red); font-weight: 800; margin-bottom: .4rem; }
-    .result-total { text-align: right; min-width: 5rem; }
-    .result-total strong { display: block; font-size: 1.4rem; color: var(--brand-red); line-height: 1; }
-    .result-total span { font-size: .68rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
     .empty { color: var(--text-muted); font-size: .88rem; margin-bottom: 1rem; }
     .bars { list-style: none; display: flex; flex-direction: column; gap: .75rem; margin-bottom: 1rem; }
     .bar-meta { display: flex; justify-content: space-between; gap: .8rem; font-size: .82rem; font-weight: 700; margin-bottom: .3rem; flex-wrap: wrap; }
