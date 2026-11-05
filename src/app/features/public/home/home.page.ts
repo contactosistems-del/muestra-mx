@@ -5,11 +5,13 @@ import { I18nService } from '../../../core/services/i18n.service';
 import { NewsService } from '../../../core/services/news.service';
 import { SurveyService } from '../../../core/services/survey.service';
 import { newsCategoryLabel } from '../../../data/catalog';
+import { ElectionCountdown } from './election-countdown';
+import { PopulationClock } from './population-clock';
 
 @Component({
   selector: 'app-home-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, ElectionCountdown, PopulationClock],
   template: `
     <div class="main-grid" [attr.lang]="i18n.lang()">
       <section class="hero-slider-container">
@@ -27,25 +29,6 @@ import { newsCategoryLabel } from '../../../data/catalog';
       </section>
 
       <aside>
-        <div class="sidebar-widget sponsor-card">
-          @if (content.sponsor().linkPath) {
-            <a [routerLink]="content.sponsor().linkPath" class="sponsor-media">
-              <img [src]="content.sponsor().imageUrl" [alt]="i18n.t('sponsorAlt')" />
-            </a>
-          } @else {
-            <div class="sponsor-media">
-              <img [src]="content.sponsor().imageUrl" [alt]="i18n.t('sponsorAlt')" />
-            </div>
-          }
-          <div class="sponsor-body">
-            <span class="badge">{{ i18n.tx(content.sponsor().badge) }}</span>
-            <h5>{{ i18n.tx(content.sponsor().name) }}</h5>
-            @if (content.sponsor().linkPath) {
-              <a [routerLink]="content.sponsor().linkPath" class="btn-votar-activo sponsor-cta">{{ i18n.t('seeInterview') }}</a>
-            }
-          </div>
-        </div>
-
         <div class="sidebar-widget">
           <div class="widget-header"><i class="fa-solid fa-chart-column"></i> {{ i18n.t('polls') }}</div>
           <div class="widget-content">
@@ -61,6 +44,9 @@ import { newsCategoryLabel } from '../../../data/catalog';
         </div>
       </aside>
     </div>
+
+    <app-election-countdown />
+    <app-population-clock />
 
     <section class="home-news" [attr.lang]="i18n.lang()">
       <div class="results-head news-head">
@@ -91,13 +77,6 @@ import { newsCategoryLabel } from '../../../data/catalog';
     </section>
   `,
   styles: `
-    .sponsor-card { border: 2px solid #0EA5E9; text-align: center; background: #0A0A0A; }
-    .sponsor-media { display: block; aspect-ratio: 16 / 9; background: #071018; overflow: hidden; }
-    .sponsor-card img { width: 100%; height: 100%; object-fit: cover; object-position: 75% center; display: block; }
-    .sponsor-body { padding: .8rem; background: var(--card-bg); }
-    .sponsor-body .badge { font-size: .65rem; margin-bottom: .3rem; }
-    .sponsor-body h5 { font-size: .82rem; font-weight: 800; margin-bottom: .4rem; }
-    .sponsor-cta { display: inline-block; padding: .4rem; font-size: .7rem; text-align: center; }
     .poll-city { font-size: .82rem; color: var(--brand-red); font-weight: 800; margin-bottom: .4rem; }
     .poll-divider { padding-bottom: 1.2rem; margin-bottom: 1.2rem; border-bottom: 1px solid #ddd; }
     .charts-link {

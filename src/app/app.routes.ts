@@ -9,7 +9,6 @@ export const routes: Routes = [
       { path: '', loadComponent: () => import('./features/public/home/home.page').then((m) => m.HomePage) },
       { path: 'graficas', loadComponent: () => import('./features/public/charts/charts.page').then((m) => m.ChartsPage) },
       { path: 'mananera', loadComponent: () => import('./features/public/briefing/briefing.page').then((m) => m.BriefingPage) },
-      { path: 'entrevista', loadComponent: () => import('./features/public/interview/interview.page').then((m) => m.InterviewPage) },
       { path: 'nosotros', loadComponent: () => import('./features/public/about/about.page').then((m) => m.AboutPage) },
       { path: 'noticias', loadComponent: () => import('./features/public/news/news.page').then((m) => m.NewsPage) },
       { path: 'noticias/:id', loadComponent: () => import('./features/public/news/news-detail.page').then((m) => m.NewsDetailPage) },

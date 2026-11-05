@@ -31,7 +31,6 @@ export class PublicShell {
     { path: '/', key: 'navHome' as const, exact: true },
     { path: '/graficas', key: 'navCharts' as const, exact: false },
     { path: '/mananera', key: 'navBriefing' as const, exact: false },
-    { path: '/entrevista', key: 'navInterviews' as const, exact: false },
     { path: '/nosotros', key: 'navAbout' as const, exact: false },
     { path: '/noticias', key: 'navNews' as const, exact: false },
     { path: '/contacto', key: 'navContact' as const, exact: false },
