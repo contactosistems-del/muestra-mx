@@ -240,12 +240,16 @@ type AdminTab = 'results' | 'charts' | 'surveys' | 'content' | 'news';
                       <span>{{ i18n.formatDate(item.publishedAt) }} · {{ item.categoryId }}</span>
                     </div>
                     <div class="news-actions">
-                      <button type="button" class="ghost" (click)="news.openEdit(item.id)">
-                        {{ i18n.t('editNews') }}
-                      </button>
-                      <button type="button" class="danger" (click)="askRemove(item.id)">
-                        {{ i18n.t('deleteNews') }}
-                      </button>
+                      @if (news.isEditorial(item.id)) {
+                        <span class="badge">{{ i18n.lang() === 'es' ? 'Publicada desde el código' : 'Published from code' }}</span>
+                      } @else {
+                        <button type="button" class="ghost" (click)="news.openEdit(item.id)">
+                          {{ i18n.t('editNews') }}
+                        </button>
+                        <button type="button" class="danger" (click)="askRemove(item.id)">
+                          {{ i18n.t('deleteNews') }}
+                        </button>
+                      }
                     </div>
                   </li>
                 }

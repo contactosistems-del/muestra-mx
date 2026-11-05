@@ -1,8 +1,9 @@
-import { DestroyRef, inject, Injectable, signal } from '@angular/core';
+import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { loc } from '../i18n/localized';
 import type { NewsItem } from '../../domain/models';
 import { NEWS_REPOSITORY } from '../../domain/tokens';
+import { EDITORIAL_NEWS, isEditorialNews } from '../../data/editorial-news';
 import { MediaStorageService } from './media-storage.service';
 import { TranslationService } from './translation.service';
 
@@ -12,7 +13,12 @@ export class NewsService {
   private readonly media = inject(MediaStorageService);
   private readonly translator = inject(TranslationService);
   private readonly router = inject(Router);
-  readonly items = signal<NewsItem[]>([]);
+  private readonly storedItems = signal<NewsItem[]>([]);
+  /** Noticias del panel (Firestore) más las notas publicadas desde el código, de la más nueva a la más vieja. */
+  readonly items = computed(() =>
+    [...this.storedItems(), ...EDITORIAL_NEWS].sort((a, b) => b.publishedAt - a.publishedAt),
+  );
+  readonly isEditorial = isEditorialNews;
   readonly loading = signal(true);
   readonly editorOpen = signal(false);
   readonly editingId = signal<string | null>(null);
@@ -20,7 +26,7 @@ export class NewsService {
 
   constructor() {
     const stop = this.repo.watch((items) => {
-      this.items.set(items);
+      this.storedItems.set(items);
       this.loading.set(false);
     });
     inject(DestroyRef).onDestroy(stop);
@@ -32,7 +38,7 @@ export class NewsService {
   }
 
   openEdit(id: string): void {
-    if (!id || !this.byId(id)) return;
+    if (!id || isEditorialNews(id) || !this.byId(id)) return;
     this.editingId.set(id);
     this.editorOpen.set(true);
   }
@@ -91,7 +97,7 @@ export class NewsService {
   }
 
   async remove(id: string): Promise<void> {
-    if (!id) return;
+    if (!id || isEditorialNews(id)) return;
     await this.repo.remove(id);
   }
 }
