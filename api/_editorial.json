@@ -1,0 +1,14 @@
+{
+  "ed-presupuesto-ine-2027": {
+    "id": "ed-presupuesto-ine-2027",
+    "image": "/assets/images/noticias/presupuesto-ine-2027.jpg",
+    "title": "Sheinbaum plantea recortar el presupuesto del INE para 2027; la decisión será de la Cámara de Diputados",
+    "summary": "La presidenta Claudia Sheinbaum afirmó este jueves en su conferencia matutina que \"se pueden hacer ahorros\" en el presupuesto del Instituto Nacional Electoral (INE) para 2027, y lo relacionó con señalamientos de corrupción en contrataciones del instituto."
+  },
+  "ed-ine-convenio-integridad-2027": {
+    "id": "ed-ine-convenio-integridad-2027",
+    "image": "/assets/images/noticias/ine-convenio-integridad-2027.jpg",
+    "title": "INE firmará convenio con cinco instituciones para revisar a aspirantes rumbo a la elección 2027",
+    "summary": "El Instituto Nacional Electoral (INE) firmará este viernes 6 de noviembre un convenio de colaboración para evaluar el perfil de riesgo de quienes aspiren a una candidatura en el Proceso Electoral 2027. El objetivo es evitar que personas vinculadas con el crimen organizado lleguen a las boletas."
+  }
+}

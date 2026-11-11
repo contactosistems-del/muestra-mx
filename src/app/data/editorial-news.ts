@@ -4,6 +4,7 @@ import type { NewsItem } from '../domain/models';
  * Notas publicadas desde el código (no desde el panel). Aparecen junto con las de Firestore,
  * ordenadas por fecha. Sus ids empiezan con "ed-" y no se editan ni borran desde el panel:
  * para quitarlas o cambiarlas se modifica este archivo.
+ * Al agregar o cambiar una nota aquí, actualiza también api/_editorial.json (miniatura al compartir en redes).
  */
 export const EDITORIAL_NEWS: NewsItem[] = [
   {

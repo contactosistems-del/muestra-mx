@@ -2,6 +2,17 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist/muestra-app/browser",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/noticias/:id",
+      "destination": "/api/share?type=news&id=:id"
+    },
+    {
+      "source": "/encuesta/:id",
+      "destination": "/api/share?type=survey&id=:id"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
+    }
   ]
 }
