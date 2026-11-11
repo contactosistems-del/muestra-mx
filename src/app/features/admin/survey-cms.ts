@@ -140,7 +140,7 @@ type OptionForm = {
     .list-item.active { border-color: var(--brand-red); box-shadow: inset 3px 0 0 var(--brand-red); }
     .list-item span { color: var(--text-muted); font-size: .75rem; }
     .empty { color: var(--text-muted); font-size: .85rem; }
-    .cms-card { background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 10px; padding: 1rem; }
+    .cms-card { background: var(--card-bg); border: 1px solid rgba(157, 161, 159, .3); border-radius: 16px; padding: 1.2rem; box-shadow: 0 12px 26px -22px rgba(15, 23, 42, .55); }
     .cms-card h4 { font-size: .9rem; font-weight: 900; margin: 0 0 .8rem; color: var(--brand-red); }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); gap: .75rem; }
     .flags { display: flex; gap: 1rem; flex-wrap: wrap; margin: .6rem 0 1rem; font-size: .82rem; font-weight: 700; }
