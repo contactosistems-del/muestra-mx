@@ -189,7 +189,7 @@ type AdminTab = 'results' | 'charts' | 'surveys' | 'content' | 'news';
                       @for (opt of row.result.options; track opt.label; let i = $index) {
                         <li>
                           <div class="bar-meta">
-                            <span><i class="pie-dot" [style.background]="pieColor(i)"></i>{{ opt.label }}</span>
+                            <span>{{ opt.label }}</span>
                             <strong>{{ opt.percent }}% · {{ opt.count }}</strong>
                           </div>
                           <div class="bar-track">

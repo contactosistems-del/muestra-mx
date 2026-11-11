@@ -3,7 +3,11 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 /** Colores de las rebanadas, en orden. El primero es el rojo de la marca. */
 export const PIE_COLORS = ['#BE3455', '#1F6FB2', '#2E9E5B', '#E0A21B', '#7A4FB5', '#E46A2E', '#1BA3A8', '#6B6F6D'];
 
+/** En false, todas las rebanadas van en el rojo de la marca. Ponlo en true para usar colores por candidato. */
+export const PIE_MULTICOLOR = false;
+
 export function pieColor(index: number): string {
+  if (!PIE_MULTICOLOR) return PIE_COLORS[0];
   return PIE_COLORS[index % PIE_COLORS.length];
 }
 
@@ -37,7 +41,7 @@ interface PieSlice {
   styles: `
     :host { display: block; }
     .pie { display: block; width: 100%; height: auto; }
-    path, circle { stroke: var(--card-bg, #fff); stroke-width: 2; stroke-linejoin: round; transition: opacity .2s ease; }
+    path, circle { stroke: var(--card-bg, #fff); stroke-width: 3; stroke-linejoin: round; transition: opacity .2s ease; }
     path:hover, circle:hover { opacity: .85; }
   `,
 })

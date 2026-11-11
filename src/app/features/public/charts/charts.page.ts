@@ -34,7 +34,7 @@ import { PieChart, pieColor } from '../../../shared/pie-chart/pie-chart';
                 @for (opt of row.result.options; track opt.label; let i = $index) {
                   <li>
                     <div class="bar-meta">
-                      <span><i class="dot" [style.background]="color(i)"></i>{{ opt.label }}</span>
+                      <span>{{ opt.label }}</span>
                       <strong>{{ opt.percent }}%</strong>
                     </div>
                     <div class="bar-track">
