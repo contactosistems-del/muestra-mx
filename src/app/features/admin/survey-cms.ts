@@ -117,6 +117,9 @@ type OptionForm = {
         <div class="form-actions">
           <button class="btn-votar-activo" type="submit" [disabled]="busy()">{{ i18n.t('cmsSave') }}</button>
           @if (editingId()) {
+            <button type="button" class="ghost" [disabled]="busy()" (click)="duplicate()">
+              {{ i18n.lang() === 'en' ? 'Duplicate with new link' : 'Duplicar con otro enlace' }}
+            </button>
             <button type="button" class="danger" [disabled]="busy()" (click)="remove()">{{ i18n.t('surveyDelete') }}</button>
           }
         </div>
@@ -209,6 +212,24 @@ export class SurveyCms {
     if (this.options.length < 2) {
       this.options.push(this.blankOption(`opt-${this.options.length + 1}`));
     }
+  }
+
+  /**
+   * Copia la encuesta abierta (textos, candidatos y fotos) a una nueva con otro ID.
+   * La original no se toca; se puede borrar después. La copia empieza sin votos.
+   */
+  duplicate(): void {
+    const from = this.editingId();
+    if (!from) return;
+    this.editingId.set(null);
+    this.formId = '';
+    this.options = this.options.map((opt) => ({ ...opt, aliases: [] }));
+    this.messageError.set(false);
+    this.message.set(
+      this.i18n.lang() === 'en'
+        ? `Copy of "${from}". Type the new ID and save. Then delete "${from}" from the list.`
+        : `Copia de "${from}". Escribe el nuevo ID y guarda. Después borra "${from}" de la lista.`,
+    );
   }
 
   addOption(): void {
