@@ -259,12 +259,36 @@ const QUESTIONS: TriviaQuestion[] = [
 
 const ROUND_SIZE = 5;
 
-const TOPICS: Array<{ id: TriviaTopic; icon: string; label: LocalizedString }> = [
-  { id: 'mx', icon: 'fa-solid fa-flag', label: L('México', 'Mexico') },
-  { id: 'cb', icon: 'fa-solid fa-umbrella-beach', label: L('Caribe', 'Caribbean') },
-  { id: 'fd', icon: 'fa-solid fa-pepper-hot', label: L('Comida', 'Food') },
-  { id: 'fb', icon: 'fa-solid fa-futbol', label: L('Futbol', 'Soccer') },
+interface TopicTheme {
+  id: TriviaTopic;
+  icon: string;
+  label: LocalizedString;
+  tagline: LocalizedString;
+  /** Íconos que flotan en el fondo. */
+  deco: string[];
+}
+
+const TOPICS: TopicTheme[] = [
+  {
+    id: 'mx', icon: 'fa-solid fa-landmark', label: L('México', 'Mexico'), tagline: L('Historia, naturaleza y cultura', 'History, nature and culture'),
+    deco: ['fa-mountain-sun', 'fa-landmark', 'fa-feather', 'fa-sun', 'fa-dove', 'fa-monument', 'fa-leaf'],
+  },
+  {
+    id: 'cb', icon: 'fa-solid fa-umbrella-beach', label: L('Caribe', 'Caribbean'), tagline: L('Playas, cenotes y arrecifes', 'Beaches, cenotes and reefs'),
+    deco: ['fa-fish', 'fa-water', 'fa-sun', 'fa-umbrella-beach', 'fa-shrimp', 'fa-anchor', 'fa-fish-fins'],
+  },
+  {
+    id: 'fd', icon: 'fa-solid fa-pepper-hot', label: L('Comida', 'Food'), tagline: L('Sabores que enamoran', 'Flavors to fall for'),
+    deco: ['fa-pepper-hot', 'fa-lemon', 'fa-mug-hot', 'fa-bowl-food', 'fa-carrot', 'fa-seedling', 'fa-utensils'],
+  },
+  {
+    id: 'fb', icon: 'fa-solid fa-futbol', label: L('Futbol', 'Soccer'), tagline: L('Mundiales, ídolos y goles', 'World Cups, idols and goals'),
+    deco: ['fa-futbol', 'fa-trophy', 'fa-medal', 'fa-flag-checkered', 'fa-shirt', 'fa-stopwatch', 'fa-star'],
+  },
 ];
+
+/** Íconos de la portada (mezcla de todos los temas). */
+const INTRO_DECO = ['fa-futbol', 'fa-umbrella-beach', 'fa-pepper-hot', 'fa-landmark', 'fa-fish', 'fa-trophy', 'fa-sun', 'fa-lemon'];
 
 function shuffle<T>(items: T[]): T[] {
   const copy = [...items];
@@ -275,150 +299,360 @@ function shuffle<T>(items: T[]): T[] {
   return copy;
 }
 
+const CONFETTI_COLORS = ['#BE3455', '#FFD166', '#06D6A0', '#118AB2', '#FFFFFF', '#F78C6B'];
+
 @Component({
   selector: 'app-election-trivia',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="trivia" [attr.lang]="i18n.lang()" aria-labelledby="trivia-title">
-      <div class="tv-head">
-        <span class="tv-eyebrow"><i class="fa-solid fa-gamepad" aria-hidden="true"></i> {{ t('Juega y aprende', 'Play and learn') }}</span>
-        <h3 id="trivia-title">{{ t('¿Cuánto sabes de México?', 'How much do you know about Mexico?') }}</h3>
+    <section [class]="'trivia theme-' + (started() ? topic() : 'intro')" [attr.lang]="i18n.lang()" aria-labelledby="trivia-title">
+      <!-- Fondo animado -->
+      <div class="tv-bg" aria-hidden="true">
+        <div class="tv-glow g1"></div>
+        <div class="tv-glow g2"></div>
+        @for (d of deco(); track d.key) {
+          <i class="tv-float fa-solid {{ d.icon }}" [style.left.%]="d.x" [style.top.%]="d.y" [style.font-size.rem]="d.size" [style.animation-delay.s]="d.delay" [style.animation-duration.s]="d.dur"></i>
+        }
+        @if (started() && topic() === 'cb') {
+          <svg class="tv-waves" viewBox="0 0 1440 120" preserveAspectRatio="none">
+            <path class="w1" d="M0,60 C240,110 480,10 720,60 C960,110 1200,10 1440,60 L1440,120 L0,120 Z" />
+            <path class="w2" d="M0,80 C240,40 480,120 720,80 C960,40 1200,120 1440,80 L1440,120 L0,120 Z" />
+          </svg>
+        }
+        @if (started() && topic() === 'fb') {
+          <div class="tv-pitch"><span class="circle"></span><span class="line"></span></div>
+        }
       </div>
 
-      @if (!started()) {
-        <div class="tv-intro">
-          <p>{{ t('Escoge un tema y contesta 5 preguntas rápidas. ¿Las sacas todas?', 'Pick a topic and answer 5 quick questions. Can you get them all?') }}</p>
-          <div class="tv-topics">
-            @for (topic of topics; track topic.id) {
-              <button type="button" class="tv-topic" (click)="start(topic.id)">
-                <i [class]="topic.icon" aria-hidden="true"></i>
-                <span>{{ i18n.tx(topic.label) }}</span>
-              </button>
+      <div class="tv-inner">
+        <div class="tv-head">
+          <span class="tv-eyebrow"><i class="fa-solid fa-gamepad" aria-hidden="true"></i> {{ t('Juega y aprende', 'Play and learn') }}</span>
+          <h3 id="trivia-title">
+            @if (started()) {
+              <i [class]="currentTheme().icon" aria-hidden="true"></i> {{ t('Trivia', 'Trivia') }}: {{ i18n.tx(currentTheme().label) }}
+            } @else {
+              {{ t('¿Cuánto sabes de México?', 'How much do you know about Mexico?') }}
             }
+          </h3>
+        </div>
+
+        @if (!started()) {
+          <div class="tv-intro">
+            <p>{{ t('Escoge un tema y contesta 5 preguntas rápidas. ¿Las sacas todas?', 'Pick a topic and answer 5 quick questions. Can you get them all?') }}</p>
+            <div class="tv-topics">
+              @for (tp of topics; track tp.id; let i = $index) {
+                <button type="button" class="tv-topic tp-{{ tp.id }}" [style.animation-delay.ms]="i * 90" (click)="start(tp.id)">
+                  <span class="tp-icon"><i [class]="tp.icon" aria-hidden="true"></i></span>
+                  <span class="tp-name">{{ i18n.tx(tp.label) }}</span>
+                  <span class="tp-tag">{{ i18n.tx(tp.tagline) }}</span>
+                  <span class="tp-go">{{ t('Jugar', 'Play') }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
+                </button>
+              }
+            </div>
           </div>
-        </div>
-      } @else if (!finished()) {
-        @let q = current();
-        <div class="tv-progress">
-          <span>{{ t('Pregunta', 'Question') }} {{ index() + 1 }} / {{ round().length }}</span>
-          <span class="tv-score">{{ score() }} <i class="fa-solid fa-star" aria-hidden="true"></i></span>
-        </div>
-        <div class="tv-bar"><div class="tv-bar-fill" [style.width.%]="((index() + (picked() !== null ? 1 : 0)) / round().length) * 100"></div></div>
-        <p class="tv-q">{{ i18n.tx(q.q) }}</p>
-        <div class="tv-options">
-          @for (opt of q.options; track $index; let i = $index) {
-            <button
-              type="button"
-              class="tv-opt"
-              [disabled]="picked() !== null"
-              [class.right]="picked() !== null && i === q.answer"
-              [class.wrong]="picked() === i && i !== q.answer"
-              (click)="pick(i)"
-            >
-              {{ i18n.tx(opt) }}
-            </button>
+        } @else if (!finished()) {
+          <div class="tv-progress">
+            <span>{{ t('Pregunta', 'Question') }} {{ index() + 1 }} / {{ round().length }}</span>
+            <span class="tv-score" [class.bump]="scoreBump()"><i class="fa-solid fa-star" aria-hidden="true"></i> {{ score() }}</span>
+          </div>
+          <div class="tv-bar"><div class="tv-bar-fill" [style.width.%]="progress()"></div></div>
+
+          @for (q of [current()]; track index()) {
+            <div class="tv-card">
+              <p class="tv-q">{{ i18n.tx(q.q) }}</p>
+              <div class="tv-options">
+                @for (opt of q.options; track $index; let i = $index) {
+                  <button
+                    type="button"
+                    class="tv-opt"
+                    [style.animation-delay.ms]="120 + i * 90"
+                    [disabled]="picked() !== null"
+                    [class.right]="picked() !== null && i === q.answer"
+                    [class.wrong]="picked() === i && i !== q.answer"
+                    (click)="pick(i)"
+                  >
+                    <span class="tv-letter">{{ letters[i] }}</span>
+                    <span class="tv-opt-text">{{ i18n.tx(opt) }}</span>
+                    @if (picked() !== null && i === q.answer) {
+                      <i class="fa-solid fa-circle-check tv-mark" aria-hidden="true"></i>
+                    } @else if (picked() === i) {
+                      <i class="fa-solid fa-circle-xmark tv-mark" aria-hidden="true"></i>
+                    }
+                  </button>
+                }
+              </div>
+              @if (picked() !== null) {
+                <div class="tv-feedback" [class.ok]="picked() === q.answer">
+                  <span class="tv-fb-icon">{{ picked() === q.answer ? '🎉' : '💡' }}</span>
+                  <div>
+                    <strong>{{ picked() === q.answer ? t('¡Correcto!', 'Correct!') : t('¡Casi!', 'Almost!') }}</strong>
+                    {{ i18n.tx(q.fact) }}
+                  </div>
+                </div>
+                <button type="button" class="tv-btn tv-next" (click)="next()">
+                  {{ isLast() ? t('Ver resultado', 'See result') : t('Siguiente', 'Next') }}
+                  <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                </button>
+              }
+            </div>
           }
-        </div>
-        @if (picked() !== null) {
-          <div class="tv-feedback" [class.ok]="picked() === q.answer">
-            <strong>{{ picked() === q.answer ? t('¡Correcto!', 'Correct!') : t('Casi…', 'Not quite…') }}</strong>
-            {{ i18n.tx(q.fact) }}
+        } @else {
+          <div class="tv-result">
+            <div class="tv-confetti" aria-hidden="true">
+              @for (c of confetti(); track c.key) {
+                <span [style.left.%]="c.x" [style.background]="c.color" [style.animation-delay.s]="c.delay" [style.animation-duration.s]="c.dur" [style.width.px]="c.w" [style.height.px]="c.h"></span>
+              }
+            </div>
+            <div class="tv-ring" [style.--pct]="(score() / round().length) * 100">
+              <div class="tv-big">{{ score() }}<small>/{{ round().length }}</small></div>
+            </div>
+            <p class="tv-verdict">{{ verdict() }}</p>
+            <div class="tv-actions">
+              <button type="button" class="tv-btn" (click)="start(topic())"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> {{ t('Jugar otra vez', 'Play again') }}</button>
+              <button type="button" class="tv-btn tv-ghost" (click)="started.set(false)"><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i> {{ t('Cambiar de tema', 'Change topic') }}</button>
+              <a class="tv-btn tv-wa" [href]="shareUrl()" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i> {{ t('Reta a un amigo', 'Challenge a friend') }}</a>
+            </div>
           </div>
-          <button type="button" class="tv-btn" (click)="next()">
-            {{ isLast() ? t('Ver resultado', 'See result') : t('Siguiente', 'Next') }}
-            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-          </button>
         }
-      } @else {
-        <div class="tv-result">
-          <div class="tv-big">{{ score() }}<small>/{{ round().length }}</small></div>
-          <p class="tv-verdict">{{ verdict() }}</p>
-          <div class="tv-actions">
-            <button type="button" class="tv-btn" (click)="start(topic())"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> {{ t('Jugar otra vez', 'Play again') }}</button>
-            <button type="button" class="tv-btn tv-ghost" (click)="started.set(false)">{{ t('Cambiar de tema', 'Change topic') }}</button>
-            <a class="tv-btn tv-wa" [href]="shareUrl()" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i> {{ t('Reta a un amigo', 'Challenge a friend') }}</a>
-          </div>
-        </div>
-      }
+      </div>
     </section>
   `,
   styles: `
+    :host { display: block; }
     .trivia {
-      margin: 2.2rem 0 0; padding: 1.5rem; border-radius: 12px; background: var(--card-bg);
-      border: 1px solid var(--border-color); border-top: 6px solid var(--brand-red);
+      --c1: #0A0A0A; --c2: #3B0D1C; --c3: #BE3455;
+      position: relative; overflow: hidden; isolation: isolate;
+      margin: 2.2rem 0 0; border-radius: 16px; color: #fff;
+      background: linear-gradient(135deg, var(--c1), var(--c2) 55%, var(--c3));
+      background-size: 220% 220%;
+      animation: tvGradient 14s ease infinite;
+      box-shadow: 0 18px 40px -18px rgba(0, 0, 0, .55);
+      min-height: 380px;
     }
-    .tv-eyebrow { font-size: .75rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--brand-red); }
-    .tv-head h3 { font-family: var(--font-logo); font-size: clamp(1.25rem, 2.8vw, 1.7rem); font-weight: 900; margin: .3rem 0 1rem; }
-    .tv-intro p { color: var(--text-muted); font-size: .95rem; line-height: 1.45; margin-bottom: 1rem; }
-    .tv-topics { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); gap: .7rem; }
+    .theme-mx { --c1: #04332A; --c2: #0B6E4F; --c3: #BE3455; }
+    .theme-cb { --c1: #023E8A; --c2: #0096C7; --c3: #48CAE4; }
+    .theme-fd { --c1: #6A040F; --c2: #D62828; --c3: #F77F00; }
+    .theme-fb { --c1: #0B3D1E; --c2: #1B7F3B; --c3: #2DA44E; }
+
+    /* ---------- Fondo ---------- */
+    .tv-bg { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+    .tv-glow { position: absolute; width: 360px; height: 360px; border-radius: 50%; filter: blur(70px); opacity: .45; }
+    .g1 { background: rgba(255, 255, 255, .35); top: -140px; right: -80px; animation: tvDrift 12s ease-in-out infinite; }
+    .g2 { background: rgba(255, 209, 102, .35); bottom: -160px; left: -100px; animation: tvDrift 15s ease-in-out infinite reverse; }
+    .tv-float {
+      position: absolute; color: rgba(255, 255, 255, .13);
+      animation-name: tvFloat; animation-timing-function: ease-in-out; animation-iteration-count: infinite;
+    }
+    .tv-waves { position: absolute; left: 0; bottom: 0; width: 200%; height: 90px; }
+    .tv-waves path { fill: rgba(255, 255, 255, .14); }
+    .tv-waves .w1 { animation: tvWave 9s linear infinite; }
+    .tv-waves .w2 { fill: rgba(255, 255, 255, .09); animation: tvWave 13s linear infinite reverse; }
+    .tv-pitch { position: absolute; inset: 14px; border: 2px solid rgba(255, 255, 255, .12); border-radius: 10px; }
+    .tv-pitch .line { position: absolute; top: 0; bottom: 0; left: 50%; border-left: 2px solid rgba(255, 255, 255, .12); }
+    .tv-pitch .circle {
+      position: absolute; top: 50%; left: 50%; width: 150px; height: 150px; margin: -75px 0 0 -75px;
+      border: 2px solid rgba(255, 255, 255, .12); border-radius: 50%;
+    }
+
+    /* ---------- Contenido ---------- */
+    .tv-inner { position: relative; padding: clamp(1.3rem, 3vw, 2rem); }
+    .tv-eyebrow {
+      display: inline-flex; align-items: center; gap: .4rem; font-size: .72rem; font-weight: 800; letter-spacing: .14em;
+      text-transform: uppercase; padding: .35rem .7rem; border-radius: 999px;
+      background: rgba(255, 255, 255, .14); backdrop-filter: blur(6px);
+    }
+    .tv-head h3 {
+      font-family: var(--font-logo); font-size: clamp(1.4rem, 3.4vw, 2.1rem); font-weight: 900; margin: .7rem 0 1rem;
+      text-shadow: 0 2px 14px rgba(0, 0, 0, .3);
+    }
+    .tv-head h3 i { margin-right: .35rem; }
+    .tv-intro p { color: rgba(255, 255, 255, .85); font-size: 1rem; line-height: 1.45; margin-bottom: 1.2rem; }
+
+    .tv-topics { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: .9rem; }
     .tv-topic {
-      display: flex; flex-direction: column; align-items: center; gap: .45rem; padding: 1.1rem .8rem; border-radius: 10px;
-      border: 2px solid var(--border-color); background: var(--card-bg); color: inherit; font-weight: 800; font-size: .95rem;
-      cursor: pointer; transition: border-color .15s ease, transform .15s ease, background .15s ease;
+      position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: flex-start; gap: .25rem;
+      padding: 1.1rem 1rem 1rem; border-radius: 14px; border: 1px solid rgba(255, 255, 255, .22); color: #fff; text-align: left;
+      cursor: pointer; min-height: 165px;
+      box-shadow: 0 10px 24px -14px rgba(0, 0, 0, .6);
+      opacity: 0; animation: tvRise .55s cubic-bezier(.2, .8, .2, 1) forwards;
+      transition: transform .25s ease, box-shadow .25s ease;
     }
-    .tv-topic i { font-size: 1.6rem; color: var(--brand-red); }
-    .tv-topic:hover { border-color: var(--brand-red); transform: translateY(-2px); background: #FDF2F4; color: #111; }
-    .tv-btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: .5rem; border: none; border-radius: 8px;
-      background: var(--brand-red); color: #fff; font-weight: 800; font-size: .9rem; padding: .75rem 1.3rem; cursor: pointer;
-      text-transform: uppercase; text-decoration: none; transition: transform .15s ease, filter .15s ease;
+    .tv-topic::after {
+      content: ''; position: absolute; inset: 0; background: linear-gradient(120deg, transparent 30%, rgba(255, 255, 255, .25) 50%, transparent 70%);
+      transform: translateX(-120%); transition: transform .7s ease;
     }
-    .tv-btn:hover { transform: translateY(-1px); filter: brightness(1.08); }
-    .tv-wa { background: #25D366; }
-    .tv-ghost { background: transparent; color: var(--brand-red); border: 2px solid var(--brand-red); }
-    .tv-progress { display: flex; justify-content: space-between; font-size: .8rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
-    .tv-score { color: var(--brand-red); }
-    .tv-bar { height: 6px; background: #E5E7EB; border-radius: 999px; overflow: hidden; margin: .45rem 0 1.1rem; }
-    .tv-bar-fill { height: 100%; background: var(--brand-red); transition: width .3s ease; }
-    .tv-q { font-size: clamp(1.05rem, 2.2vw, 1.25rem); font-weight: 800; line-height: 1.35; margin-bottom: 1rem; }
-    .tv-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: .7rem; margin-bottom: 1rem; }
+    .tv-topic:hover { transform: translateY(-5px) scale(1.02); box-shadow: 0 18px 30px -14px rgba(0, 0, 0, .7); }
+    .tv-topic:hover::after { transform: translateX(120%); }
+    .tp-mx { background: linear-gradient(145deg, #0B6E4F, #04332A); }
+    .tp-cb { background: linear-gradient(145deg, #00B4D8, #0353A4); }
+    .tp-fd { background: linear-gradient(145deg, #F77F00, #9D0208); }
+    .tp-fb { background: linear-gradient(145deg, #2DA44E, #0B3D1E); }
+    .tp-icon {
+      display: grid; place-items: center; width: 52px; height: 52px; border-radius: 14px; font-size: 1.55rem;
+      background: rgba(255, 255, 255, .18); margin-bottom: .55rem; transition: transform .35s ease;
+    }
+    .tv-topic:hover .tp-icon { transform: rotate(-10deg) scale(1.12); }
+    .tp-name { font-size: 1.15rem; font-weight: 900; }
+    .tp-tag { font-size: .8rem; color: rgba(255, 255, 255, .82); line-height: 1.3; }
+    .tp-go { margin-top: auto; padding-top: .7rem; font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+    .tp-go i { transition: transform .25s ease; }
+    .tv-topic:hover .tp-go i { transform: translateX(4px); }
+
+    .tv-progress { display: flex; justify-content: space-between; align-items: center; font-size: .8rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
+    .tv-score { display: inline-flex; gap: .35rem; align-items: center; padding: .3rem .7rem; border-radius: 999px; background: rgba(255, 255, 255, .16); }
+    .tv-score i { color: #FFD166; }
+    .tv-score.bump { animation: tvPop .5s ease; }
+    .tv-bar { height: 8px; background: rgba(255, 255, 255, .18); border-radius: 999px; overflow: hidden; margin: .6rem 0 1.2rem; }
+    .tv-bar-fill { height: 100%; background: linear-gradient(90deg, #FFD166, #fff); border-radius: 999px; transition: width .5s cubic-bezier(.2, .8, .2, 1); }
+
+    .tv-card {
+      background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .18); border-radius: 14px;
+      padding: clamp(1rem, 2.5vw, 1.4rem); backdrop-filter: blur(10px);
+      animation: tvSlide .45s cubic-bezier(.2, .8, .2, 1);
+    }
+    .tv-q { font-size: clamp(1.1rem, 2.4vw, 1.4rem); font-weight: 800; line-height: 1.35; margin-bottom: 1.1rem; }
+    .tv-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: .7rem; margin-bottom: 1rem; }
     .tv-opt {
-      border: 2px solid var(--brand-gray); background: var(--card-bg); color: inherit; border-radius: 8px;
-      padding: .85rem .9rem; font-weight: 700; font-size: .95rem; cursor: pointer; text-align: center;
-      transition: border-color .15s ease, background .15s ease;
+      display: flex; align-items: center; gap: .7rem; text-align: left;
+      border: 2px solid rgba(255, 255, 255, .25); background: rgba(255, 255, 255, .95); color: #111;
+      border-radius: 12px; padding: .75rem .9rem; font-weight: 700; font-size: .95rem; cursor: pointer;
+      opacity: 0; animation: tvRise .4s ease forwards;
+      transition: transform .18s ease, box-shadow .18s ease, background .2s ease, border-color .2s ease;
     }
-    .tv-opt:hover:not(:disabled) { border-color: var(--brand-red); }
-    .tv-opt:disabled { cursor: default; opacity: .75; }
-    .tv-opt.right { border-color: #16A34A; background: #DCFCE7; color: #14532D; opacity: 1; }
-    .tv-opt.wrong { border-color: var(--brand-red); background: #FDE2E8; color: #7F1D1D; opacity: 1; }
-    .tv-feedback { padding: .8rem 1rem; border-radius: 8px; background: #FEF3C7; color: #78350F; font-size: .9rem; line-height: 1.4; margin-bottom: 1rem; }
-    .tv-feedback.ok { background: #DCFCE7; color: #14532D; }
-    .tv-result { text-align: center; }
-    .tv-big { font-family: var(--font-logo); font-size: clamp(3rem, 9vw, 4.5rem); font-weight: 900; color: var(--brand-red); line-height: 1; }
-    .tv-big small { font-size: .45em; color: var(--text-muted); }
-    .tv-verdict { font-size: 1.05rem; font-weight: 800; margin: .6rem 0 1.2rem; }
-    .tv-actions { display: flex; gap: .7rem; justify-content: center; flex-wrap: wrap; }
-    @media (max-width: 480px) { .tv-actions .tv-btn { width: 100%; } }
+    .tv-opt:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 10px 18px -10px rgba(0, 0, 0, .6); }
+    .tv-opt:disabled { cursor: default; }
+    .tv-opt:disabled:not(.right):not(.wrong) { opacity: .55 !important; }
+    .tv-letter {
+      flex: 0 0 auto; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 8px;
+      background: #111; color: #fff; font-size: .8rem; font-weight: 900;
+    }
+    .tv-opt-text { flex: 1; min-width: 0; }
+    .tv-mark { font-size: 1.25rem; }
+    .tv-opt.right { background: #DCFCE7; border-color: #16A34A; color: #14532D; animation: tvRise .4s ease forwards, tvPulse .7s ease .05s; }
+    .tv-opt.right .tv-letter { background: #16A34A; }
+    .tv-opt.wrong { background: #FFE4E6; border-color: #E11D48; color: #7F1D1D; animation: tvRise .4s ease forwards, tvShake .45s ease; }
+    .tv-opt.wrong .tv-letter { background: #E11D48; }
+
+    .tv-feedback {
+      display: flex; gap: .7rem; align-items: flex-start; padding: .85rem 1rem; border-radius: 12px; margin-bottom: 1rem;
+      background: rgba(255, 209, 102, .95); color: #4A2B00; font-size: .92rem; line-height: 1.45;
+      animation: tvRise .35s ease both;
+    }
+    .tv-feedback.ok { background: rgba(220, 252, 231, .97); color: #14532D; }
+    .tv-fb-icon { font-size: 1.4rem; line-height: 1; }
+
+    .tv-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: .5rem; border: none; border-radius: 10px;
+      background: #fff; color: #111; font-weight: 900; font-size: .88rem; padding: .8rem 1.3rem; cursor: pointer;
+      text-transform: uppercase; letter-spacing: .04em; text-decoration: none;
+      box-shadow: 0 8px 18px -10px rgba(0, 0, 0, .6); transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .tv-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 22px -10px rgba(0, 0, 0, .7); }
+    .tv-next { animation: tvRise .35s ease .1s both; }
+    .tv-wa { background: #25D366; color: #fff; }
+    .tv-ghost { background: rgba(255, 255, 255, .14); color: #fff; border: 1px solid rgba(255, 255, 255, .35); }
+
+    .tv-result { position: relative; text-align: center; padding: .5rem 0 .3rem; }
+    .tv-ring {
+      --pct: 0;
+      width: 170px; height: 170px; margin: 0 auto; border-radius: 50%; display: grid; place-items: center;
+      background: conic-gradient(#FFD166 calc(var(--pct) * 1%), rgba(255, 255, 255, .15) 0);
+      animation: tvZoom .7s cubic-bezier(.2, 1.4, .4, 1);
+    }
+    .tv-big {
+      width: 138px; height: 138px; border-radius: 50%; display: grid; place-items: center; align-content: center;
+      background: rgba(0, 0, 0, .35); font-family: var(--font-logo); font-size: 3.4rem; font-weight: 900; line-height: 1;
+    }
+    .tv-big small { font-size: 1.1rem; opacity: .8; }
+    .tv-verdict { font-size: 1.15rem; font-weight: 900; margin: 1rem 0 1.3rem; animation: tvRise .5s ease .3s both; }
+    .tv-actions { display: flex; gap: .7rem; justify-content: center; flex-wrap: wrap; animation: tvRise .5s ease .45s both; }
+    .tv-confetti { position: absolute; inset: -40px 0 0; pointer-events: none; overflow: hidden; height: 420px; }
+    .tv-confetti span { position: absolute; top: -20px; border-radius: 2px; opacity: .95; animation: tvConfetti linear forwards; }
+
+    @keyframes tvGradient { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+    @keyframes tvDrift { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(40px, 30px); } }
+    @keyframes tvFloat { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-22px) rotate(12deg); } }
+    @keyframes tvWave { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+    @keyframes tvRise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes tvSlide { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes tvPop { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
+    @keyframes tvPulse { 0% { box-shadow: 0 0 0 0 rgba(22, 163, 74, .6); } 100% { box-shadow: 0 0 0 16px rgba(22, 163, 74, 0); } }
+    @keyframes tvShake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-7px); } 40%, 80% { transform: translateX(7px); } }
+    @keyframes tvZoom { from { transform: scale(.4) rotate(-90deg); opacity: 0; } to { transform: scale(1) rotate(0); opacity: 1; } }
+    @keyframes tvConfetti { to { transform: translateY(460px) rotate(720deg); opacity: 0; } }
+
+    @media (max-width: 480px) {
+      .tv-actions .tv-btn { width: 100%; }
+      .tv-topic { min-height: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .trivia, .tv-glow, .tv-float, .tv-waves path, .tv-confetti span { animation: none !important; }
+      .tv-topic, .tv-opt, .tv-card, .tv-feedback, .tv-next, .tv-verdict, .tv-actions, .tv-ring { animation: none !important; opacity: 1; }
+    }
   `,
 })
 export class ElectionTrivia {
   readonly i18n = inject(I18nService);
 
   readonly topics = TOPICS;
+  readonly letters = ['A', 'B', 'C', 'D'];
   readonly topic = signal<TriviaTopic>('mx');
   readonly started = signal(false);
   readonly round = signal<TriviaQuestion[]>([]);
   readonly index = signal(0);
   readonly picked = signal<number | null>(null);
   readonly score = signal(0);
+  readonly scoreBump = signal(false);
   readonly finished = signal(false);
 
   readonly current = computed(() => this.round()[this.index()]);
   readonly isLast = computed(() => this.index() + 1 >= this.round().length);
+  readonly currentTheme = computed(() => TOPICS.find((tp) => tp.id === this.topic()) ?? TOPICS[0]);
+  readonly progress = computed(() => ((this.index() + (this.picked() !== null ? 1 : 0)) / Math.max(1, this.round().length)) * 100);
+
+  /** Íconos flotantes del fondo, con posición y ritmo fijos por tema. */
+  readonly deco = computed(() => {
+    const icons = this.started() ? this.currentTheme().deco : INTRO_DECO;
+    const spots = [[6, 12], [84, 8], [70, 62], [14, 72], [46, 6], [92, 44], [32, 86], [58, 34]];
+    return icons.map((icon, i) => ({
+      key: `${this.started() ? this.topic() : 'intro'}-${i}`,
+      icon,
+      x: spots[i % spots.length][0],
+      y: spots[i % spots.length][1],
+      size: 1.8 + ((i * 7) % 5) * 0.55,
+      delay: -(i * 1.3),
+      dur: 7 + (i % 4) * 1.6,
+    }));
+  });
+
+  /** Confeti del resultado: más piezas entre mejor sea el puntaje. */
+  readonly confetti = computed(() => {
+    const pieces = 18 + this.score() * 8;
+    return Array.from({ length: pieces }, (_, i) => ({
+      key: i,
+      x: Math.random() * 100,
+      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+      delay: Math.random() * 0.8,
+      dur: 1.8 + Math.random() * 1.6,
+      w: 6 + Math.random() * 6,
+      h: 8 + Math.random() * 8,
+    }));
+  });
 
   readonly verdict = computed(() => {
     const s = this.score();
     const total = this.round().length;
-    if (s === total) return this.t('¡Perfecto! Te sabes México de memoria.', 'Perfect! You know Mexico by heart.');
-    if (s >= total - 1) return this.t('¡Muy bien! Casi perfecto.', 'Great! Almost perfect.');
-    if (s >= Math.ceil(total / 2)) return this.t('Nada mal. ¿Lo intentas otra vez?', 'Not bad. Try again?');
-    return this.t('A repasar… ¡juega otra vez y mejora tu marca!', 'Time to study… play again and beat your score!');
+    if (s === total) return this.t('¡Perfecto! Eres un experto. 🏆', 'Perfect! You are an expert. 🏆');
+    if (s >= total - 1) return this.t('¡Muy bien! Casi perfecto. 🔥', 'Great! Almost perfect. 🔥');
+    if (s >= Math.ceil(total / 2)) return this.t('Nada mal. ¿Vas por la revancha? 💪', 'Not bad. Up for a rematch? 💪');
+    return this.t('A repasar… ¡juega otra vez y mejora tu marca! 📚', 'Time to study… play again and beat your score! 📚');
   });
 
   readonly shareUrl = computed(() => {
+    const topic = this.i18n.tx(this.currentTheme().label);
     const text = this.t(
-      `Saqué ${this.score()}/${this.round().length} en la trivia de MUESTRA.MX. ¿Me superas? https://muestra.mx`,
-      `I scored ${this.score()}/${this.round().length} on the MUESTRA.MX trivia. Can you beat me? https://muestra.mx`,
+      `Saqué ${this.score()}/${this.round().length} en la trivia de ${topic} de MUESTRA.MX. ¿Me superas? https://muestra.mx`,
+      `I scored ${this.score()}/${this.round().length} on the MUESTRA.MX ${topic} trivia. Can you beat me? https://muestra.mx`,
     );
     return `https://wa.me/?text=${encodeURIComponent(text)}`;
   });
@@ -440,11 +674,15 @@ export class ElectionTrivia {
   pick(i: number): void {
     if (this.picked() !== null) return;
     this.picked.set(i);
-    if (i === this.current().answer) this.score.update((s) => s + 1);
+    if (i === this.current().answer) {
+      this.score.update((s) => s + 1);
+      this.scoreBump.set(true);
+      setTimeout(() => this.scoreBump.set(false), 520);
+    }
   }
 
   next(): void {
-    if (this.index() + 1 >= this.round().length) {
+    if (this.isLast()) {
       this.finished.set(true);
       return;
     }
