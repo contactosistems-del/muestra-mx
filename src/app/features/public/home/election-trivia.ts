@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { I18nService } from '../../../core/services/i18n.service';
 import type { LocalizedString } from '../../../domain/models';
 
@@ -16,76 +15,76 @@ const L = (es: string, en: string): LocalizedString => ({ es, en });
 /** Banco de preguntas. Para agregar más, copia un bloque y cambia el texto. */
 const QUESTIONS: TriviaQuestion[] = [
   {
-    q: L('¿A partir de qué edad puedes votar en México?', 'At what age can you vote in Mexico?'),
-    options: [L('16 años', '16'), L('18 años', '18'), L('21 años', '21')],
+    q: L('¿Cuál es la montaña más alta de México?', 'What is the highest mountain in Mexico?'),
+    options: [L('Popocatépetl', 'Popocatépetl'), L('Pico de Orizaba', 'Pico de Orizaba'), L('Nevado de Toluca', 'Nevado de Toluca')],
     answer: 1,
-    fact: L('Desde los 18 años, con tu credencial para votar vigente.', 'From age 18, with a valid voter ID.'),
+    fact: L('El Pico de Orizaba o Citlaltépetl, entre Puebla y Veracruz, es el punto más alto del país.', 'Pico de Orizaba (Citlaltépetl), between Puebla and Veracruz, is the country’s highest point.'),
   },
   {
-    q: L('¿Qué institución organiza las elecciones federales?', 'Which institution runs federal elections?'),
-    options: [L('El INE', 'INE'), L('La Suprema Corte', 'The Supreme Court'), L('El Congreso', 'Congress')],
+    q: L('¿Cuántas entidades federativas tiene México?', 'How many federal entities does Mexico have?'),
+    options: [L('30', '30'), L('32', '32'), L('35', '35')],
+    answer: 1,
+    fact: L('Son 31 estados más la Ciudad de México.', '31 states plus Mexico City.'),
+  },
+  {
+    q: L('¿Qué es un cenote?', 'What is a cenote?'),
+    options: [L('Un volcán apagado', 'An extinct volcano'), L('Un pozo natural de agua', 'A natural water sinkhole'), L('Una pirámide maya', 'A Mayan pyramid')],
+    answer: 1,
+    fact: L('Es una cavidad en la roca caliza llena de agua dulce; la península de Yucatán tiene miles.', 'A limestone hollow filled with fresh water; the Yucatán Peninsula has thousands.'),
+  },
+  {
+    q: L('¿Cuál es la capital de Quintana Roo?', 'What is the capital of Quintana Roo?'),
+    options: [L('Cancún', 'Cancún'), L('Chetumal', 'Chetumal'), L('Playa del Carmen', 'Playa del Carmen')],
+    answer: 1,
+    fact: L('Aunque Cancún es la ciudad más grande, la capital es Chetumal.', 'Cancún is the biggest city, but the capital is Chetumal.'),
+  },
+  {
+    q: L('¿Cómo le dicen a la Laguna de Bacalar?', 'What is Bacalar Lagoon known as?'),
+    options: [L('Laguna de los Siete Colores', 'Lagoon of Seven Colors'), L('Laguna Azul', 'Blue Lagoon'), L('Laguna Encantada', 'Enchanted Lagoon')],
     answer: 0,
-    fact: L('El Instituto Nacional Electoral organiza las elecciones federales.', 'The National Electoral Institute (INE) runs federal elections.'),
+    fact: L('Sus tonos de azul cambian según la profundidad y el fondo.', 'Its shades of blue change with depth and the bottom.'),
   },
   {
-    q: L('¿En qué año el INE sustituyó al IFE?', 'In what year did INE replace IFE?'),
-    options: [L('2000', '2000'), L('2008', '2008'), L('2014', '2014')],
-    answer: 2,
-    fact: L('La reforma político-electoral de 2014 creó el INE.', 'The 2014 electoral reform created INE.'),
-  },
-  {
-    q: L('¿De qué municipio es cabecera Playa del Carmen?', 'Playa del Carmen is the seat of which municipality?'),
-    options: [L('Benito Juárez', 'Benito Juárez'), L('Solidaridad', 'Solidaridad'), L('Cozumel', 'Cozumel')],
+    q: L('¿Qué arrecife pasa frente a las costas de Quintana Roo?', 'Which reef runs along Quintana Roo’s coast?'),
+    options: [L('Gran Barrera de Coral', 'Great Barrier Reef'), L('Sistema Arrecifal Mesoamericano', 'Mesoamerican Reef'), L('Arrecife de Florida', 'Florida Reef')],
     answer: 1,
-    fact: L('Playa del Carmen es la cabecera del municipio de Solidaridad.', 'Playa del Carmen is the seat of Solidaridad municipality.'),
+    fact: L('Es el sistema de arrecifes más grande del continente americano.', 'It is the largest reef system in the Americas.'),
   },
   {
-    q: L('¿Cuántos municipios tiene Quintana Roo?', 'How many municipalities does Quintana Roo have?'),
-    options: [L('9', '9'), L('11', '11'), L('15', '15')],
-    answer: 1,
-    fact: L('Son 11; los más recientes son Bacalar y Puerto Morelos.', 'There are 11; the newest are Bacalar and Puerto Morelos.'),
-  },
-  {
-    q: L('¿En qué año Quintana Roo se convirtió en estado?', 'In what year did Quintana Roo become a state?'),
-    options: [L('1910', '1910'), L('1950', '1950'), L('1974', '1974')],
-    answer: 2,
-    fact: L('Dejó de ser territorio federal en 1974.', 'It stopped being a federal territory in 1974.'),
-  },
-  {
-    q: L('¿Cuántos años dura el cargo de un diputado federal?', 'How long is a federal deputy’s term?'),
-    options: [L('3 años', '3 years'), L('4 años', '4 years'), L('6 años', '6 years')],
+    q: L('¿En qué estado está Chichén Itzá?', 'In which state is Chichén Itzá?'),
+    options: [L('Yucatán', 'Yucatán'), L('Quintana Roo', 'Quintana Roo'), L('Campeche', 'Campeche')],
     answer: 0,
-    fact: L('La Cámara de Diputados se renueva cada 3 años.', 'The Chamber of Deputies is renewed every 3 years.'),
+    fact: L('Está en Yucatán y es una de las nuevas siete maravillas del mundo.', 'It is in Yucatán and is one of the New Seven Wonders of the World.'),
   },
   {
-    q: L('¿Cuántos años dura una presidencia municipal en Quintana Roo?', 'How long is a mayor’s term in Quintana Roo?'),
-    options: [L('2 años', '2 years'), L('3 años', '3 years'), L('6 años', '6 years')],
+    q: L('¿De dónde es originario el ajolote?', 'Where is the axolotl native to?'),
+    options: [L('Lago de Chapala', 'Lake Chapala'), L('Canales de Xochimilco', 'Xochimilco canals'), L('Cenotes de Yucatán', 'Yucatán cenotes')],
     answer: 1,
-    fact: L('Los ayuntamientos duran 3 años en el cargo.', 'Municipal councils serve 3-year terms.'),
+    fact: L('Vive de forma natural solo en los lagos y canales de Xochimilco, en la CDMX.', 'It lives in the wild only in the lakes and canals of Xochimilco, Mexico City.'),
   },
   {
-    q: L('¿Cuál es la capital de Tabasco?', 'What is the capital of Tabasco?'),
-    options: [L('Villahermosa', 'Villahermosa'), L('Cárdenas', 'Cárdenas'), L('Comalcalco', 'Comalcalco')],
+    q: L('¿A qué estados llega cada invierno la mariposa monarca?', 'Where do monarch butterflies arrive each winter?'),
+    options: [L('Michoacán y Estado de México', 'Michoacán and State of Mexico'), L('Sonora y Chihuahua', 'Sonora and Chihuahua'), L('Oaxaca y Chiapas', 'Oaxaca and Chiapas')],
     answer: 0,
-    fact: L('Villahermosa es la capital del estado de Tabasco.', 'Villahermosa is the capital of Tabasco.'),
+    fact: L('Viajan miles de kilómetros desde Canadá y Estados Unidos hasta los bosques de oyamel.', 'They fly thousands of kilometers from Canada and the US to the fir forests.'),
   },
   {
-    q: L('¿En qué año Tulum se convirtió en municipio?', 'In what year did Tulum become a municipality?'),
-    options: [L('1995', '1995'), L('2008', '2008'), L('2018', '2018')],
+    q: L('¿Con qué planta se hace el tequila?', 'What plant is tequila made from?'),
+    options: [L('Maguey pulquero', 'Pulque agave'), L('Agave azul', 'Blue agave'), L('Caña de azúcar', 'Sugar cane')],
     answer: 1,
-    fact: L('Tulum se separó de Solidaridad y es municipio desde 2008.', 'Tulum split from Solidaridad and became a municipality in 2008.'),
+    fact: L('Se elabora con agave azul y su origen es Jalisco.', 'It is made from blue agave and comes from Jalisco.'),
   },
   {
-    q: L('¿Cuánto dura un sexenio presidencial?', 'How long is a presidential term?'),
-    options: [L('4 años', '4 years'), L('5 años', '5 years'), L('6 años', '6 years')],
-    answer: 2,
-    fact: L('La presidencia de la República dura 6 años, sin reelección.', 'The presidency lasts 6 years, with no re-election.'),
-  },
-  {
-    q: L('¿Qué documento necesitas para votar?', 'What document do you need to vote?'),
-    options: [L('Pasaporte', 'Passport'), L('Credencial para votar', 'Voter ID card'), L('Acta de nacimiento', 'Birth certificate')],
+    q: L('¿Cuál es la lengua indígena más hablada en México?', 'What is the most spoken Indigenous language in Mexico?'),
+    options: [L('Maya', 'Maya'), L('Náhuatl', 'Nahuatl'), L('Zapoteco', 'Zapotec')],
     answer: 1,
-    fact: L('Solo se vota con la credencial para votar con fotografía vigente.', 'You can only vote with a valid photo voter ID.'),
+    fact: L('El náhuatl es la más hablada; el maya ocupa el segundo lugar.', 'Nahuatl is the most spoken; Maya is second.'),
+  },
+  {
+    q: L('¿Cuál es la flor nacional de México?', 'What is Mexico’s national flower?'),
+    options: [L('La dalia', 'Dahlia'), L('El cempasúchil', 'Marigold'), L('La rosa', 'Rose')],
+    answer: 0,
+    fact: L('La dalia es flor nacional desde 1963; el cempasúchil es la flor del Día de Muertos.', 'The dahlia has been the national flower since 1963; marigold is the Day of the Dead flower.'),
   },
 ];
 
@@ -103,17 +102,16 @@ function shuffle<T>(items: T[]): T[] {
 @Component({
   selector: 'app-election-trivia',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
   template: `
     <section class="trivia" [attr.lang]="i18n.lang()" aria-labelledby="trivia-title">
       <div class="tv-head">
         <span class="tv-eyebrow"><i class="fa-solid fa-gamepad" aria-hidden="true"></i> {{ t('Juega y aprende', 'Play and learn') }}</span>
-        <h3 id="trivia-title">{{ t('¿Cuánto sabes de elecciones?', 'How much do you know about elections?') }}</h3>
+        <h3 id="trivia-title">{{ t('¿Cuánto sabes de México?', 'How much do you know about Mexico?') }}</h3>
       </div>
 
       @if (!started()) {
         <div class="tv-intro">
-          <p>{{ t('5 preguntas rápidas sobre México, Quintana Roo y la elección 2027. ¿Las contestas todas?', '5 quick questions about Mexico, Quintana Roo and the 2027 election. Can you get them all?') }}</p>
+          <p>{{ t('5 preguntas rápidas sobre México y el Caribe mexicano. ¿Las contestas todas?', '5 quick questions about Mexico and the Mexican Caribbean. Can you get them all?') }}</p>
           <button type="button" class="tv-btn" (click)="start()">{{ t('Empezar', 'Start') }} <i class="fa-solid fa-play" aria-hidden="true"></i></button>
         </div>
       } @else if (!finished()) {
@@ -155,7 +153,6 @@ function shuffle<T>(items: T[]): T[] {
           <div class="tv-actions">
             <button type="button" class="tv-btn" (click)="start()"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> {{ t('Jugar otra vez', 'Play again') }}</button>
             <a class="tv-btn tv-wa" [href]="shareUrl()" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i> {{ t('Reta a un amigo', 'Challenge a friend') }}</a>
-            <a class="tv-btn tv-ghost" routerLink="/graficas">{{ t('Ver encuestas', 'See polls') }}</a>
           </div>
         </div>
       }
@@ -219,7 +216,7 @@ export class ElectionTrivia {
   readonly verdict = computed(() => {
     const s = this.score();
     const total = this.round().length;
-    if (s === total) return this.t('¡Perfecto! Eres experto electoral.', 'Perfect! You are an election expert.');
+    if (s === total) return this.t('¡Perfecto! Te sabes México de memoria.', 'Perfect! You know Mexico by heart.');
     if (s >= total - 1) return this.t('¡Muy bien! Casi perfecto.', 'Great! Almost perfect.');
     if (s >= Math.ceil(total / 2)) return this.t('Nada mal. ¿Lo intentas otra vez?', 'Not bad. Try again?');
     return this.t('A repasar… ¡juega otra vez y mejora tu marca!', 'Time to study… play again and beat your score!');
@@ -227,8 +224,8 @@ export class ElectionTrivia {
 
   readonly shareUrl = computed(() => {
     const text = this.t(
-      `Saqué ${this.score()}/${this.round().length} en la trivia electoral de MUESTRA.MX. ¿Me superas? https://muestra.mx`,
-      `I scored ${this.score()}/${this.round().length} on the MUESTRA.MX election trivia. Can you beat me? https://muestra.mx`,
+      `Saqué ${this.score()}/${this.round().length} en la trivia de México de MUESTRA.MX. ¿Me superas? https://muestra.mx`,
+      `I scored ${this.score()}/${this.round().length} on the MUESTRA.MX Mexico trivia. Can you beat me? https://muestra.mx`,
     );
     return `https://wa.me/?text=${encodeURIComponent(text)}`;
   });
