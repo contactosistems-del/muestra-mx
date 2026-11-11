@@ -1,5 +1,5 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
-import { provideRouter, withInMemoryScrolling } from '@angular/router';
+import { provideRouter, withInMemoryScrolling, withViewTransitions } from '@angular/router';
 import { provideFirebase } from './core/firebase/firestore.provider';
 import { FirestoreContentRepository } from './data/firestore-content.repository';
 import { FirestoreNewsRepository } from './data/firestore-news.repository';
@@ -12,7 +12,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
-    provideRouter(routes, withInMemoryScrolling({ scrollPositionRestoration: 'top' })),
+    provideRouter(routes, withInMemoryScrolling({ scrollPositionRestoration: 'top' }), withViewTransitions()),
     provideFirebase(),
     { provide: NEWS_REPOSITORY, useClass: FirestoreNewsRepository },
     { provide: VOTE_REPOSITORY, useClass: FirestoreVoteRepository },
