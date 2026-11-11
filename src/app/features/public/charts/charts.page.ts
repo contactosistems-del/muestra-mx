@@ -2,11 +2,12 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { I18nService } from '../../../core/services/i18n.service';
 import { SurveyService } from '../../../core/services/survey.service';
+import { PieChart, pieColor } from '../../../shared/pie-chart/pie-chart';
 
 @Component({
   selector: 'app-charts-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, PieChart],
   template: `
     <section class="charts-wrap" [attr.lang]="i18n.lang()">
       <div class="charts-head">
@@ -26,15 +27,18 @@ import { SurveyService } from '../../../core/services/survey.service';
             @if (row.result.total === 0) {
               <p class="empty">{{ i18n.t('noVotesYet') }}</p>
             } @else {
+              <div class="pie-box">
+                <app-pie-chart [options]="row.result.options" />
+              </div>
               <ul class="bars">
-                @for (opt of row.result.options; track opt.label) {
+                @for (opt of row.result.options; track opt.label; let i = $index) {
                   <li>
                     <div class="bar-meta">
-                      <span>{{ opt.label }}</span>
+                      <span><i class="dot" [style.background]="color(i)"></i>{{ opt.label }}</span>
                       <strong>{{ opt.percent }}%</strong>
                     </div>
                     <div class="bar-track">
-                      <div class="bar-fill" [style.width.%]="opt.percent"></div>
+                      <div class="bar-fill" [style.width.%]="opt.percent" [style.background]="color(i)"></div>
                     </div>
                   </li>
                 }
@@ -70,6 +74,8 @@ import { SurveyService } from '../../../core/services/survey.service';
     .bar-meta span { min-width: 0; overflow-wrap: anywhere; }
     .bar-track { height: 10px; background: #E5E7EB; border-radius: 999px; overflow: hidden; }
     .bar-fill { height: 100%; background: var(--brand-red); border-radius: 999px; min-width: 0; transition: width .35s ease; }
+    .pie-box { width: min(100%, 220px); margin: 0 auto 1.1rem; }
+    .dot { display: inline-block; width: .7rem; height: .7rem; border-radius: 50%; margin-right: .4rem; vertical-align: -1px; }
     .result-cta { display: inline-flex; justify-content: center; margin-top: .2rem; }
     @media (max-width: 720px) {
       .result-cta { width: 100%; }
@@ -79,4 +85,5 @@ import { SurveyService } from '../../../core/services/survey.service';
 export class ChartsPage {
   readonly i18n = inject(I18nService);
   readonly surveys = inject(SurveyService);
+  readonly color = pieColor;
 }

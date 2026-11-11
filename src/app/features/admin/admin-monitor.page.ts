@@ -6,6 +6,7 @@ import { NewsService } from '../../core/services/news.service';
 import { SurveyService } from '../../core/services/survey.service';
 import type { VoteRecord } from '../../domain/models';
 import { LeafletMap } from '../../shared/leaflet-map/leaflet-map';
+import { PieChart, pieColor } from '../../shared/pie-chart/pie-chart';
 import { ContentCms } from './content-cms';
 import { NewsEditor } from './news-editor';
 import { SurveyCms } from './survey-cms';
@@ -15,7 +16,7 @@ type AdminTab = 'results' | 'charts' | 'surveys' | 'content' | 'news';
 @Component({
   selector: 'app-admin-monitor',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, FormsModule, LeafletMap, ContentCms, SurveyCms, NewsEditor],
+  imports: [RouterLink, FormsModule, LeafletMap, PieChart, ContentCms, SurveyCms, NewsEditor],
   template: `
     <section class="admin-monitor-overlay active">
       <div class="monitor-shell">
@@ -181,15 +182,18 @@ type AdminTab = 'results' | 'charts' | 'surveys' | 'content' | 'news';
                   @if (row.result.total === 0) {
                     <p class="empty">{{ i18n.t('noVotesYet') }}</p>
                   } @else {
+                    <div class="admin-pie">
+                      <app-pie-chart [options]="row.result.options" />
+                    </div>
                     <ul class="admin-bars">
-                      @for (opt of row.result.options; track opt.label) {
+                      @for (opt of row.result.options; track opt.label; let i = $index) {
                         <li>
                           <div class="bar-meta">
-                            <span>{{ opt.label }}</span>
+                            <span><i class="pie-dot" [style.background]="pieColor(i)"></i>{{ opt.label }}</span>
                             <strong>{{ opt.percent }}% · {{ opt.count }}</strong>
                           </div>
                           <div class="bar-track">
-                            <div class="bar-fill" [style.width.%]="opt.percent"></div>
+                            <div class="bar-fill" [style.width.%]="opt.percent" [style.background]="pieColor(i)"></div>
                           </div>
                         </li>
                       }
@@ -284,6 +288,8 @@ type AdminTab = 'results' | 'charts' | 'surveys' | 'content' | 'news';
     </section>
   `,
   styles: `
+    .admin-pie { width: min(100%, 200px); margin: .4rem auto 1rem; }
+    .pie-dot { display: inline-block; width: .7rem; height: .7rem; border-radius: 50%; margin-right: .4rem; vertical-align: -1px; }
     :host {
       display: block;
       min-height: 100dvh;
@@ -683,6 +689,7 @@ export class AdminMonitorPage implements OnInit, OnDestroy {
   readonly i18n = inject(I18nService);
   readonly news = inject(NewsService);
   readonly surveys = inject(SurveyService);
+  readonly pieColor = pieColor;
   readonly tab = signal<AdminTab>('results');
   readonly votes = signal<VoteRecord[]>([]);
   readonly selectedSurveyId = signal('');
