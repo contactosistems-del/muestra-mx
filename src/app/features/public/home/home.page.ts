@@ -6,13 +6,14 @@ import { NewsService } from '../../../core/services/news.service';
 import { SurveyService } from '../../../core/services/survey.service';
 import { newsCategoryLabel } from '../../../data/catalog';
 import { ElectionCountdown } from './election-countdown';
+import { ElectionTrivia } from './election-trivia';
 import { LiveChannels } from './live-channels';
 import { PopulationClock } from './population-clock';
 
 @Component({
   selector: 'app-home-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, LiveChannels, ElectionCountdown, PopulationClock],
+  imports: [RouterLink, LiveChannels, ElectionCountdown, ElectionTrivia, PopulationClock],
   template: `
     <div class="main-grid" [attr.lang]="i18n.lang()">
       <section class="hero-slider-container">
@@ -48,6 +49,7 @@ import { PopulationClock } from './population-clock';
 
     <app-live-channels />
     <app-election-countdown />
+    <app-election-trivia />
     <app-population-clock />
 
     <section class="home-news" [attr.lang]="i18n.lang()">
