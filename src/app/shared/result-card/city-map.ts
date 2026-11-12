@@ -21,12 +21,12 @@ import { tileUrl, worldPx } from '../city-geo';
     :host { display: block; }
     .cm { position: relative; overflow: hidden; background: #11141B; }
     .cm-tiles { position: absolute; left: 50%; top: 50%; width: 0; height: 0; animation: cmDrift 18s ease-in-out infinite alternate; }
-    .cm-tiles img { position: absolute; width: 256px; height: 256px; max-width: none; user-select: none; pointer-events: none; }
+    .cm-tiles img { position: absolute; width: 256px; height: 256px; max-width: none; user-select: none; pointer-events: none; filter: brightness(1.9) contrast(1.15); }
     .cm-shade {
       position: absolute; inset: 0;
       background:
         radial-gradient(circle at 50% 55%, transparent 0 18%, rgba(10,10,15,.35) 60%),
-        linear-gradient(180deg, rgba(190,52,85,.25), rgba(10,10,15,.15) 45%, rgba(10,10,15,.75));
+        linear-gradient(180deg, rgba(190,52,85,.22), rgba(10,10,15,.05) 45%, rgba(10,10,15,.65));
       mix-blend-mode: normal;
     }
     .cm-pin { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -85%); color: #FF4D7A; font-size: 1.9rem; filter: drop-shadow(0 4px 8px rgba(0,0,0,.6)); }

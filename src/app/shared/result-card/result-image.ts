@@ -313,7 +313,9 @@ async function drawCityBanner(ctx: CanvasRenderingContext2D, data: ResultImageDa
         jobs.push(
           loadImage(tileUrl(tx, ty, z)).then((img) => {
             if (!img) return;
+            ctx.filter = 'brightness(1.9) contrast(1.15)';
             ctx.drawImage(img, tx * 256 - originX, top + ty * 256 - originY, 256, 256);
+            ctx.filter = 'none';
             ok++;
           }),
         );
