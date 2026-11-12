@@ -38,9 +38,12 @@
   </div>
 </header>
 
-<nav class="site-nav" [attr.lang]="lang">
+<nav class="site-nav" [class.is-scrolled]="scrolled()" [attr.lang]="lang">
   <div class="site-nav-inner">
     <ul class="nav-links">
+      <li class="nav-mini-logo" aria-hidden="true">
+        <a routerLink="/" tabindex="-1"><span class="logo-mu">mu</span><span class="logo-es">es</span>tra.mx</a>
+      </li>
       @for (link of links; track link.path) {
         <li routerLinkActive="active" [routerLinkActiveOptions]="{ exact: link.exact }">
           <a [routerLink]="link.path">{{ i18n.t(link.key) }}</a>

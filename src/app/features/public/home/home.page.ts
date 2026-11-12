@@ -8,13 +8,15 @@ import { newsCategoryLabel } from '../../../data/catalog';
 import { ElectionCountdown } from './election-countdown';
 import { ElectionTrivia } from './election-trivia';
 import { LiveChannels } from './live-channels';
+import { LiveStats } from './live-stats';
 import { PopulationClock } from './population-clock';
 
 @Component({
   selector: 'app-home-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, LiveChannels, ElectionCountdown, ElectionTrivia, PopulationClock],
+  imports: [RouterLink, LiveChannels, LiveStats, ElectionCountdown, ElectionTrivia, PopulationClock],
   template: `
+    <app-live-stats />
     <div class="main-grid" [attr.lang]="i18n.lang()">
       <section class="hero-slider-container">
         <img [src]="content.featured().imageUrl" class="slide-img-real" [alt]="i18n.t('heroAlt')" />

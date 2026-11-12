@@ -7,6 +7,7 @@ import { SurveyService } from '../../core/services/survey.service';
 import type { VoteRecord } from '../../domain/models';
 import { LeafletMap } from '../../shared/leaflet-map/leaflet-map';
 import { PieChart, pieColor } from '../../shared/pie-chart/pie-chart';
+import { AdminInsights } from './admin-insights';
 import { ContentCms } from './content-cms';
 import { NewsEditor } from './news-editor';
 import { SurveyCms } from './survey-cms';
@@ -16,7 +17,7 @@ type AdminTab = 'results' | 'charts' | 'surveys' | 'content' | 'news';
 @Component({
   selector: 'app-admin-monitor',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, FormsModule, LeafletMap, PieChart, ContentCms, SurveyCms, NewsEditor],
+  imports: [RouterLink, FormsModule, LeafletMap, PieChart, AdminInsights, ContentCms, SurveyCms, NewsEditor],
   template: `
     <section class="admin-monitor-overlay active">
       <div class="monitor-shell">
@@ -97,16 +98,7 @@ type AdminTab = 'results' | 'charts' | 'surveys' | 'content' | 'news';
             </section>
 
             @if (selectedSurvey(); as survey) {
-              <div class="stats-row">
-                <div class="stat">
-                  <span>{{ i18n.t('cloudRecords') }}</span>
-                  <strong>{{ selectedVotes().length }}</strong>
-                </div>
-                <div class="stat">
-                  <span>{{ i18n.tx(survey.city) }}</span>
-                  <strong>{{ selectedMarkers().length }}</strong>
-                </div>
-              </div>
+              <app-admin-insights [votes]="selectedVotes()" />
 
               <div class="panel-actions survey-export">
                 <button type="button" class="export" (click)="exportCsv()">

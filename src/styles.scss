@@ -9,16 +9,18 @@
   --text-color: #111827;
   --text-muted: #4B5563;
   --border-color: #9DA19F;
-  --font-sans: 'Inter', sans-serif;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  --font-display: 'Sora', 'Plus Jakarta Sans', sans-serif;
   --font-logo: 'Montserrat', sans-serif;
 }
 
 [data-theme='dark'] {
-  --bg-color: #0F172A;
-  --card-bg: #1E293B;
-  --text-color: #F8FAFC;
-  --text-muted: #94A3B8;
-  --border-color: #64748B;
+  --bg-color: #0B0D12;
+  --card-bg: #151922;
+  --text-color: #F1F5F9;
+  --text-muted: #9AA4B2;
+  --border-color: #2A3140;
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -890,3 +892,53 @@ html { scrollbar-color: var(--brand-red) transparent; }
 .footer-nav a:hover::after { right: 0; }
 .footer-logo .logo-es { display: inline-block; transition: transform .35s var(--ease-out); }
 .footer-logo:hover .logo-es { transform: translateY(-3px) rotate(-4deg); }
+
+/* ---------- Menú inteligente: vidrio y compacto al bajar ---------- */
+.site-nav { transition: background .35s ease, box-shadow .35s ease, border-color .35s ease; }
+.site-nav .nav-actions { max-height: 80px; transition: max-height .35s var(--ease-out), padding .35s var(--ease-out), opacity .25s ease; }
+.nav-mini-logo { display: flex; align-items: center; max-width: 0; overflow: hidden; opacity: 0; transition: max-width .4s var(--ease-out), opacity .3s ease, margin .4s; }
+.nav-links li.nav-mini-logo a {
+  padding: .5rem .9rem .5rem 0 !important; background: none !important; text-transform: none; letter-spacing: -.02em;
+  font-family: var(--font-logo); font-size: 1.05rem; font-weight: 900; color: #fff;
+}
+.nav-links li.nav-mini-logo a::after { display: none; }
+.nav-mini-logo .logo-es { color: #FF8FAB; }
+.site-nav.is-scrolled {
+  background: rgba(10, 12, 18, .78) !important;
+  -webkit-backdrop-filter: saturate(160%) blur(16px); backdrop-filter: saturate(160%) blur(16px);
+  border-bottom-color: rgba(190, 52, 85, .85);
+  box-shadow: 0 10px 30px -12px rgba(0, 0, 0, .55);
+}
+.site-nav.is-scrolled .nav-actions { max-height: 0; padding-top: 0; padding-bottom: 0; opacity: 0; border-top-color: transparent; pointer-events: none; }
+.site-nav.is-scrolled .nav-mini-logo { max-width: 160px; opacity: 1; }
+.site-nav.is-scrolled .nav-links li a { padding-top: .62rem; padding-bottom: .62rem; }
+
+/* ---------- Tipografía premium ---------- */
+body { font-feature-settings: 'ss01', 'cv11'; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+h1, h2, h3, .news-card h3, .news-card h4, .article-sheet h1, .slide-content h2, .slide-content h1, .widget-header, .panel-head h2 {
+  font-family: var(--font-display); letter-spacing: -.02em;
+}
+h1 { letter-spacing: -.03em; }
+p { text-wrap: pretty; }
+h1, h2, h3 { text-wrap: balance; }
+.badge, .nav-links li a, .nav-chip, .btn-votar, .btn-leer, .btn-votar-activo, .result-cta { font-family: var(--font-sans); }
+
+/* ---------- Modo oscuro pulido ---------- */
+[data-theme='dark'] body {
+  background:
+    radial-gradient(900px 500px at 100% 0%, rgba(190, 52, 85, .10), transparent 60%),
+    radial-gradient(800px 500px at 0% 100%, rgba(59, 130, 246, .06), transparent 60%),
+    var(--bg-color) fixed;
+}
+[data-theme='dark'] .site-header { background: rgba(21, 25, 34, .92); border-bottom-color: #222938; }
+[data-theme='dark'] .sidebar-widget, [data-theme='dark'] .news-card, [data-theme='dark'] .result-card, [data-theme='dark'] .nosotros-card,
+[data-theme='dark'] .dir-box, [data-theme='dark'] .article-sheet, [data-theme='dark'] .nosotros-section, [data-theme='dark'] .contacto-section {
+  border-color: #232A38 !important; box-shadow: 0 14px 30px -18px rgba(0, 0, 0, .8);
+}
+[data-theme='dark'] .sidebar-widget:hover, [data-theme='dark'] .news-card:hover, [data-theme='dark'] .result-card:hover { border-color: rgba(224, 87, 122, .6) !important; }
+[data-theme='dark'] .bar-track, [data-theme='dark'] .sp-track, [data-theme='dark'] .mx-track { background: #252C3A !important; }
+[data-theme='dark'] .input-group input:not([type='file']), [data-theme='dark'] .input-group textarea, [data-theme='dark'] .input-group select, [data-theme='dark'] .file-field {
+  background: #0F131B; border-color: #2A3140 !important;
+}
+[data-theme='dark'] .civica-choice.selected { background: rgba(190, 52, 85, .14) !important; }
+[data-theme='dark'] ::-webkit-scrollbar-track { background: #0B0D12; }

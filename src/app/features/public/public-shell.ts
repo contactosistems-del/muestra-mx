@@ -27,6 +27,7 @@ export class PublicShell {
   readonly news = inject(NewsService);
   readonly splash = signal(true);
   readonly loginOpen = signal(false);
+  readonly scrolled = signal(false);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly links = [
@@ -44,6 +45,13 @@ export class PublicShell {
     afterNextRender(() => {
       setTimeout(() => this.splash.set(false), 1500);
       this.setupReveal();
+      const onScroll = () => {
+        const next = window.scrollY > 120;
+        if (next !== this.scrolled()) this.scrolled.set(next);
+      };
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+      this.destroyRef.onDestroy(() => window.removeEventListener('scroll', onScroll));
     });
   }
 
