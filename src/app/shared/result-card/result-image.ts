@@ -1,3 +1,4 @@
+import { type CityGeo, tileUrl, worldPx } from '../city-geo';
 import { partyColor, partyTint } from '../party';
 
 export interface ResultImageRow {
@@ -13,6 +14,7 @@ export interface ResultImageData {
   city: string;
   question: string;
   rows: ResultImageRow[];
+  geo?: CityGeo | null;
 }
 
 const W = 1080;
@@ -108,42 +110,47 @@ export async function downloadResultImage(data: ResultImageData): Promise<void> 
   ctx.fillText(`Corte: ${stamp}`, W - PAD, 112);
   ctx.textAlign = 'left';
 
-  // Ubicación
-  let y = 230;
-  ctx.font = `700 24px ${mono}`;
-  ctx.fillStyle = '#BE3455';
-  ctx.fillText(`MUESTRA.MX  /  ${data.city.toUpperCase()}`, PAD, y);
+  // Mapa de la ciudad (o ciudad simulada si no hay mapa)
+  const mapTop = 150;
+  const mapH = 260;
+  await drawCityBanner(ctx, data, mapTop, mapH, mono);
 
   // Pregunta
-  y += 30;
-  let size = 58;
+  let y = mapTop + mapH + 40;
+  let size = 52;
   let lines: string[];
   do {
     ctx.font = `800 ${size}px ${display}`;
     lines = wrap(ctx, data.question, W - PAD * 2);
     size -= 4;
-  } while (lines.length > 4 && size > 36);
-  const lh = size * 1.2;
+  } while (lines.length > 3 && size > 34);
+  const lh = (size + 4) * 1.18;
   ctx.fillStyle = '#0B0B0F';
   for (const line of lines) {
     y += lh;
     ctx.fillText(line, PAD, y);
   }
 
-  // Filas
-  y += 60;
-  const rows = data.rows.slice(0, 6);
-  const avail = H - 230 - y;
-  const rowH = Math.min(150, Math.floor(avail / Math.max(rows.length, 1)));
-  const avatar = Math.min(96, rowH - 34);
+  // Dona a la izquierda
+  const rows = data.rows.slice(0, 5);
+  const blockTop = y + 50;
+  const blockBottom = H - 175;
+  const donutR = 135;
+  const dcx = PAD + donutR + 10;
+  const dcy = blockTop + Math.min(donutR + 20, (blockBottom - blockTop) / 2);
+  drawDonut(ctx, rows, dcx, dcy, donutR, display, mono);
+
+  // Filas a la derecha
+  const rx = dcx + donutR + 60;
+  const right = W - PAD;
+  const rowH = Math.min(118, Math.floor((blockBottom - blockTop) / Math.max(rows.length, 1)));
+  const avatar = Math.min(76, rowH - 30);
   const images = await Promise.all(rows.map((r) => loadImage(r.image ?? '')));
-
+  let ry = blockTop;
   rows.forEach((row, i) => {
-    const cy = y + rowH / 2;
     const color = partyColor(row.party);
-    const ax = PAD + avatar / 2;
-
-    // Avatar
+    const cy = ry + rowH / 2;
+    const ax = rx + avatar / 2;
     ctx.save();
     ctx.beginPath();
     ctx.arc(ax, cy, avatar / 2, 0, Math.PI * 2);
@@ -153,10 +160,8 @@ export async function downloadResultImage(data: ResultImageData): Promise<void> 
     ctx.clip();
     const img = images[i];
     if (img) {
-      const s = Math.max(avatar / img.width, avatar / img.height);
-      const iw = img.width * s;
-      const ih = img.height * s;
-      ctx.drawImage(img, ax - iw / 2, cy - avatar / 2, iw, ih);
+      const sc = Math.max(avatar / img.width, avatar / img.height);
+      ctx.drawImage(img, ax - (img.width * sc) / 2, cy - avatar / 2, img.width * sc, img.height * sc);
     } else {
       ctx.fillStyle = color;
       ctx.fillRect(ax - avatar / 2, cy - avatar / 2, avatar, avatar);
@@ -168,52 +173,53 @@ export async function downloadResultImage(data: ResultImageData): Promise<void> 
     }
     ctx.restore();
     if (i === 0) {
-      ctx.lineWidth = 6;
+      ctx.lineWidth = 5;
       ctx.strokeStyle = color;
       ctx.beginPath();
-      ctx.arc(ax, cy, avatar / 2 + 6, 0, Math.PI * 2);
+      ctx.arc(ax, cy, avatar / 2 + 5, 0, Math.PI * 2);
       ctx.stroke();
     }
-
-    const tx = PAD + avatar + 32;
-    const right = W - PAD;
-    // Nombre
-    ctx.font = `800 36px ${display}`;
-    ctx.fillStyle = '#0B0B0F';
-    const name = row.label;
-    ctx.fillText(name, tx, cy - 8);
-    let nx = tx + ctx.measureText(name).width + 16;
-    // Partido
-    if (row.party) {
-      ctx.font = `700 20px ${mono}`;
-      const pw = ctx.measureText(row.party).width + 24;
-      ctx.fillStyle = partyTint(row.party, 0.14);
-      roundRect(ctx, nx, cy - 40, pw, 34, 8);
-      ctx.fill();
-      ctx.fillStyle = color;
-      ctx.fillText(row.party, nx + 12, cy - 16);
-      nx += pw;
-    }
+    const tx = rx + avatar + 22;
     // Porcentaje
     ctx.textAlign = 'right';
-    ctx.font = `700 44px ${mono}`;
+    ctx.font = `700 36px ${mono}`;
     ctx.fillStyle = '#0B0B0F';
-    ctx.fillText(`${row.percent.toFixed(1)}%`, right, cy - 6);
+    ctx.fillText(`${row.percent.toFixed(1)}%`, right, cy - 8);
+    const pctW = ctx.measureText(`${row.percent.toFixed(1)}%`).width;
     ctx.textAlign = 'left';
-    // Barra
-    const bw = right - tx;
+    // Nombre (se reduce si no cabe)
+    let fs = 28;
+    ctx.font = `800 ${fs}px ${display}`;
+    while (ctx.measureText(row.label).width > right - tx - pctW - 20 && fs > 18) {
+      fs -= 1;
+      ctx.font = `800 ${fs}px ${display}`;
+    }
+    ctx.fillStyle = '#0B0B0F';
+    ctx.fillText(row.label, tx, cy - 10);
+    // Partido + barra
+    let bx = tx;
+    if (row.party) {
+      ctx.font = `700 17px ${mono}`;
+      const pw = ctx.measureText(row.party).width + 18;
+      ctx.fillStyle = partyTint(row.party, 0.14);
+      roundRect(ctx, tx, cy + 6, pw, 28, 7);
+      ctx.fill();
+      ctx.fillStyle = color;
+      ctx.fillText(row.party, tx + 9, cy + 26);
+      bx = tx + pw + 12;
+    }
+    const bw = right - bx;
     ctx.fillStyle = '#EEF0F2';
-    roundRect(ctx, tx, cy + 14, bw, 18, 9);
+    roundRect(ctx, bx, cy + 12, bw, 16, 8);
     ctx.fill();
     ctx.fillStyle = color;
-    roundRect(ctx, tx, cy + 14, Math.max(18, (bw * row.percent) / 100), 18, 9);
+    roundRect(ctx, bx, cy + 12, Math.max(16, (bw * row.percent) / 100), 16, 8);
     ctx.fill();
-
-    y += rowH;
+    ry += rowH;
   });
 
   // Pie
-  const fy = H - 150;
+  const fy = H - 140;
   ctx.strokeStyle = '#D9DCE1';
   ctx.setLineDash([10, 10]);
   ctx.lineWidth = 2;
@@ -247,4 +253,147 @@ export async function downloadResultImage(data: ResultImageData): Promise<void> 
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+function drawDonut(ctx: CanvasRenderingContext2D, rows: ResultImageRow[], cx: number, cy: number, r: number, display: string, mono: string): void {
+  const sum = rows.reduce((a, x) => a + Math.max(0, x.percent), 0) || 1;
+  const thick = r * 0.34;
+  ctx.lineWidth = thick;
+  ctx.strokeStyle = '#EEF0F2';
+  ctx.beginPath();
+  ctx.arc(cx, cy, r - thick / 2, 0, Math.PI * 2);
+  ctx.stroke();
+  let a = -Math.PI / 2;
+  const gap = rows.length > 1 ? 0.025 : 0;
+  for (const row of rows) {
+    const sweep = (Math.max(0, row.percent) / sum) * Math.PI * 2;
+    if (sweep <= 0) continue;
+    ctx.strokeStyle = partyColor(row.party);
+    ctx.beginPath();
+    ctx.arc(cx, cy, r - thick / 2, a + gap / 2, a + Math.max(gap, sweep - gap / 2));
+    ctx.stroke();
+    a += sweep;
+  }
+  const lead = [...rows].sort((x, y) => y.percent - x.percent)[0];
+  if (!lead) return;
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#0B0B0F';
+  ctx.font = `700 48px ${mono}`;
+  ctx.fillText(`${lead.percent.toFixed(1)}%`, cx, cy + 10);
+  ctx.font = `800 20px ${display}`;
+  ctx.fillStyle = partyColor(lead.party);
+  const first = lead.label.split(/\s+/)[0] ?? '';
+  ctx.fillText(first.toUpperCase(), cx, cy + 42);
+  ctx.textAlign = 'left';
+}
+
+/** Banner con el mapa real de la ciudad (teselas CARTO). Si no se pueden cargar, dibuja una ciudad simulada. */
+async function drawCityBanner(ctx: CanvasRenderingContext2D, data: ResultImageData, top: number, h: number, mono: string): Promise<void> {
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, top, W, h);
+  ctx.clip();
+  ctx.fillStyle = '#11141B';
+  ctx.fillRect(0, top, W, h);
+
+  let drewTiles = false;
+  if (data.geo) {
+    const z = data.geo.zoom;
+    const c = worldPx(data.geo.lat, data.geo.lng, z);
+    const originX = c.x - W / 2;
+    const originY = c.y - h / 2;
+    const tx0 = Math.floor(originX / 256);
+    const ty0 = Math.floor(originY / 256);
+    const tx1 = Math.floor((originX + W) / 256);
+    const ty1 = Math.floor((originY + h) / 256);
+    const jobs: Array<Promise<void>> = [];
+    let ok = 0;
+    for (let tx = tx0; tx <= tx1; tx++) {
+      for (let ty = ty0; ty <= ty1; ty++) {
+        jobs.push(
+          loadImage(tileUrl(tx, ty, z)).then((img) => {
+            if (!img) return;
+            ctx.drawImage(img, tx * 256 - originX, top + ty * 256 - originY, 256, 256);
+            ok++;
+          }),
+        );
+      }
+    }
+    await Promise.all(jobs);
+    drewTiles = ok > 0;
+  }
+  if (!drewTiles) drawSimulatedCity(ctx, top, h);
+
+  // Velo con colores de marca
+  const veil = ctx.createLinearGradient(0, top, 0, top + h);
+  veil.addColorStop(0, 'rgba(190,52,85,0.30)');
+  veil.addColorStop(0.5, 'rgba(10,10,15,0.10)');
+  veil.addColorStop(1, 'rgba(10,10,15,0.80)');
+  ctx.fillStyle = veil;
+  ctx.fillRect(0, top, W, h);
+
+  // Pin al centro
+  const px = W / 2;
+  const py = top + h / 2;
+  for (const [rr, al] of [[46, 0.12], [30, 0.22], [16, 0.35]] as Array<[number, number]>) {
+    ctx.fillStyle = `rgba(255,77,122,${al})`;
+    ctx.beginPath();
+    ctx.ellipse(px, py + 6, rr, rr * 0.45, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.fillStyle = '#FF4D7A';
+  ctx.beginPath();
+  ctx.arc(px, py - 26, 18, Math.PI, 0);
+  ctx.lineTo(px, py + 4);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(px, py - 26, 7, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Etiqueta de ciudad
+  const label = `MUESTRA.MX  /  ${data.city.toUpperCase()}`;
+  ctx.font = `700 22px ${mono}`;
+  const lw = ctx.measureText(label).width + 36;
+  ctx.fillStyle = 'rgba(10,10,15,0.7)';
+  roundRect(ctx, PAD, top + h - 66, lw, 44, 22);
+  ctx.fill();
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillText(label, PAD + 18, top + h - 37);
+}
+
+/** Cuadrícula de calles estilo plano de ciudad, con costa, por si el mapa real no carga. */
+function drawSimulatedCity(ctx: CanvasRenderingContext2D, top: number, h: number): void {
+  ctx.fillStyle = '#151A24';
+  ctx.fillRect(0, top, W, h);
+  ctx.fillStyle = '#0E3B57';
+  ctx.beginPath();
+  ctx.moveTo(W * 0.72, top);
+  ctx.bezierCurveTo(W * 0.78, top + h * 0.4, W * 0.7, top + h * 0.7, W * 0.8, top + h);
+  ctx.lineTo(W, top + h);
+  ctx.lineTo(W, top);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 2;
+  for (let x = -40; x < W * 0.78; x += 46) {
+    ctx.beginPath();
+    ctx.moveTo(x, top);
+    ctx.lineTo(x + 30, top + h);
+    ctx.stroke();
+  }
+  for (let yy = top + 20; yy < top + h; yy += 40) {
+    ctx.beginPath();
+    ctx.moveTo(0, yy);
+    ctx.lineTo(W * 0.76, yy - 12);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = 'rgba(255,200,120,0.22)';
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(0, top + h * 0.65);
+  ctx.lineTo(W * 0.74, top + h * 0.3);
+  ctx.stroke();
 }

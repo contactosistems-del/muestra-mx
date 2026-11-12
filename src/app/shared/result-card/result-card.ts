@@ -4,15 +4,22 @@ import { AuthService } from '../../core/services/auth.service';
 import { I18nService } from '../../core/services/i18n.service';
 import type { Survey, SurveyResult } from '../../domain/models';
 import { partyColor, partyTint } from '../party';
+import { cityGeo } from '../city-geo';
+import { CityMap } from './city-map';
+import { Donut } from './donut';
 import { downloadResultImage } from './result-image';
 
 /** Tarjeta de "Resultados al momento" estilo tablero, con descarga de imagen para administradores. */
 @Component({
   selector: 'app-result-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, CityMap, Donut],
   template: `
     <article class="rc">
+      @if (geo(); as g) {
+        <app-city-map class="rc-map" [lat]="g.lat" [lng]="g.lng" [zoom]="g.zoom" [height]="150" [label]="i18n.tx(survey().city)" />
+      }
+      <div class="rc-body">
       <div class="rc-crumb">
         <span>MUESTRA.MX</span><i>/</i><span>{{ t('ENCUESTAS', 'POLLS') }}</span><i>/</i><span>{{ city() }}</span>
       </div>
@@ -21,6 +28,19 @@ import { downloadResultImage } from './result-image';
       @if (total() === 0) {
         <p class="rc-empty">{{ i18n.t('noVotesYet') }}</p>
       } @else {
+        <div class="rc-sum">
+          <app-donut class="rc-donut" [slices]="slices()" />
+          <div class="rc-sum-text">
+            <small>{{ t('Encabeza', 'Leading') }}</small>
+            <strong>{{ rows()[0]?.label }}</strong>
+            @if (rows()[0]?.party) {
+              <em class="rc-party" [style.background]="rows()[0]?.tint" [style.color]="rows()[0]?.color">{{ rows()[0]?.party }}</em>
+            }
+            @if (lead() !== null) {
+              <span class="rc-lead"><i class="fa-solid fa-arrow-trend-up"></i> {{ t('Ventaja de', 'Lead of') }} {{ lead()!.toFixed(1) }} {{ t('pts', 'pts') }}</span>
+            }
+          </div>
+        </div>
         <ul class="rc-rows">
           @for (row of rows(); track row.label; let i = $index) {
             <li class="rc-row" [class.lead]="i === 0" [style.--pc]="row.color" [style.animation-delay.ms]="i * 90">
@@ -65,15 +85,24 @@ import { downloadResultImage } from './result-image';
           </button>
         }
       </div>
+      </div>
     </article>
   `,
   styles: `
     :host { display: block; }
     .rc {
-      height: 100%; display: flex; flex-direction: column; padding: 1.5rem 1.4rem 1.3rem; border-radius: 22px;
+      height: 100%; display: flex; flex-direction: column; overflow: hidden; border-radius: 22px;
       background: var(--card-bg); border: 1px solid rgba(157,161,159,.32); box-shadow: 0 18px 36px -26px rgba(15,23,42,.55);
       transition: transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s;
     }
+    .rc-body { flex: 1; display: flex; flex-direction: column; padding: 1.3rem 1.4rem 1.3rem; }
+    .rc-map { border-bottom: 3px solid var(--brand-red); }
+    .rc-sum { display: flex; align-items: center; gap: 1.1rem; padding: .9rem 1rem; margin-bottom: 1.1rem; border-radius: 16px; background: linear-gradient(135deg, rgba(190,52,85,.07), rgba(157,161,159,.06)); border: 1px solid rgba(157,161,159,.22); }
+    .rc-donut { flex: 0 0 auto; width: 118px; }
+    .rc-sum-text { display: flex; flex-direction: column; align-items: flex-start; gap: .3rem; min-width: 0; }
+    .rc-sum-text small { font-family: var(--font-mono); font-size: .66rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--text-muted); }
+    .rc-sum-text strong { font-family: var(--font-display); font-size: 1.2rem; font-weight: 800; line-height: 1.15; }
+    .rc-lead { font-size: .76rem; font-weight: 800; color: #16A34A; display: inline-flex; gap: .35rem; align-items: center; }
     .rc:hover { transform: translateY(-4px); box-shadow: 0 26px 44px -26px rgba(15,23,42,.6); }
     .rc-crumb { display: flex; flex-wrap: wrap; gap: .45rem; font-family: var(--font-mono); font-size: .72rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--brand-red); }
     .rc-crumb i { font-style: normal; color: var(--text-muted); opacity: .6; }
@@ -143,6 +172,17 @@ export class ResultCard {
       });
   });
 
+  readonly geo = computed(() => {
+    const sv = this.survey();
+    return cityGeo(sv.city.es, sv.city.en, sv.title.es, sv.shortLabel.es);
+  });
+  readonly slices = computed(() => this.rows().map((r) => ({ label: r.label, percent: r.percent, color: r.color })));
+  /** Diferencia en puntos entre el primero y el segundo lugar. */
+  readonly lead = computed(() => {
+    const r = this.rows();
+    return r.length > 1 ? r[0]!.percent - r[1]!.percent : null;
+  });
+
   t(es: string, en: string): string {
     return this.i18n.lang() === 'en' ? en : es;
   }
@@ -156,6 +196,7 @@ export class ResultCard {
         city: this.i18n.tx(this.survey().city),
         question: this.question(),
         rows: this.rows(),
+        geo: this.geo(),
       });
     } finally {
       this.busy.set(false);
