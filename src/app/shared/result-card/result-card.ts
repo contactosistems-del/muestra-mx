@@ -51,7 +51,7 @@ import { downloadResultImage } from './result-image';
 
       <div class="rc-foot">
         <div>
-          <span>{{ t('Sondeo en línea', 'Online poll') }} · {{ total().toLocaleString('es-MX') }} {{ t('votos', 'votes') }}</span>
+          <span>{{ t('Sondeo en línea', 'Online poll') }}</span>
           <span class="rc-live"><i></i> {{ t('En vivo', 'Live') }}</span>
         </div>
       </div>
@@ -155,7 +155,6 @@ export class ResultCard {
         surveyId: this.survey().id,
         city: this.i18n.tx(this.survey().city),
         question: this.question(),
-        total: this.total(),
         rows: this.rows(),
       });
     } finally {

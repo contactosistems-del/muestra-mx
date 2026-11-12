@@ -13,10 +13,6 @@ import { CountUp } from '../../../shared/count-up/count-up';
     <section class="ls" [attr.lang]="i18n.lang()">
       <div class="ls-live"><span class="ls-dot"></span> {{ t('EN VIVO', 'LIVE') }}</div>
       <div class="ls-item">
-        <i class="fa-solid fa-check-to-slot" aria-hidden="true"></i>
-        <div><strong><app-count-up [value]="votes()" /></strong><span>{{ t('votos registrados', 'votes cast') }}</span></div>
-      </div>
-      <div class="ls-item">
         <i class="fa-solid fa-square-poll-vertical" aria-hidden="true"></i>
         <div><strong><app-count-up [value]="active()" [duration]="900" /></strong><span>{{ t('encuestas activas', 'active polls') }}</span></div>
       </div>
@@ -76,7 +72,6 @@ export class LiveStats {
   readonly i18n = inject(I18nService);
   private readonly surveys = inject(SurveyService);
 
-  readonly votes = computed(() => this.surveys.results().reduce((sum, row) => sum + (row.result.total || 0), 0));
   readonly active = computed(() => this.surveys.results().length);
   readonly options = computed(() => this.surveys.results().reduce((sum, row) => sum + row.survey.options.length, 0));
 

@@ -71,7 +71,7 @@ import { SurveyService } from '../../core/services/survey.service';
                 </div>
               }
             </div>
-            <p class="sp-total">{{ total() }} {{ t('participaciones', 'votes') }} · {{ t('se actualiza en vivo', 'updates live') }}</p>
+            <p class="sp-total">{{ t('Sondeo en línea · se actualiza en vivo', 'Online poll · updates live') }}</p>
             <div class="sp-actions">
               <a class="sp-wa" [href]="waUrl()" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> {{ t('Invita a votar', 'Invite others') }}</a>
               <a class="sp-more" routerLink="/graficas">{{ t('Ver todas las encuestas', 'See all polls') }} <i class="fa-solid fa-arrow-right"></i></a>

@@ -12,7 +12,6 @@ export interface ResultImageData {
   surveyId: string;
   city: string;
   question: string;
-  total: number;
   rows: ResultImageRow[];
 }
 
@@ -225,7 +224,7 @@ export async function downloadResultImage(data: ResultImageData): Promise<void> 
   ctx.setLineDash([]);
   ctx.font = `600 26px ${mono}`;
   ctx.fillStyle = '#374151';
-  ctx.fillText(`Sondeo en línea · ${data.total.toLocaleString('es-MX')} votos`, PAD, fy + 52);
+  ctx.fillText('Sondeo en línea', PAD, fy + 52);
   ctx.fillStyle = '#16A34A';
   ctx.beginPath();
   ctx.arc(PAD + 8, fy + 90, 8, 0, Math.PI * 2);
