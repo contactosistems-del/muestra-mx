@@ -110,20 +110,16 @@ export class LeafletMap {
       zoomControl: true,
     }).setView(this.center(), this.zoom());
 
-    const carto = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>';
+    const esri = (service: string) =>
+      L.tileLayer(`https://server.arcgisonline.com/ArcGIS/rest/services/${service}/MapServer/tile/{z}/{y}/{x}`, {
+        attribution: 'Tiles &copy; Esri',
+        maxZoom: 19,
+      });
     const base = {
-      Mapa: L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: carto, subdomains: 'abcd', maxZoom: 19,
-      }),
-      Claro: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: carto, subdomains: 'abcd', maxZoom: 19,
-      }),
-      Oscuro: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: carto, subdomains: 'abcd', maxZoom: 19,
-      }),
-      'Satélite': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Tiles &copy; Esri', maxZoom: 19,
-      }),
+      Mapa: esri('World_Street_Map'),
+      Claro: esri('Canvas/World_Light_Gray_Base'),
+      Oscuro: esri('Canvas/World_Dark_Gray_Base'),
+      'Satélite': esri('World_Imagery'),
     };
     const dark = document.documentElement.getAttribute('data-theme') === 'dark';
     (dark ? base.Oscuro : base.Mapa).addTo(this.map);

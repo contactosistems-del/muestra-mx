@@ -36,7 +36,13 @@ export function worldPx(lat: number, lng: number, zoom: number): { x: number; y:
   };
 }
 
-export function tileUrl(x: number, y: number, z: number, style: 'dark_all' | 'light_all' | 'rastertiles/voyager' = 'dark_all'): string {
-  const s = 'abcd'[(x + y) % 4];
-  return `https://${s}.basemaps.cartocdn.com/${style}/${z}/${x}/${y}.png`;
+/** Teselas de Esri (sin clave). Estilo oscuro por defecto para el banner de la ciudad. */
+export function tileUrl(x: number, y: number, z: number, style: 'dark' | 'light' | 'streets' | 'satellite' = 'dark'): string {
+  const service = {
+    dark: 'Canvas/World_Dark_Gray_Base',
+    light: 'Canvas/World_Light_Gray_Base',
+    streets: 'World_Street_Map',
+    satellite: 'World_Imagery',
+  }[style];
+  return `https://server.arcgisonline.com/ArcGIS/rest/services/${service}/MapServer/tile/${z}/${y}/${x}`;
 }
