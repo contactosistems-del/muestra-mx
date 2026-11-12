@@ -55,6 +55,7 @@ export class FirestoreSurveyRepository implements SurveyRepository {
         if (!label) return null;
         const voteValue = String(row['voteValue'] ?? '').trim();
         const imageUrl = String(row['imageUrl'] ?? '').trim();
+        const party = String(row['party'] ?? '').trim();
         const aliases = Array.isArray(row['aliases'])
           ? row['aliases'].map((item) => String(item ?? '').trim()).filter(Boolean)
           : [];
@@ -64,6 +65,7 @@ export class FirestoreSurveyRepository implements SurveyRepository {
           ...(voteValue ? { voteValue } : {}),
           ...(aliases.length ? { aliases: [...new Set(aliases)] } : {}),
           ...(imageUrl ? { imageUrl } : {}),
+          ...(party ? { party } : {}),
         };
       })
       .filter((item): item is SurveyOption => !!item);

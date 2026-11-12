@@ -59,7 +59,7 @@ export class PublicShell {
   private setupReveal(): void {
     if (typeof IntersectionObserver === 'undefined' || typeof MutationObserver === 'undefined') return;
     const selector = [
-      '.sidebar-widget', '.news-card', '.result-card', '.nosotros-card', '.dir-box',
+      '.sidebar-widget', '.news-card', '.result-card', 'app-result-card', '.nosotros-card', '.dir-box',
       '.live', '.countdown', '.pop', '.home-news .results-head', '.charts-head',
     ].join(',');
     const io = new IntersectionObserver(

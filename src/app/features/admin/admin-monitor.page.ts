@@ -6,7 +6,7 @@ import { NewsService } from '../../core/services/news.service';
 import { SurveyService } from '../../core/services/survey.service';
 import type { VoteRecord } from '../../domain/models';
 import { LeafletMap } from '../../shared/leaflet-map/leaflet-map';
-import { PieChart, pieColor } from '../../shared/pie-chart/pie-chart';
+import { ResultCard } from '../../shared/result-card/result-card';
 import { AdminInsights } from './admin-insights';
 import { ContentCms } from './content-cms';
 import { NewsEditor } from './news-editor';
@@ -17,7 +17,7 @@ type AdminTab = 'results' | 'charts' | 'surveys' | 'content' | 'news';
 @Component({
   selector: 'app-admin-monitor',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, FormsModule, LeafletMap, PieChart, AdminInsights, ContentCms, SurveyCms, NewsEditor],
+  imports: [RouterLink, FormsModule, LeafletMap, ResultCard, AdminInsights, ContentCms, SurveyCms, NewsEditor],
   template: `
     <section class="admin-monitor-overlay active">
       <div class="monitor-shell">
@@ -164,34 +164,9 @@ type AdminTab = 'results' | 'charts' | 'surveys' | 'content' | 'news';
               </div>
             </div>
 
-            <div class="results-list results-list-full">
+            <div class="admin-cards">
               @for (row of surveys.adminResults(); track row.survey.id) {
-                <article class="result-item">
-                  <div class="result-item-head">
-                    <strong>{{ i18n.tx(row.survey.title) }}</strong>
-                    <span>{{ row.result.total }} {{ i18n.t('totalVotes') }}</span>
-                  </div>
-                  @if (row.result.total === 0) {
-                    <p class="empty">{{ i18n.t('noVotesYet') }}</p>
-                  } @else {
-                    <div class="admin-pie">
-                      <app-pie-chart [options]="row.result.options" />
-                    </div>
-                    <ul class="admin-bars">
-                      @for (opt of row.result.options; track opt.label; let i = $index) {
-                        <li>
-                          <div class="bar-meta">
-                            <span>{{ opt.label }}</span>
-                            <strong>{{ opt.percent }}% · {{ opt.count }}</strong>
-                          </div>
-                          <div class="bar-track">
-                            <div class="bar-fill" [style.width.%]="opt.percent" [style.background]="pieColor(i)"></div>
-                          </div>
-                        </li>
-                      }
-                    </ul>
-                  }
-                </article>
+                <app-result-card [survey]="row.survey" [result]="row.result" [showCounts]="true" />
               } @empty {
                 <p class="empty">{{ i18n.t('surveyEmpty') }}</p>
               }
@@ -280,7 +255,7 @@ type AdminTab = 'results' | 'charts' | 'surveys' | 'content' | 'news';
     </section>
   `,
   styles: `
-    .admin-pie { width: min(100%, 200px); margin: .4rem auto 1rem; }
+    .admin-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 1.1rem; }
     .pie-dot { display: inline-block; width: .7rem; height: .7rem; border-radius: 50%; margin-right: .4rem; vertical-align: -1px; }
     :host {
       display: block;
@@ -759,7 +734,6 @@ export class AdminMonitorPage implements OnInit, OnDestroy {
   readonly i18n = inject(I18nService);
   readonly news = inject(NewsService);
   readonly surveys = inject(SurveyService);
-  readonly pieColor = pieColor;
   readonly tab = signal<AdminTab>('results');
   readonly votes = signal<VoteRecord[]>([]);
   readonly selectedSurveyId = signal('');

@@ -54,6 +54,8 @@ export interface SurveyOption {
   voteValue?: string;
   aliases?: string[];
   imageUrl?: string;
+  /** Partido o coalición (opcional), p. ej. MORENA, PVEM, PAN. */
+  party?: string;
 }
 
 /** Una encuesta del sitio: pregunta, candidatos y si está visible al público. */
@@ -86,6 +88,7 @@ export interface SurveyDraft {
     aliases?: string[];
     imageFile?: File | null;
     imageUrl?: string;
+    party?: string;
   }>;
 }
 

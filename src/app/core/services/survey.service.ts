@@ -278,6 +278,7 @@ export class SurveyService {
         voteValue,
         ...(aliases.size ? { aliases: [...aliases] } : {}),
         imageUrl,
+        ...(row.party?.trim() ? { party: row.party.trim().toUpperCase() } : {}),
       });
     }
     return built;

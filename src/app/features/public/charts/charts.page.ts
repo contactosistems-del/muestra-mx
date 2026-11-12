@@ -1,13 +1,12 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { I18nService } from '../../../core/services/i18n.service';
 import { SurveyService } from '../../../core/services/survey.service';
-import { PieChart, pieColor } from '../../../shared/pie-chart/pie-chart';
+import { ResultCard } from '../../../shared/result-card/result-card';
 
 @Component({
   selector: 'app-charts-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, PieChart],
+  imports: [ResultCard],
   template: `
     <section class="charts-wrap" [attr.lang]="i18n.lang()">
       <div class="charts-head">
@@ -17,35 +16,7 @@ import { PieChart, pieColor } from '../../../shared/pie-chart/pie-chart';
 
       <div class="results-grid">
         @for (row of surveys.results(); track row.survey.id) {
-          <article class="result-card">
-            <div class="result-top">
-              <div>
-                <div class="poll-city">{{ i18n.tx(row.survey.city) }}</div>
-                <h4>{{ i18n.tx(row.survey.title) }}</h4>
-              </div>
-            </div>
-            @if (row.result.total === 0) {
-              <p class="empty">{{ i18n.t('noVotesYet') }}</p>
-            } @else {
-              <div class="pie-box">
-                <app-pie-chart [options]="row.result.options" />
-              </div>
-              <ul class="bars">
-                @for (opt of row.result.options; track opt.label; let i = $index) {
-                  <li>
-                    <div class="bar-meta">
-                      <span>{{ opt.label }}</span>
-                      <strong>{{ opt.percent }}%</strong>
-                    </div>
-                    <div class="bar-track">
-                      <div class="bar-fill" [style.width.%]="opt.percent" [style.background]="color(i)"></div>
-                    </div>
-                  </li>
-                }
-              </ul>
-            }
-            <a class="btn-votar result-cta" [routerLink]="['/encuesta', row.survey.id]">{{ i18n.t('takeSurvey') }}</a>
-          </article>
+          <app-result-card [survey]="row.survey" [result]="row.result" />
         } @empty {
           <p class="empty">{{ i18n.t('surveyEmpty') }}</p>
         }
@@ -85,5 +56,4 @@ import { PieChart, pieColor } from '../../../shared/pie-chart/pie-chart';
 export class ChartsPage {
   readonly i18n = inject(I18nService);
   readonly surveys = inject(SurveyService);
-  readonly color = pieColor;
 }

@@ -3,6 +3,7 @@ import { FormsModule, type NgForm } from '@angular/forms';
 import { I18nService } from '../../core/services/i18n.service';
 import { SurveyService } from '../../core/services/survey.service';
 import type { Survey, SurveyDraft } from '../../domain/models';
+import { PARTY_NAMES } from '../../shared/party';
 
 type OptionForm = {
   id: string;
@@ -10,6 +11,7 @@ type OptionForm = {
   voteValue: string;
   aliases: string[];
   imageUrl: string;
+  party: string;
   preview: string;
   file: File | null;
   fileName: string;
@@ -100,6 +102,10 @@ type OptionForm = {
               <input [name]="'vote' + i" [(ngModel)]="opt.voteValue" required />
             </div>
             <div class="input-group">
+              <label>{{ i18n.lang() === 'en' ? 'Party (optional)' : 'Partido (opcional)' }}</label>
+              <input [name]="'party' + i" [(ngModel)]="opt.party" list="party-list" placeholder="MORENA, PVEM, PAN…" />
+            </div>
+            <div class="input-group">
               <label class="req">{{ i18n.t('surveyCandidatePhoto') }}</label>
               <label class="file-field">
                 <input type="file" accept="image/*" (change)="onOptionFile($event, i)" />
@@ -123,6 +129,9 @@ type OptionForm = {
             <button type="button" class="danger" [disabled]="busy()" (click)="remove()">{{ i18n.t('surveyDelete') }}</button>
           }
         </div>
+        <datalist id="party-list">
+          @for (p of partyNames; track p) { <option [value]="p"></option> }
+        </datalist>
       </form>
       </div>
     </section>
@@ -159,6 +168,7 @@ type OptionForm = {
   `,
 })
 export class SurveyCms {
+  readonly partyNames = PARTY_NAMES;
   readonly i18n = inject(I18nService);
   readonly surveys = inject(SurveyService);
   readonly editingId = signal<string | null>(null);
@@ -205,6 +215,7 @@ export class SurveyCms {
       voteValue: opt.voteValue ?? '',
       aliases: opt.aliases ?? [],
       imageUrl: opt.imageUrl ?? '',
+      party: opt.party ?? '',
       preview: opt.imageUrl ?? '',
       file: null,
       fileName: '',
@@ -315,6 +326,7 @@ export class SurveyCms {
           voteValue: opt.voteValue,
           aliases: opt.aliases,
           imageUrl: opt.imageUrl,
+          party: opt.party,
           imageFile: opt.file,
         })),
       };
@@ -360,6 +372,6 @@ export class SurveyCms {
   }
 
   private blankOption(id: string): OptionForm {
-    return { id, label: '', voteValue: '', aliases: [], imageUrl: '', preview: '', file: null, fileName: '' };
+    return { id, label: '', voteValue: '', aliases: [], imageUrl: '', party: '', preview: '', file: null, fileName: '' };
   }
 }
