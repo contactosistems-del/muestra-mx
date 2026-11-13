@@ -22,72 +22,52 @@ interface Faq {
 const FAQS: Faq[] = [
   {
     id: 'services',
-    q: { es: '¿Qué servicios ofrecen?', en: 'What services do you offer?' },
+    q: { es: '¿Qué ofrecen?', en: 'What do you offer?' },
     a: {
-      es: 'Hacemos encuestas electorales, sondeos de opinión pública, estudios de mercado y mapas de resultados por zona. Te entregamos resultados claros, gráficas listas para redes y reportes para tomar decisiones.',
-      en: 'We run election polls, public opinion surveys, market research and results maps by area, with clear results, social-ready charts and reports.',
+      es: 'Tres cosas:\n• Encuestas para campañas y gobiernos\n• Estudios de mercado para negocios\n• Publicidad para tu negocio en el portal y redes',
+      en: 'Three things:\n• Polls for campaigns and governments\n• Market research for businesses\n• Advertising for your business on our site and socials',
     },
-    keys: ['servicio', 'ofrecen', 'hacen', 'service'],
+    keys: ['servicio', 'ofrecen', 'hacen', 'service', 'offer'],
     cta: 'whatsapp',
   },
   {
     id: 'price',
-    q: { es: '¿Cuánto cuesta una encuesta?', en: 'How much does a poll cost?' },
+    q: { es: 'Cotizar una encuesta', en: 'Get a poll quote' },
     a: {
-      es: 'Depende del alcance: municipio o estado, número de preguntas y tiempo de levantamiento. La cotización es sin costo; escríbenos por WhatsApp y te respondemos rápido.',
-      en: 'It depends on scope: city or state, number of questions and timing. Quotes are free—message us on WhatsApp.',
+      es: 'El precio depende de la zona y el número de preguntas. La cotización es gratis por WhatsApp.',
+      en: 'Price depends on area and number of questions. Quotes are free on WhatsApp.',
     },
-    keys: ['cuesta', 'precio', 'costo', 'cotiza', 'cobran', 'price', 'cost', 'quote'],
-    cta: 'whatsapp',
-  },
-  {
-    id: 'candidate',
-    q: { es: 'Soy candidato o equipo de campaña', en: 'I am a candidate or campaign team' },
-    a: {
-      es: 'Te ayudamos a medir tu posicionamiento, conocimiento de nombre y preferencia frente a otros aspirantes en tu municipio, con mapas por zona y seguimiento en el tiempo. Todo de forma confidencial.',
-      en: 'We help you measure positioning, name recognition and preference vs. other contenders in your area, with maps and tracking over time. Fully confidential.',
-    },
-    keys: ['candidat', 'campaña', 'campana', 'aspirante', 'partido', 'campaign'],
-    cta: 'whatsapp',
-  },
-  {
-    id: 'business',
-    q: { es: 'Tengo un negocio, ¿me sirve?', en: 'I have a business—can you help?' },
-    a: {
-      es: 'Sí. Con un estudio de mercado conoces qué piensan tus clientes, qué precio aceptan y en qué zonas está tu oportunidad, antes de invertir.',
-      en: 'Yes. Market research shows what customers think, what price they accept and where your opportunity is—before you invest.',
-    },
-    keys: ['negocio', 'empresa', 'mercado', 'cliente', 'business', 'market'],
+    keys: ['cuesta', 'precio', 'costo', 'cotiza', 'cobran', 'candidat', 'campaña', 'campana', 'price', 'cost', 'quote'],
     cta: 'whatsapp',
   },
   {
     id: 'ads',
-    q: { es: 'Quiero anunciarme en el portal', en: 'I want to advertise' },
+    q: { es: 'Anunciar mi negocio', en: 'Advertise my business' },
     a: {
-      es: 'Podemos difundir tu marca, evento o mensaje en muestra.mx y nuestras redes. Cuéntanos qué quieres promover y te enviamos opciones.',
-      en: 'We can promote your brand, event or message on muestra.mx and our social channels. Tell us what you want to promote.',
+      es: 'Tu negocio puede aparecer en muestra.mx y en nuestras redes, con planes accesibles para comercios de Quintana Roo. Pregúntanos por WhatsApp.',
+      en: 'Your business can appear on muestra.mx and our socials, with affordable plans for Quintana Roo businesses. Ask us on WhatsApp.',
     },
-    keys: ['anunci', 'publicidad', 'promocion', 'banner', 'difusion', 'advert'],
-    cta: 'contact',
+    keys: ['anunci', 'publicidad', 'promocion', 'negocio', 'comercio', 'empresa', 'banner', 'advert', 'business'],
+    cta: 'whatsapp',
   },
   {
     id: 'vote',
-    q: { es: '¿Cómo voto en una encuesta?', en: 'How do I vote?' },
+    q: { es: '¿Cómo voto?', en: 'How do I vote?' },
     a: {
-      es: 'Entra a cualquier encuesta desde el menú, toca a tu candidato y presiona "Emitir mi voto". Es anónimo y es un voto por dispositivo. Al votar verás los resultados al momento.',
-      en: 'Open any poll from the menu, tap your choice and press vote. It is anonymous, one vote per device, and you will see live results.',
+      es: 'Abre una encuesta, toca tu opción y presiona votar. Es anónimo y un voto por dispositivo.',
+      en: 'Open a poll, tap your choice and press vote. Anonymous, one vote per device.',
     },
     keys: ['votar', 'voto', 'participar', 'vote'],
     cta: 'results',
   },
   {
     id: 'news',
-    q: { es: 'Tengo una noticia o boletín', en: 'I have news or a press release' },
+    q: { es: 'Enviar una noticia', en: 'Send news' },
     a: {
-      es: 'Envíanos tu información por el formulario de contacto o WhatsApp. Nuestro equipo la revisa para su posible publicación.',
-      en: 'Send it via the contact form or WhatsApp. Our team reviews it for possible publication.',
+      es: 'Mándanos tu información por Contacto o WhatsApp y la revisamos.',
+      en: 'Send it via Contact or WhatsApp and we will review it.',
     },
-    keys: ['noticia', 'boletin', 'boletín', 'nota', 'prensa', 'news', 'press'],
+    keys: ['noticia', 'boletin', 'nota', 'prensa', 'news', 'press'],
     cta: 'contact',
   },
 ];
@@ -184,8 +164,8 @@ export class Chatbot {
   constructor() {
     effect(() => {
       const hello = this.t(
-        '¡Hola! 👋 Soy el asistente de MUESTRA.MX. Te ayudo con encuestas para tu campaña o negocio, publicidad y noticias. Elige una pregunta o escríbeme.',
-        'Hi! 👋 I am the MUESTRA.MX assistant. I can help with polls for your campaign or business, advertising and news. Pick a question or type.',
+        '¡Hola! 👋 ¿En qué te ayudo? Elige una opción abajo.',
+        'Hi! 👋 How can I help? Pick an option below.',
       );
       untracked(() => {
         this.messages.update((list) => (list.length <= 1 ? [{ role: 'bot', text: hello }] : list));
