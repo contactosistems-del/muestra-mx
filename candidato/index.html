@@ -203,10 +203,12 @@ const esc = (t) => String(t).replace(/[<>&"]/g, (c) => ({ "<": "&lt;", ">": "&gt
 const seeded = (s) => { let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return ((h >>> 0) % 10000) / 10000; };
 
 /* ---------- Mapa ---------- */
-const map = L.map("map").setView([CITY.lat, CITY.lng], CITY.zoom);
-const esri = (s) => L.tileLayer(`https://server.arcgisonline.com/ArcGIS/rest/services/${s}/MapServer/tile/{z}/{y}/{x}`,
-  { attribution: "Tiles &copy; Esri", maxZoom: 19 });
-const bases = { Oscuro: esri("Canvas/World_Dark_Gray_Base"), Mapa: esri("World_Street_Map"), "Satélite": esri("World_Imagery") };
+const map = L.map("map", { maxZoom: 18, minZoom: 10 }).setView([CITY.lat, CITY.lng], CITY.zoom);
+// El mapa oscuro de Esri solo tiene imágenes hasta el zoom 16: más cerca se agrandan esas mismas
+// (así nunca sale "Map data not yet available").
+const esri = (s, native) => L.tileLayer(`https://server.arcgisonline.com/ArcGIS/rest/services/${s}/MapServer/tile/{z}/{y}/{x}`,
+  { attribution: "Tiles &copy; Esri", maxZoom: 18, maxNativeZoom: native });
+const bases = { Oscuro: esri("Canvas/World_Dark_Gray_Base", 16), Mapa: esri("World_Street_Map", 18), "Satélite": esri("World_Imagery", 18) };
 bases.Oscuro.addTo(map);
 L.control.layers(bases, undefined, { position: "topright" }).addTo(map);
 const svg = L.svg({ padding: 0.5 });
