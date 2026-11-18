@@ -244,7 +244,7 @@ function endIntro() {
 setTimeout(endIntro, 6000); // por si la red tarda
 
 function renderLegend(present) {
-  const items = Object.entries(colors).filter(([id]) => present.has(id));
+  const items = Object.entries(colors);
   if (!items.length) { legendEl.innerHTML = `<span class="muted">Aún no hay votos con ubicación.</span>`; return; }
   const animate = !legendEl.dataset.done;
   legendEl.innerHTML = items.map(([id, v], i) => {
@@ -366,10 +366,12 @@ async function pickSurvey() {
 }
 
 function colorsFor(survey) {
+  // Lista de todos los candidatos (aunque aún no tengan puntos). Si dos comparten id, los votos van al primero.
   const out = {};
   (Array.isArray(survey.options) ? survey.options : []).forEach((o, i) => {
     if (!o || !String(o.label || "").trim()) return;
-    const id = String(o.id ?? `opt-${i + 1}`);
+    const baseId = String(o.id ?? `opt-${i + 1}`);
+    const id = out[baseId] ? `${baseId}#${i}` : baseId;
     const img = String(o.imageUrl || "").trim();
     out[id] = { label: String(o.label).trim(), color: partyColor(o.party) || PALETTE[i % PALETTE.length],
       img: !img ? "" : /^(https?:|data:)/.test(img) ? img : SITE + (img.startsWith("/") ? "" : "/") + img };
