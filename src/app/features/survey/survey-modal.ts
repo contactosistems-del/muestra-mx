@@ -46,8 +46,15 @@ import { I18nService } from '../../core/services/i18n.service';
                 }
               </div>
               <button class="btn-votar-activo" type="button" [disabled]="surveys.busy()" (click)="surveys.vote()">
+                @if (surveys.busy()) {
+                  <i class="fa-solid fa-spinner fa-spin"></i>
+                }
                 {{ i18n.t('castVote') }}
               </button>
+              <p class="geo-note">
+                <i class="fa-solid fa-location-dot"></i>
+                {{ i18n.lang() === 'en' ? 'We ask for your approximate area only, never your address.' : 'Solo pedimos tu zona aproximada, nunca tu dirección.' }}
+              </p>
             </div>
           </div>
         </div>
@@ -56,6 +63,7 @@ import { I18nService } from '../../core/services/i18n.service';
     }
   `,
   styles: `
+    .geo-note { margin: .6rem 0 0; text-align: center; font-size: .78rem; opacity: .7; }
     .survey-hero {
       height: 130px;
       background: linear-gradient(rgba(0,0,0,.5), rgba(0,0,0,.7)),

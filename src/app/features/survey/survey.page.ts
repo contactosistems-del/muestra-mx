@@ -109,6 +109,7 @@ import { SurveyService } from '../../core/services/survey.service';
               {{ i18n.t('castVote') }}
             }
           </button>
+          <p class="sp-secure" style="margin-bottom:0"><i class="fa-solid fa-location-dot"></i> {{ t('Al votar te pediremos tu ubicación aproximada: solo tu zona, nunca tu dirección.', 'When you vote we ask for your approximate location: only your area, never your address.') }}</p>
           <p class="sp-secure"><i class="fa-solid fa-shield-halved"></i> {{ t('Un voto por dispositivo · Participación anónima', 'One vote per device · Anonymous') }}</p>
         }
       </article>

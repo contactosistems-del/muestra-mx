@@ -45,22 +45,41 @@ export class DeviceService {
     return `muestra_vote_${surveyId}_`;
   }
 
+  /** Ubicación por internet, pedida en cuanto se abre una encuesta para tenerla lista al votar. */
+  private networkPromise: Promise<{ ip: string; lat?: number; lng?: number }> | null = null;
+
+  /** Empieza a buscar la ubicación por internet (sin pedir permiso de GPS). */
+  warm(): void {
+    this.networkPromise ??= this.resolveNetwork();
+  }
+
   async context(): Promise<DeviceContext> {
     if (this.cached) return this.cached;
 
     const fingerprint = this.fingerprint();
-    const [network, gps] = await Promise.all([this.resolveNetwork(), this.resolveGps()]);
+    this.warm();
+    // Nunca se hace esperar al votante más de ~3.5 s: se usa la ubicación que haya en ese momento.
+    const [network, gps] = await Promise.all([
+      this.withLimit(this.networkPromise!, 3500, { ip: '' }),
+      this.withLimit(this.resolveGps(), 3500, {}),
+    ]);
 
-    this.cached = {
+    const ctx: DeviceContext = {
       fingerprint,
       ip: network.ip || 'unknown',
       lat: gps.lat ?? network.lat ?? 21.1619,
       lng: gps.lng ?? network.lng ?? -86.8515,
     };
-    return this.cached;
+    // Solo se guarda si de verdad hubo ubicación; si no, al siguiente intento se vuelve a buscar.
+    if (gps.lat !== undefined || network.lat !== undefined) this.cached = ctx;
+    return ctx;
   }
 
-  /** Ubicación del GPS del celular o computadora (la más exacta). */
+  private withLimit<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+    return Promise.race([promise.catch(() => fallback), new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms))]);
+  }
+
+  /** Ubicación del GPS (aproximada: es más rápida y basta para el mapa por zonas). */
   private resolveGps(): Promise<{ lat?: number; lng?: number }> {
     return new Promise((resolve) => {
       if (!navigator.geolocation) {
@@ -75,7 +94,7 @@ export class DeviceService {
           });
         },
         () => resolve({}),
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 30_000 },
+        { enableHighAccuracy: false, timeout: 3000, maximumAge: 10 * 60_000 },
       );
     });
   }

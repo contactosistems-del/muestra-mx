@@ -96,6 +96,7 @@ export class SurveyService {
   open(id: string, options: { modal?: boolean } = {}): void {
     this.openId.set(id);
     this.modalOpen.set(!!options.modal);
+    this.device.warm();
     this.selected.set(null);
     const survey = this.surveyById(id);
     this.statusKey.set(survey && this.localVoted(survey) ? 'alreadyVoted' : null);
