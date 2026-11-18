@@ -109,6 +109,9 @@
     box-shadow: 0 0 14px -2px var(--c); }
   .cand.on { border-color: var(--c); background: rgba(255,255,255,.1); box-shadow: 0 0 22px -6px var(--c); }
   .cand.off { opacity: .32 !important; filter: grayscale(.7); }
+  .cand.all { --c: #fff; border-color: rgba(255,255,255,.55); background: rgba(255,255,255,.12); animation: pop .35s cubic-bezier(.2,.9,.2,1.3) forwards; }
+  .cand .sw.x { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,.15);
+    border: 3px solid rgba(255,255,255,.6); box-shadow: none; font-size: .9rem; font-weight: 900; color: #fff; }
   @keyframes pop { from { opacity: 0; transform: scale(.7) translateY(8px); } to { opacity: 1; transform: none; } }
   .foot-row { display: flex; justify-content: space-between; align-items: center; gap: .6rem; margin-top: .55rem; color: var(--muted); font-size: .7rem; font-weight: 600; }
   .foot-row .logo { font-size: .78rem; color: #cbd5e1; }
@@ -319,9 +322,11 @@ function renderLegend(present) {
     const pic = v.img ? `<img src="${esc(v.img)}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'sw'}))">` : `<span class="sw"></span>`;
     const delay = animate ? `animation-delay:${0.45 + i * 0.12}s;` : "animation:none;opacity:1;";
     return `<button class="cand ${cls}" style="--c:${v.color};${delay}" data-id="${esc(id)}">${pic}${esc(v.label)}</button>`;
-  }).join("");
+  }).join("") + (selected.size ? `<button class="cand all" id="ver-todos"><span class="sw x">✕</span>Ver todos</button>` : "");
   legendEl.dataset.done = "1";
-  legendEl.querySelectorAll(".cand").forEach((b) => b.onclick = () => {
+  const all = document.getElementById("ver-todos");
+  if (all) all.onclick = () => { selected.clear(); draw(false); };
+  legendEl.querySelectorAll(".cand[data-id]").forEach((b) => b.onclick = () => {
     const id = b.dataset.id;
     if (selected.has(id)) selected.delete(id); else { selected.clear(); selected.add(id); }
     draw(false);
