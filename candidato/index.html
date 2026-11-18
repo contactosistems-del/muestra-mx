@@ -22,8 +22,18 @@
   footer { display: flex; flex-wrap: wrap; gap: .5rem 1.1rem; padding: .75rem 1.1rem calc(.75rem + env(safe-area-inset-bottom));
     font-size: .9rem; font-weight: 700; }
   footer span { display: inline-flex; align-items: center; gap: .45rem; }
-  footer i { width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 0 2px rgba(255,255,255,.25); }
   .muted { color: #94a3b8; font-weight: 600; }
+  footer { gap: .5rem; }
+  .cand { display: inline-flex; align-items: center; gap: .5rem; padding: .3rem .75rem .3rem .3rem; border-radius: 999px;
+    border: 2px solid transparent; background: rgba(255,255,255,.06); color: inherit; font: inherit; font-weight: 800;
+    cursor: pointer; transition: opacity .2s, background .2s, border-color .2s; }
+  .cand img, .cand .sw { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; border: 3px solid var(--c); background: var(--c); }
+  .cand.on { border-color: var(--c); background: rgba(255,255,255,.12); }
+  .cand.off { opacity: .35; }
+  .hint { width: 100%; color: #94a3b8; font-size: .75rem; font-weight: 600; margin-top: .1rem; }
+  .pulse { width: 14px; height: 14px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 0 var(--c);
+    animation: ring 1.2s ease-out 3; }
+  @keyframes ring { 0% { box-shadow: 0 0 0 0 var(--c); opacity: 1; } 100% { box-shadow: 0 0 0 26px transparent; opacity: .9; } }
 </style>
 </head>
 <body>
@@ -55,6 +65,7 @@ const FIREBASE = {
 const CITY = { lat: 20.6296, lng: -87.0739, zoom: 13 };   // Playa del Carmen
 const CITY_MATCH = /playa del carmen|solidaridad/i;       // encuesta a mostrar si no se indica ?e=ID
 const HALF_CELL = 0.0025;                                  // los puntos se reparten en su zona (~500 m)
+const SITE = "https://muestra.mx";                         // para fotos guardadas con ruta relativa
 /* =================== */
 
 const PARTY = { MORENA:"#9F2241", PVEM:"#2E9E44", VERDE:"#2E9E44", PT:"#D52B1E", PAN:"#0059A8", PRI:"#00843D",
@@ -95,37 +106,84 @@ function colorsFor(survey) {
   (Array.isArray(survey.options) ? survey.options : []).forEach((o, i) => {
     if (!o || !String(o.label || "").trim()) return;
     const id = String(o.id ?? `opt-${i + 1}`);
-    out[id] = { label: String(o.label).trim(), color: partyColor(o.party) || PALETTE[i % PALETTE.length] };
+    const img = String(o.imageUrl || "").trim();
+    out[id] = { label: String(o.label).trim(), color: partyColor(o.party) || PALETTE[i % PALETTE.length],
+      img: !img ? "" : /^(https?:|data:)/.test(img) ? img : SITE + (img.startsWith("/") ? "" : "/") + img };
   });
   return out;
 }
 
 let framed = false;
-function draw(celdas, colors) {
+let colors = {};
+let celdas = {};
+let prev = null;                 // conteos anteriores, para saber qué puntos son nuevos
+const selected = new Set();      // candidatos elegidos en la leyenda (vacío = todos)
+const zonesLayer = L.layerGroup().addTo(map);
+
+const esc = (t) => String(t).replace(/[<>&"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" })[c]);
+const visible = (opt) => !selected.size || selected.has(opt);
+
+function renderLegend(present) {
+  const items = Object.entries(colors).filter(([id]) => present.has(id));
+  if (!items.length) { legendEl.innerHTML = `<span class="muted">Aún no hay votos con ubicación.</span>`; return; }
+  legendEl.innerHTML = items.map(([id, v]) => {
+    const cls = selected.size ? (selected.has(id) ? "on" : "off") : "";
+    const pic = v.img ? `<img src="${esc(v.img)}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'sw'}))">` : `<span class="sw"></span>`;
+    return `<button class="cand ${cls}" style="--c:${v.color}" data-id="${esc(id)}">${pic}${esc(v.label)}</button>`;
+  }).join("") + `<span class="hint">Toca un candidato para ver solo sus puntos</span>`;
+  legendEl.querySelectorAll(".cand").forEach((b) => b.onclick = () => {
+    const id = b.dataset.id;
+    if (selected.has(id)) selected.delete(id); else { selected.clear(); selected.add(id); }
+    draw(false);
+  });
+}
+
+function pulse(p, color) {
+  const m = L.marker(p, { interactive: false, icon: L.divIcon({ className: "", iconSize: [14, 14],
+    html: `<div class="pulse" style="--c:${color}"></div>` }) }).addTo(map);
+  setTimeout(() => m.remove(), 3800);
+}
+
+function draw(fromServer) {
   dots.clearLayers();
+  zonesLayer.clearLayers();
   const present = new Set();
   const pts = [];
+  const pending = [];   // los puntos se agregan al final, encima de las zonas
   for (const [key, counts] of Object.entries(celdas || {})) {
     const [i, j] = key.split("_").map(Number);
     if (!Number.isFinite(i) || !Number.isFinite(j)) continue;
     const clat = (i + 0.5) * 2 * HALF_CELL, clng = (j + 0.5) * 2 * HALF_CELL;
+
+    // Zona pintada del color de quien va ganando ahí (empate = sin color).
+    const ranked = Object.entries(counts || {}).map(([o, n]) => [o, Number(n) || 0]).filter(([o, n]) => n > 0 && visible(o))
+      .sort((a, b) => b[1] - a[1]);
+    if (ranked.length && (ranked.length === 1 || ranked[0][1] > ranked[1][1])) {
+      const c = colors[ranked[0][0]]?.color || "#BE3455";
+      L.rectangle([[clat - HALF_CELL, clng - HALF_CELL], [clat + HALF_CELL, clng + HALF_CELL]],
+        { stroke: true, color: c, weight: 1, opacity: .35, fillColor: c, fillOpacity: .22, interactive: false }).addTo(zonesLayer);
+    }
+
     for (const [opt, nRaw] of Object.entries(counts || {})) {
       const n = Number(nRaw) || 0;
       if (!n) continue;
       present.add(opt);
+      if (!visible(opt)) continue;
       const color = colors[opt]?.color || "#BE3455";
+      const before = prev ? Number(prev[key]?.[opt]) || 0 : n;
       for (let k = 0; k < n; k++) {
         const s = `${key}|${opt}|${k}`;
         const p = [clat + (seeded(s + "a") * 2 - 1) * HALF_CELL, clng + (seeded(s + "b") * 2 - 1) * HALF_CELL];
         pts.push(p);
-        L.circleMarker(p, { radius: 5, color: "#0b1220", weight: 1, fillColor: color, fillOpacity: .9, interactive: false }).addTo(dots);
+        pending.push([p, color]);
+        if (fromServer && k >= before) pulse(p, color);   // voto nuevo: destello
       }
     }
   }
-  const items = Object.entries(colors).filter(([id]) => present.has(id));
-  legendEl.innerHTML = items.length
-    ? items.map(([, v]) => `<span><i style="background:${v.color}"></i>${v.label.replace(/[<>&]/g, "")}</span>`).join("")
-    : `<span class="muted">Aún no hay votos con ubicación.</span>`;
+  pending.forEach(([p, color]) =>
+    L.circleMarker(p, { radius: 5, color: "#0b1220", weight: 1, fillColor: color, fillOpacity: .9, interactive: false }).addTo(dots));
+  if (fromServer) prev = JSON.parse(JSON.stringify(celdas || {}));
+  renderLegend(present);
   if (!framed && pts.length) {
     framed = true;
     const near = pts.filter(([a, b]) => Math.abs(a - CITY.lat) < 0.12 && Math.abs(b - CITY.lng) < 0.12);
@@ -141,9 +199,9 @@ try {
     document.getElementById("title").textContent = txt(survey.title) || "Seguimiento de votación";
     document.getElementById("city").textContent = txt(survey.city) || "Playa del Carmen";
     document.title = `${txt(survey.title)} · Seguimiento`;
-    const colors = colorsFor(survey);
+    colors = colorsFor(survey);
     onSnapshot(doc(db, "resultados_encuestas", `${survey.id}__mapa`),
-      (snap) => draw(snap.exists() ? snap.data().celdas : {}, colors),
+      (snap) => { celdas = snap.exists() ? snap.data().celdas : {}; draw(true); },
       () => { legendEl.innerHTML = `<span class="muted">No se pudo cargar el mapa.</span>`; });
   }
 } catch (e) {
