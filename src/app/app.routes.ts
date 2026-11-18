@@ -13,8 +13,6 @@ export const routes: Routes = [
       { path: 'noticias', loadComponent: () => import('./features/public/news/news.page').then((m) => m.NewsPage) },
       { path: 'noticias/:id', loadComponent: () => import('./features/public/news/news-detail.page').then((m) => m.NewsDetailPage) },
       { path: 'contacto', loadComponent: () => import('./features/public/contact/contact.page').then((m) => m.ContactPage) },
-      { path: 'mapa', loadComponent: () => import('./features/public/vote-map/vote-map.page').then((m) => m.VoteMapPage) },
-      { path: 'mapa/:id', loadComponent: () => import('./features/public/vote-map/vote-map.page').then((m) => m.VoteMapPage) },
       { path: 'encuesta/:id', loadComponent: () => import('./features/survey/survey.page').then((m) => m.SurveyPage) },
     ],
   },
@@ -23,5 +21,7 @@ export const routes: Routes = [
     canActivate: [adminGuard],
     loadComponent: () => import('./features/admin/admin-monitor.page').then((m) => m.AdminMonitorPage),
   },
+  // Enlace privado para candidatos: no aparece en el menú ni en el sitio.
+  { path: 'seguimiento/:id', loadComponent: () => import('./features/private/candidate-map.page').then((m) => m.CandidateMapPage) },
   { path: '**', redirectTo: '' },
 ];
