@@ -160,6 +160,9 @@
   .sp-row { display: flex; justify-content: space-between; font-size: .78rem; font-weight: 700; margin: .3rem 0 .15rem; }
   .sp-track { height: 6px; border-radius: 4px; background: rgba(255,255,255,.08); overflow: hidden; display: flex; }
   .sp-track i { display: block; height: 100%; }
+  .leaflet-tooltip.sec-lbl { background: rgba(7,9,15,.78); border: 1px solid rgba(255,255,255,.18); color: #fff; box-shadow: none;
+    padding: 1px 6px; border-radius: 8px; font: 800 11px/1.3 "Plus Jakarta Sans", sans-serif; }
+  .leaflet-tooltip.sec-lbl::before { display: none; }
   .sp-lead { display: flex; align-items: center; gap: .45rem; margin-top: .7rem; padding-top: .6rem; border-top: 1px solid var(--line); font-size: .78rem; font-weight: 800; }
   .sp-lead i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); box-shadow: 0 0 10px var(--c); }
   .leaflet-bar, .leaflet-control-layers { border: 1px solid var(--line) !important; border-radius: 12px !important; overflow: hidden;
@@ -472,6 +475,23 @@ function popupHtml(f) {
     ${lead ? `<div class="sp-lead" style="--c:${lead.color}"><i></i>En la encuesta aquí va adelante: ${esc(lead.label)}</div>` : ""}`;
 }
 
+// Etiqueta con el valor de cada sección (porcentaje o electores), visible al acercarse.
+const LABEL_ZOOM = 14;
+const labels = L.layerGroup().addTo(map);
+function paintLabels() {
+  labels.clearLayers();
+  const m = MODES[mode];
+  if (!secLayer || !m || map.getZoom() < LABEL_ZOOM) return;
+  const view = map.getBounds().pad(0.1);
+  secLayer.eachLayer((l) => {
+    const c = l.getBounds().getCenter();
+    if (!view.contains(c)) return;
+    L.tooltip({ permanent: true, direction: "center", className: "sec-lbl", interactive: false })
+      .setLatLng(c).setContent(m.fmt(m.val(l.feature.properties))).addTo(labels);
+  });
+}
+map.on("zoomend moveend", paintLabels);
+
 function paintSections() {
   if (!secLayer) return;
   const m = MODES[mode];
@@ -488,6 +508,12 @@ function paintSections() {
   // En las capas del INE los puntos se ven más tenues para que se lea el color de la sección.
   document.getElementById("map").classList.toggle("ine-mode", !!m);
   zonesLayer.eachLayer((l) => l.setStyle({ fillOpacity: m ? 0 : .2, opacity: m ? 0 : .45 }));
+  document.getElementById("hint").textContent = m
+    ? `Acércate para ver el porcentaje de cada sección · toca una sección para ver todos sus datos`
+    : "Toca un candidato para ver solo sus puntos · toca una sección para ver sus datos";
+  // Al elegir una capa del INE, si el mapa está lejos se acerca lo justo para que se lean los porcentajes.
+  if (m && map.getZoom() < LABEL_ZOOM) map.flyTo(map.getCenter(), LABEL_ZOOM, { duration: .8 });
+  paintLabels();
 }
 
 async function loadSections() {
