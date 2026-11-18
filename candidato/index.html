@@ -481,7 +481,7 @@ async function loadSections() {
     const fc = await res.json();
     secLayer = L.geoJSON(fc, { renderer: secRenderer, pane: "secciones", style: sectionStyle,
       onEachFeature: (f, layer) => {
-        layer.bindPopup(() => popupHtml(f), { className: "sec-pop", maxWidth: 260 });
+        layer.bindPopup(() => popupHtml(f), { className: "sec-pop", maxWidth: 260, autoPanPaddingTopLeft: [12, 170], autoPanPaddingBottomRight: [12, 210] });
         layer.on("mouseover", () => layer.setStyle({ weight: 2.2, color: "#fff" }));
         layer.on("mouseout", () => secLayer.resetStyle(layer));
       } }).addTo(map);
