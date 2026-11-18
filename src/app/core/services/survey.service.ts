@@ -175,7 +175,8 @@ export class SurveyService {
   async syncPublicResults(): Promise<void> {
     const list = this.adminSurveys().length ? this.adminSurveys() : this.surveys();
     await Promise.all(
-      list.map(async (survey) => {
+      list.map(async (original) => {
+        const survey = this.auth.isAdmin() ? await this.fixDuplicateOptionIds(original) : original;
         const votes = await this.votesRepo.list(survey);
         await this.votesRepo.rebuildResults(survey, votes);
       }),
@@ -256,8 +257,46 @@ export class SurveyService {
     await this.surveyRepo.remove(id);
   }
 
+  /**
+   * Si dos candidatos quedaron con el mismo id, le da uno nuevo al repetido
+   * y reparte sus votos mitad y mitad (en orden de llegada).
+   */
+  private async fixDuplicateOptionIds(survey: Survey): Promise<Survey> {
+    const used = new Set(survey.options.map((opt) => opt.id));
+    const seen = new Set<string>();
+    const groups = new Map<string, string[]>();
+    const options = survey.options.map((opt) => {
+      if (!seen.has(opt.id)) {
+        seen.add(opt.id);
+        return opt;
+      }
+      const id = this.freeOptionId(used);
+      used.add(id);
+      groups.set(opt.id, [...(groups.get(opt.id) ?? [opt.id]), id]);
+      const aliases = (opt.aliases ?? []).filter((alias) => alias !== opt.id);
+      return { ...opt, id, ...(aliases.length ? { aliases } : { aliases: [] }) };
+    });
+    if (!groups.size) return survey;
+    const fixed: Survey = { ...survey, options, updatedAt: Date.now() };
+    await this.surveyRepo.save(fixed);
+    await this.votesRepo.splitVotes(survey.id, groups);
+    return fixed;
+  }
+
+  private freeOptionId(used: Set<string>): string {
+    let n = used.size + 1;
+    while (used.has(`opt-${n}`)) n += 1;
+    return `opt-${n}`;
+  }
+
   private async buildOptions(draft: SurveyDraft, previous?: Survey | null): Promise<SurveyOption[]> {
     const built: SurveyOption[] = [];
+    // Ids ya ocupados (de esta encuesta y de su versión anterior) para no repetir nunca uno.
+    const used = new Set<string>([
+      ...draft.options.map((row) => row.id?.trim() ?? '').filter(Boolean),
+      ...(previous?.options.map((opt) => opt.id) ?? []),
+    ]);
+    const taken = new Set<string>();
     for (let i = 0; i < draft.options.length; i += 1) {
       const row = draft.options[i]!;
       const label = row.label.trim();
@@ -266,7 +305,12 @@ export class SurveyService {
       if (row.imageFile) {
         imageUrl = jpegToDataUrl(await this.media.prepareNewsImage(row.imageFile));
       }
-      const id = row.id?.trim() || `opt-${i + 1}`;
+      let id = row.id?.trim() || '';
+      if (!id || taken.has(id)) {
+        id = !row.id?.trim() && !used.has(`opt-${i + 1}`) ? `opt-${i + 1}` : this.freeOptionId(used);
+        used.add(id);
+      }
+      taken.add(id);
       const voteValue = row.voteValue?.trim();
       if (!voteValue) continue;
       if (!imageUrl) continue;

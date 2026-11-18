@@ -10,6 +10,7 @@ import {
   runTransaction,
   setDoc,
   where,
+  writeBatch,
 } from 'firebase/firestore';
 import type { GeoZone, Survey, SurveyGeoMap, VoteRecord } from '../domain/models';
 import { FIRESTORE, type SurveyResultCounts, type VoteRepository } from '../domain/tokens';
@@ -96,6 +97,29 @@ export class FirestoreVoteRepository implements VoteRepository {
   async list(survey: Survey): Promise<VoteRecord[]> {
     const primary = await getDocs(query(collection(this.db, VOTES), where('encuestaId', '==', survey.id)));
     return primary.docs.map((item) => this.toVote(survey.id, item.data() as Record<string, unknown>));
+  }
+
+  /**
+   * Reparte los votos de una opción entre varias (mitad y mitad, en orden de llegada).
+   * Se usa para corregir encuestas donde dos candidatos quedaron con el mismo id.
+   */
+  async splitVotes(surveyId: string, groups: Map<string, string[]>): Promise<void> {
+    const snap = await getDocs(query(collection(this.db, VOTES), where('encuestaId', '==', surveyId)));
+    const updates: Array<{ id: string; opcion: string }> = [];
+    groups.forEach((ids, originalId) => {
+      const docs = snap.docs
+        .filter((d) => String(d.data()['opcion'] ?? '') === originalId)
+        .sort((a, b) => (Number(a.data()['timestamp']) || 0) - (Number(b.data()['timestamp']) || 0));
+      docs.forEach((d, i) => {
+        const target = ids[i % ids.length]!;
+        if (target !== originalId) updates.push({ id: d.id, opcion: target });
+      });
+    });
+    for (let i = 0; i < updates.length; i += 400) {
+      const batch = writeBatch(this.db);
+      updates.slice(i, i + 400).forEach((u) => batch.update(doc(this.db, VOTES, u.id), { opcion: u.opcion }));
+      await batch.commit();
+    }
   }
 
   async hasDeviceVote(survey: Survey, deviceId: string): Promise<boolean> {

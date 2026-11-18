@@ -32,6 +32,7 @@ export interface VoteRepository {
   clearDeviceVotes(deviceId: string, surveyIds: string[]): Promise<void>;
   watchResults(survey: Survey, onChange: (counts: SurveyResultCounts) => void): () => void;
   rebuildResults(survey: Survey, votes: VoteRecord[], previous?: Survey | null): Promise<void>;
+  splitVotes(surveyId: string, groups: Map<string, string[]>): Promise<void>;
   /** Mapa público por zonas de una encuesta, en vivo. */
   watchMap(surveyId: string, onChange: (map: SurveyGeoMap) => void): () => void;
 }
