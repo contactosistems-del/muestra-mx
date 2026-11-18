@@ -6,7 +6,19 @@
 <meta name="robots" content="noindex, nofollow">
 <!-- Mapa de seguimiento para candidatos (proyecto Vercel: seguimiento-pdc) -->
 <meta name="theme-color" content="#07090f">
-<title>Seguimiento de votación · muestra.mx</title>
+<title>__TITLE__</title>
+<meta name="description" content="__DESC__">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="muestra.mx">
+<meta property="og:title" content="__TITLE__">
+<meta property="og:description" content="__DESC__">
+<meta property="og:url" content="__URL__">
+<meta property="og:image" content="__OG_IMAGE__">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="__OG_IMAGE__">
+<script>window.__CITY = __CITY_JSON__;</script>
 <link rel="icon" href="https://muestra.mx/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -151,7 +163,7 @@
   <header>
     <div class="logo">mu<span class="es">es</span>tra.mx</div>
     <div class="head-txt">
-      <p class="city" id="city">Playa del Carmen</p>
+      <p class="city" id="city">__CITY_NAME__</p>
       <h1 id="title">Seguimiento de votación</h1>
     </div>
     <span class="live"><i></i> En vivo</span>
@@ -181,8 +193,8 @@ const FIREBASE = {
   projectId: "muestramx-61d39",
   appId: "1:225645214792:web:025d60e43e41c8da6a2c7d",
 };
-const CITY = { lat: 20.6296, lng: -87.0739, zoom: 13 };   // Playa del Carmen
-const CITY_MATCH = /playa del carmen|solidaridad/i;       // encuesta a mostrar si no se indica ?e=ID
+// Ciudad de esta página (la pone build.js; ver CIUDADES ahí). ?e=ID fuerza otra encuesta.
+const CITY = window.__CITY || { name: "Playa del Carmen", survey: "playa-del-carmen-2027", lat: 20.6296, lng: -87.0739, zoom: 13 };
 const HALF_CELL = 0.0025;                                  // los puntos se reparten en su zona (~500 m)
 const SITE = "https://muestra.mx";                         // para fotos guardadas con ruta relativa
 const INTRO_MS = 1900;                                     // duración mínima de la intro
@@ -338,11 +350,11 @@ function draw(fromServer) {
 try {
   const survey = await pickSurvey();
   if (!survey) {
-    legendEl.innerHTML = `<span class="muted">No hay una encuesta activa de Playa del Carmen.</span>`;
+    legendEl.innerHTML = `<span class="muted">No hay una encuesta activa de ${esc(CITY.name)}.</span>`;
     endIntro();
   } else {
     document.getElementById("title").textContent = txt(survey.title) || "Seguimiento de votación";
-    document.getElementById("city").textContent = txt(survey.city) || "Playa del Carmen";
+    document.getElementById("city").textContent = txt(survey.city) || CITY.name;
     document.title = `${txt(survey.title)} · muestra.mx`;
     colors = colorsFor(survey);
     onSnapshot(doc(db, "resultados_encuestas", `${survey.id}__mapa`),
@@ -363,8 +375,7 @@ async function pickSurvey() {
   const wanted = new URLSearchParams(location.search).get("e");
   const snap = await getDocs(query(collection(db, "encuestas"), where("active", "==", true)));
   const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-  if (wanted) return list.find((s) => s.id === wanted) || null;
-  return list.find((s) => CITY_MATCH.test(`${txt(s.city)} ${txt(s.title)}`)) || null;
+  return list.find((s) => s.id === (wanted || CITY.survey)) || null;
 }
 
 function colorsFor(survey) {

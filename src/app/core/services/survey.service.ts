@@ -1,6 +1,7 @@
 import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
 import type { Survey, SurveyDraft, SurveyGeoMap, SurveyOption, SurveyOptionTally, SurveyResult, VoteRecord } from '../../domain/models';
-import { SURVEY_REPOSITORY, VOTE_REPOSITORY, type SurveyResultCounts } from '../../domain/tokens';
+import { doc, setDoc } from 'firebase/firestore';
+import { FIRESTORE, SURVEY_REPOSITORY, VOTE_REPOSITORY, type SurveyResultCounts } from '../../domain/tokens';
 import { loc } from '../i18n/localized';
 import type { I18nKey } from '../i18n/ui-dictionary';
 import { jpegToDataUrl } from '../utils/news-image';
@@ -20,6 +21,7 @@ export class SurveyService {
   private readonly translator = inject(TranslationService);
   private readonly media = inject(MediaStorageService);
   private readonly auth = inject(AuthService);
+  private readonly db = inject(FIRESTORE);
 
   readonly surveys = signal<Survey[]>([]);
   readonly adminSurveys = signal<Survey[]>([]);
@@ -177,7 +179,7 @@ export class SurveyService {
     const list = this.adminSurveys().length ? this.adminSurveys() : this.surveys();
     await Promise.all(
       list.map(async (original) => {
-        const survey = this.auth.isAdmin() ? await this.fixDuplicateOptionIds(original) : original;
+        const survey = this.auth.isAdmin() ? await this.movePhotosOut(await this.fixDuplicateOptionIds(original)) : original;
         const votes = await this.votesRepo.list(survey);
         await this.votesRepo.rebuildResults(survey, votes);
       }),
@@ -284,6 +286,28 @@ export class SurveyService {
     return fixed;
   }
 
+  /**
+   * Las fotos guardadas dentro de la encuesta (data:…) se pasan a contenido/foto__… y la encuesta
+   * guarda solo el enlace /api/survey-photo. Así cada visita no descarga las fotos de todas las encuestas.
+   */
+  private async movePhotosOut(survey: Survey): Promise<Survey> {
+    if (!survey.options.some((opt) => String(opt.imageUrl ?? '').startsWith('data:'))) return survey;
+    const options: SurveyOption[] = [];
+    for (const opt of survey.options) {
+      const img = String(opt.imageUrl ?? '');
+      options.push(img.startsWith('data:') ? { ...opt, imageUrl: await this.storePhoto(survey.id, opt.id, img) } : opt);
+    }
+    const moved: Survey = { ...survey, options, updatedAt: Date.now() };
+    await this.surveyRepo.save(moved);
+    return moved;
+  }
+
+  private async storePhoto(surveyId: string, optionId: string, dataUrl: string): Promise<string> {
+    const id = `foto__${surveyId}__${optionId}`.replace(/[^A-Za-z0-9_-]+/g, '_').slice(0, 120);
+    await setDoc(doc(this.db, 'contenido', id), { imageUrl: dataUrl, updatedAt: Date.now() });
+    return `/api/survey-photo?id=${id}&v=${Date.now().toString(36)}`;
+  }
+
   private freeOptionId(used: Set<string>): string {
     let n = used.size + 1;
     while (used.has(`opt-${n}`)) n += 1;
@@ -306,6 +330,7 @@ export class SurveyService {
       if (row.imageFile) {
         imageUrl = jpegToDataUrl(await this.media.prepareNewsImage(row.imageFile));
       }
+      const pendingPhoto = imageUrl.startsWith('data:') ? imageUrl : '';
       let id = row.id?.trim() || '';
       if (!id || taken.has(id)) {
         id = !row.id?.trim() && !used.has(`opt-${i + 1}`) ? `opt-${i + 1}` : this.freeOptionId(used);
@@ -315,6 +340,7 @@ export class SurveyService {
       const voteValue = row.voteValue?.trim();
       if (!voteValue) continue;
       if (!imageUrl) continue;
+      if (pendingPhoto) imageUrl = await this.storePhoto(this.normalizeId(draft.id), id, pendingPhoto);
       const prev = previous?.options.find((opt) => opt.id === id);
       const aliases = new Set<string>([...(row.aliases ?? []), ...(prev?.aliases ?? [])]);
       if (prev?.label && prev.label !== label) aliases.add(prev.label);
