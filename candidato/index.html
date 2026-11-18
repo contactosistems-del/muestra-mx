@@ -208,6 +208,8 @@
     <button class="mode" data-mode="ln"><span class="sw" style="--k:#2fa0d0"></span>Electores <span class="tag">INE</span></button>
     <button class="mode" data-mode="jov"><span class="sw" style="--k:#3cc47a"></span>Jóvenes 18-29</button>
     <button class="mode" data-mode="muj"><span class="sw" style="--k:#b05be0"></span>Mujeres</button>
+    <button class="mode" data-mode="hom"><span class="sw" style="--k:#1fb3ad"></span>Hombres</button>
+    <button class="mode" data-mode="adu"><span class="sw" style="--k:#c9c021"></span>Adultos 30-64</button>
     <button class="mode" data-mode="may"><span class="sw" style="--k:#d98c16"></span>Mayores 65+</button>
   </div>
 
@@ -405,6 +407,10 @@ const MODES = {
          ramp: ["#0f2a1c", "#145a3a", "#1d8a55", "#3cc47a", "#9af5b8"] },
   muj: { label: "% de mujeres", val: (p) => p.ln ? p.m / p.ln : 0, fmt: (v) => Math.round(v * 100) + "%",
          ramp: ["#2a1036", "#4f1d6b", "#7c2fa3", "#b05be0", "#e7a8ff"] },
+  hom: { label: "% de hombres", val: (p) => p.ln ? p.h / p.ln : 0, fmt: (v) => Math.round(v * 100) + "%",
+         ramp: ["#062a2a", "#0b4f4f", "#127a78", "#1fb3ad", "#6ff0e6"] },
+  adu: { label: "% de adultos (30-64)", val: (p) => p.ln ? (p.e2 + p.e3) / p.ln : 0, fmt: (v) => Math.round(v * 100) + "%",
+         ramp: ["#2b2a06", "#57530b", "#8a8413", "#c9c021", "#fff36b"] },
   may: { label: "% de mayores de 65", val: (p) => p.ln ? p.e4 / p.ln : 0, fmt: (v) => Math.round(v * 100) + "%",
          ramp: ["#2e1a05", "#5c3507", "#9a5a0a", "#d98c16", "#ffd06b"] },
 };
