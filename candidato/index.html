@@ -116,18 +116,48 @@
 
   /* ---------- Puntos ---------- */
   .dot { transform-box: fill-box; transform-origin: center; }
+  .ine-mode .dot { opacity: .55; }
   .dot.intro { animation: drop .6s cubic-bezier(.2,.9,.25,1.4) both; }
   @keyframes drop { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: scale(1); } }
   .pulse { width: 14px; height: 14px; border-radius: 50%; background: var(--c); animation: ring 1.1s ease-out 3; }
   @keyframes ring { 0% { box-shadow: 0 0 0 0 var(--c); } 100% { box-shadow: 0 0 0 30px transparent; } }
-  .toast { position: absolute; z-index: 1100; left: 50%; top: calc(5.6rem + env(safe-area-inset-top)); transform: translate(-50%, -20px); opacity: 0;
+  .toast { position: absolute; z-index: 1100; left: 50%; top: calc(8.6rem + env(safe-area-inset-top)); transform: translate(-50%, -20px); opacity: 0;
     padding: .5rem 1rem; border-radius: 999px; background: rgba(13,17,28,.92); border: 1px solid var(--line); font-size: .8rem; font-weight: 800;
     display: inline-flex; align-items: center; gap: .5rem; transition: opacity .35s, transform .35s; pointer-events: none; white-space: nowrap; }
   .toast.show { opacity: 1; transform: translate(-50%, 0); }
   .toast i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); box-shadow: 0 0 10px var(--c); }
 
   /* Controles de Leaflet con el estilo de la marca */
-  .leaflet-top { top: calc(5.4rem + env(safe-area-inset-top)); }
+  .leaflet-top { top: calc(8.4rem + env(safe-area-inset-top)); }
+
+  /* ---------- Capas del INE ---------- */
+  .modes { position: absolute; z-index: 1000; left: .7rem; right: .7rem; top: calc(5.5rem + env(safe-area-inset-top));
+    display: flex; gap: .4rem; overflow-x: auto; scrollbar-width: none; padding: .1rem 0 .3rem;
+    opacity: 0; transform: translateY(-10px); transition: opacity .6s .3s, transform .6s .3s; }
+  .modes::-webkit-scrollbar { display: none; }
+  .ready .modes { opacity: 1; transform: none; }
+  .mode { flex: none; display: inline-flex; align-items: center; gap: .4rem; padding: .45rem .8rem; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--line); background: var(--panel); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    color: #cbd5e1; font: inherit; font-size: .78rem; font-weight: 800; white-space: nowrap; transition: background .2s, color .2s, border-color .2s; }
+  .mode.on { background: var(--red); border-color: var(--red); color: #fff; box-shadow: 0 0 18px -4px rgba(255,79,123,.7); }
+  .mode .tag { font-size: .6rem; padding: .1rem .35rem; border-radius: 6px; background: rgba(255,255,255,.12); letter-spacing: .05em; }
+  .scale { display: none; align-items: center; gap: .5rem; margin-bottom: .6rem; font-size: .72rem; font-weight: 700; color: var(--muted); }
+  .scale.show { display: flex; }
+  .scale .bar { flex: 1; height: 8px; border-radius: 6px; }
+  .src { font-size: .62rem; color: #64748b; margin-top: .35rem; }
+  .sec-pop .leaflet-popup-content-wrapper { background: rgba(13,17,28,.96); color: var(--txt); border: 1px solid var(--line); border-radius: 16px;
+    box-shadow: 0 20px 40px -12px rgba(0,0,0,.9); }
+  .sec-pop .leaflet-popup-tip { background: rgba(13,17,28,.96); }
+  .sec-pop .leaflet-popup-content { margin: .9rem 1rem; min-width: 210px; font-family: inherit; }
+  .sec-pop a.leaflet-popup-close-button { color: #94a3b8; }
+  .sp-k { font-size: .62rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .sp-n { font-family: Montserrat, sans-serif; font-weight: 900; font-size: 1.35rem; margin: .1rem 0 .55rem; }
+  .sp-n small { font-family: "Plus Jakarta Sans", sans-serif; font-size: .72rem; color: var(--muted); font-weight: 700; margin-left: .3rem; }
+  .sp-row { display: flex; justify-content: space-between; font-size: .78rem; font-weight: 700; margin: .3rem 0 .15rem; }
+  .sp-track { height: 6px; border-radius: 4px; background: rgba(255,255,255,.08); overflow: hidden; display: flex; }
+  .sp-track i { display: block; height: 100%; }
+  .sp-lead { display: flex; align-items: center; gap: .45rem; margin-top: .7rem; padding-top: .6rem; border-top: 1px solid var(--line); font-size: .78rem; font-weight: 800; }
+  .sp-lead i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); box-shadow: 0 0 10px var(--c); }
   .leaflet-bar, .leaflet-control-layers { border: 1px solid var(--line) !important; border-radius: 12px !important; overflow: hidden;
     background: var(--panel) !important; backdrop-filter: blur(10px); box-shadow: 0 10px 24px -12px rgba(0,0,0,.8) !important; }
   .leaflet-bar a { background: transparent !important; color: #e2e8f0 !important; border-bottom-color: var(--line) !important; }
@@ -135,7 +165,7 @@
   .leaflet-control-layers-expanded { color: #e2e8f0; }
   .leaflet-control-attribution { background: rgba(7,9,15,.6) !important; color: #64748b !important; font-size: 9px; }
   .leaflet-control-attribution a { color: #94a3b8 !important; }
-  .leaflet-bottom { bottom: 9.2rem; }
+  .leaflet-bottom { bottom: 11rem; }
 
   @media (min-width: 900px) {
     footer { right: auto; max-width: 520px; }
@@ -169,14 +199,24 @@
     <span class="live"><i></i> En vivo</span>
   </header>
 
+  <div class="modes" id="modes">
+    <button class="mode on" data-mode="votos">Votos en vivo</button>
+    <button class="mode" data-mode="ln">Electores <span class="tag">INE</span></button>
+    <button class="mode" data-mode="jov">Jóvenes 18-29</button>
+    <button class="mode" data-mode="muj">Mujeres</button>
+    <button class="mode" data-mode="may">Mayores 65+</button>
+  </div>
+
   <div class="toast" id="toast"><i></i><span></span></div>
 
   <footer>
+    <div class="scale" id="scale"><span id="scale-min"></span><span class="bar" id="scale-bar"></span><span id="scale-max"></span></div>
     <div id="legend"><span class="muted">Cargando…</span></div>
     <div class="foot-row">
-      <span>Toca un candidato para ver solo sus puntos</span>
+      <span id="hint">Toca un candidato para ver solo sus puntos · toca una sección para ver sus datos</span>
       <span class="logo">mu<span class="es">es</span>tra.mx</span>
     </div>
+    <div class="src" id="src"></div>
   </footer>
 </div>
 
@@ -224,6 +264,10 @@ const bases = { Oscuro: esri("World_Street_Map", { className: "dark-tiles" }), C
 bases.Oscuro.addTo(map);
 L.control.layers(bases, undefined, { position: "topright" }).addTo(map);
 const svg = L.svg({ padding: 0.5 });
+map.createPane("secciones").style.zIndex = 350;
+const secRenderer = L.svg({ pane: "secciones", padding: 0.5 });
+let secLayer = null;
+let mode = "votos";
 const zonesLayer = L.layerGroup().addTo(map);
 const dots = L.layerGroup().addTo(map);
 const legendEl = document.getElementById("legend");
@@ -336,6 +380,7 @@ function draw(fromServer) {
     if (firstPaint && m._path) m._path.style.animationDelay = `${0.2 + r * 1.4}s`;
   });
   firstPaint = false;
+  if (MODES[mode]) zonesLayer.eachLayer((l) => l.setStyle({ fillOpacity: 0, opacity: 0 }));
   if (fromServer) prev = JSON.parse(JSON.stringify(celdas || {}));
   if (fresh) toast(...fresh);
   renderLegend(present);
@@ -345,6 +390,111 @@ function draw(fromServer) {
     map.flyToBounds(L.latLngBounds(near.length ? near : pts), { padding: [70, 70], maxZoom: 15, duration: 1.4 });
   }
 }
+
+
+/* ---------- Secciones electorales del INE ---------- */
+const MODES = {
+  ln:  { label: "Electores por sección", val: (p) => p.ln, fmt: (v) => v.toLocaleString("es-MX") },
+  jov: { label: "% jóvenes 18-29", val: (p) => p.ln ? p.e1 / p.ln : 0, fmt: (v) => Math.round(v * 100) + "%" },
+  muj: { label: "% mujeres", val: (p) => p.ln ? p.m / p.ln : 0, fmt: (v) => Math.round(v * 100) + "%" },
+  may: { label: "% mayores de 65", val: (p) => p.ln ? p.e4 / p.ln : 0, fmt: (v) => Math.round(v * 100) + "%" },
+};
+const RAMP = ["#2a1420", "#5a1a33", "#8f1f3c", "#BE3455", "#ff4f7b"];
+let breaks = [];
+const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
+
+function quantiles(values) {
+  const v = values.filter((x) => x > 0).sort((a, b) => a - b);
+  if (!v.length) return [0, 0, 0, 0, 0, 0];
+  return [0, .2, .4, .6, .8, 1].map((q) => v[Math.min(v.length - 1, Math.floor(q * (v.length - 1)))]);
+}
+function rampColor(x) {
+  for (let i = 1; i < breaks.length; i++) if (x <= breaks[i]) return RAMP[Math.min(RAMP.length - 1, i - 1)];
+  return RAMP[RAMP.length - 1];
+}
+
+function sectionStyle(f) {
+  if (mode === "votos") return { color: "rgba(255,255,255,.28)", weight: 0.8, fill: true, fillOpacity: 0, fillColor: "#000" };
+  return { color: "rgba(7,9,15,.55)", weight: 0.7, fill: true, fillOpacity: .62, fillColor: rampColor(MODES[mode].val(f.properties)) };
+}
+
+// Candidato que va adelante (en la encuesta) dentro de una sección: se cuentan las zonas cuyo centro cae dentro.
+function inRing(pt, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i], [xj, yj] = ring[j];
+    if ((yi > pt[1]) !== (yj > pt[1]) && pt[0] < ((xj - xi) * (pt[1] - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+function inGeom(pt, g) {
+  const polys = g.type === "Polygon" ? [g.coordinates] : g.type === "MultiPolygon" ? g.coordinates : [];
+  return polys.some((poly) => inRing(pt, poly[0]) && !poly.slice(1).some((h) => inRing(pt, h)));
+}
+function leaderIn(geometry) {
+  const tally = {};
+  for (const [key, counts] of Object.entries(celdas || {})) {
+    const [i, j] = key.split("_").map(Number);
+    const c = [(j + 0.5) * 2 * HALF_CELL, (i + 0.5) * 2 * HALF_CELL];
+    if (!inGeom(c, geometry)) continue;
+    for (const [o, n] of Object.entries(counts || {})) tally[o] = (tally[o] || 0) + (Number(n) || 0);
+  }
+  const r = Object.entries(tally).sort((a, b) => b[1] - a[1]);
+  if (!r.length || (r[1] && r[1][1] === r[0][1])) return null;
+  return colors[r[0][0]] || null;
+}
+
+function popupHtml(f) {
+  const p = f.properties;
+  const ages = [["18-29", p.e1, "#ff4f7b"], ["30-44", p.e2, "#BE3455"], ["45-64", p.e3, "#8f1f3c"], ["65+", p.e4, "#5a1a33"]];
+  const lead = leaderIn(f.geometry);
+  return `<div class="sp-k">Sección electoral · Distrito local ${p.dl}</div>
+    <div class="sp-n">${p.s}<small>${p.ln.toLocaleString("es-MX")} electores</small></div>
+    <div class="sp-row"><span>Mujeres ${pct(p.m, p.ln)}%</span><span>Hombres ${pct(p.h, p.ln)}%</span></div>
+    <div class="sp-track"><i style="width:${pct(p.m, p.ln)}%;background:#ff4f7b"></i><i style="width:${pct(p.h, p.ln)}%;background:#1D8FE1"></i></div>
+    ${ages.map(([k, v, c]) => `<div class="sp-row"><span>${k} años</span><span>${pct(v, p.ln)}%</span></div>
+      <div class="sp-track"><i style="width:${pct(v, p.ln)}%;background:${c}"></i></div>`).join("")}
+    ${lead ? `<div class="sp-lead" style="--c:${lead.color}"><i></i>En la encuesta aquí va adelante: ${esc(lead.label)}</div>` : ""}`;
+}
+
+function paintSections() {
+  if (!secLayer) return;
+  const m = MODES[mode];
+  if (m) {
+    breaks = quantiles(secLayer.getLayers().map((l) => m.val(l.feature.properties)));
+    document.getElementById("scale-min").textContent = m.fmt(breaks[0]);
+    document.getElementById("scale-max").textContent = m.fmt(breaks[5]);
+    document.getElementById("scale-bar").style.background = `linear-gradient(90deg, ${RAMP.join(",")})`;
+  }
+  document.getElementById("scale").classList.toggle("show", !!m);
+  secLayer.setStyle(sectionStyle);
+  // En las capas del INE los puntos se ven más tenues para que se lea el color de la sección.
+  document.getElementById("map").classList.toggle("ine-mode", !!m);
+  zonesLayer.eachLayer((l) => l.setStyle({ fillOpacity: m ? 0 : .2, opacity: m ? 0 : .45 }));
+}
+
+async function loadSections() {
+  if (!CITY.data) return;
+  try {
+    const res = await fetch(CITY.data);
+    if (!res.ok) return;
+    const fc = await res.json();
+    secLayer = L.geoJSON(fc, { renderer: secRenderer, pane: "secciones", style: sectionStyle,
+      onEachFeature: (f, layer) => {
+        layer.bindPopup(() => popupHtml(f), { className: "sec-pop", maxWidth: 260 });
+        layer.on("mouseover", () => layer.setStyle({ weight: 2.2, color: "#fff" }));
+        layer.on("mouseout", () => secLayer.resetStyle(layer));
+      } }).addTo(map);
+    document.getElementById("src").textContent = "Secciones y electores: INE (lista nominal al 5 nov 2026).";
+  } catch { /* sin capa del INE */ }
+}
+
+document.querySelectorAll(".mode").forEach((b) => b.onclick = () => {
+  mode = b.dataset.mode;
+  document.querySelectorAll(".mode").forEach((x) => x.classList.toggle("on", x === b));
+  paintSections();
+});
+loadSections();
 
 /* ---------- Arranque ---------- */
 try {
