@@ -8,6 +8,7 @@ import type {
   NewsItem,
   SponsorContent,
   Survey,
+  SurveyGeoMap,
   VoteRecord,
 } from './models';
 
@@ -31,6 +32,8 @@ export interface VoteRepository {
   clearDeviceVotes(deviceId: string, surveyIds: string[]): Promise<void>;
   watchResults(survey: Survey, onChange: (counts: SurveyResultCounts) => void): () => void;
   rebuildResults(survey: Survey, votes: VoteRecord[], previous?: Survey | null): Promise<void>;
+  /** Mapa público por zonas de una encuesta, en vivo. */
+  watchMap(surveyId: string, onChange: (map: SurveyGeoMap) => void): () => void;
 }
 
 export interface SurveyRepository {

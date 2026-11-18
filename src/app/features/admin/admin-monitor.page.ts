@@ -108,6 +108,10 @@ type AdminTab = 'results' | 'charts' | 'surveys' | 'content' | 'news';
 
               <section class="block">
                 <h3>{{ i18n.t('electoralMap') }} · {{ i18n.tx(survey.shortLabel) }}</h3>
+                <p class="public-map-link">
+                  <a [href]="'/mapa/' + survey.id" target="_blank" rel="noopener">Ver mapa público de esta encuesta ↗</a>
+                  · Si no aparecen los votos anteriores, presiona «Sincronizar» una vez.
+                </p>
                 <div class="map-box map-box-wide">
                   @for (mapId of [survey.id]; track mapId) {
                     <app-leaflet-map

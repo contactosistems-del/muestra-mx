@@ -1,5 +1,5 @@
 import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
-import type { Survey, SurveyDraft, SurveyOption, SurveyOptionTally, SurveyResult, VoteRecord } from '../../domain/models';
+import type { Survey, SurveyDraft, SurveyGeoMap, SurveyOption, SurveyOptionTally, SurveyResult, VoteRecord } from '../../domain/models';
 import { SURVEY_REPOSITORY, VOTE_REPOSITORY, type SurveyResultCounts } from '../../domain/tokens';
 import { loc } from '../i18n/localized';
 import type { I18nKey } from '../i18n/ui-dictionary';
@@ -80,6 +80,11 @@ export class SurveyService {
 
   surveyById(id: string) {
     return this.surveys().find((item) => item.id === id) ?? this.adminSurveys().find((item) => item.id === id);
+  }
+
+  /** Mapa público por zonas (en vivo). Devuelve la función para dejar de escuchar. */
+  watchMap(surveyId: string, onChange: (map: SurveyGeoMap) => void): () => void {
+    return this.votesRepo.watchMap(surveyId, onChange);
   }
 
   resultById(id: string): SurveyResult | undefined {

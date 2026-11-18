@@ -104,6 +104,22 @@ export interface VoteRecord {
   encuestaId: string;
 }
 
+/** Zona del mapa público de votación: centro de una cuadrícula (~500 m) y votos por opción. */
+export interface GeoZone {
+  lat: number;
+  lng: number;
+  total: number;
+  /** Votos por id de opción. */
+  counts: Record<string, number>;
+}
+
+/** Mapa público agregado de una encuesta (nunca guarda la ubicación exacta de un voto). */
+export interface SurveyGeoMap {
+  surveyId: string;
+  zones: GeoZone[];
+  updatedAt: number;
+}
+
 export interface SurveyOptionTally {
   label: string;
   count: number;

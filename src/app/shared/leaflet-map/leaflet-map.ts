@@ -65,6 +65,12 @@ export class LeafletMap {
   readonly markers = input<MapMarker[]>([]);
   readonly center = input<[number, number]>([21.16, -86.85]);
   readonly zoom = input(5);
+  /** Zoom máximo al encuadrar los puntos (más alto = más cerca, p. ej. 14 para una ciudad). */
+  readonly fitMaxZoom = input(10);
+  /** Decimales para juntar puntos en una burbuja: 2 ≈ 1 km, 3 ≈ 100 m. */
+  readonly precision = input(2);
+  /** Opcional: color por grupo; la burbuja toma el color del grupo que va ganando ahí. */
+  readonly groupColors = input<Record<string, string>>({});
   private readonly host = viewChild.required<ElementRef<HTMLDivElement>>('host');
   private readonly destroyRef = inject(DestroyRef);
   private map?: LeafletMapType;
@@ -161,11 +167,13 @@ export class LeafletMap {
       const max = Math.max(1, ...bubbles.map((b) => b.total));
       this.pins = bubbles.map((b) => {
         const radius = b.total === 1 ? 8 : Math.min(30, 9 + Math.sqrt(b.total / max) * 21);
+        const leader = [...b.groups.entries()].sort((x, y) => y[1] - x[1])[0]?.[0];
+        const fill = (leader && this.groupColors()[leader]) || '#BE3455';
         return L.circleMarker([b.lat, b.lng], {
           radius,
           color: '#FFFFFF',
           weight: 2.5,
-          fillColor: '#BE3455',
+          fillColor: fill,
           fillOpacity: b.total === 1 ? 0.9 : 0.78,
           className: 'mx-bubble',
         })
@@ -185,7 +193,7 @@ export class LeafletMap {
       } else if (points.length > 1) {
         this.map.fitBounds(
           L.latLngBounds(points.map((item) => [item.lat, item.lng] as [number, number])),
-          { padding: [24, 24], maxZoom: 10 },
+          { padding: [24, 24], maxZoom: this.fitMaxZoom() },
         );
       } else {
         this.map.setView(this.center(), this.zoom());
@@ -200,7 +208,7 @@ export class LeafletMap {
     if (!this.map || !this.L) return;
     const pts = this.points;
     if (pts.length === 1) this.map.flyTo([pts[0]!.lat, pts[0]!.lng], Math.max(this.zoom(), 8), { duration: 0.6 });
-    else if (pts.length > 1) this.map.flyToBounds(this.L.latLngBounds(pts.map((p) => [p.lat, p.lng] as [number, number])), { padding: [24, 24], maxZoom: 10, duration: 0.6 });
+    else if (pts.length > 1) this.map.flyToBounds(this.L.latLngBounds(pts.map((p) => [p.lat, p.lng] as [number, number])), { padding: [24, 24], maxZoom: this.fitMaxZoom(), duration: 0.6 });
     else this.map.flyTo(this.center(), this.zoom(), { duration: 0.6 });
   }
 
@@ -208,7 +216,8 @@ export class LeafletMap {
   private cluster(points: MapMarker[]): Bubble[] {
     const byKey = new Map<string, Bubble>();
     for (const p of points) {
-      const key = `${p.lat.toFixed(2)},${p.lng.toFixed(2)}`;
+      const d = this.precision();
+      const key = `${p.lat.toFixed(d)},${p.lng.toFixed(d)}`;
       let b = byKey.get(key);
       if (!b) {
         b = { lat: 0, lng: 0, total: 0, labels: [], groups: new Map() };
