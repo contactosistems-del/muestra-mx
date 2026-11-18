@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Seguimiento de votación · Playa del Carmen</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  html, body { margin: 0; height: 100%; background: #0b1220; color: #f1f5f9;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .app { position: fixed; inset: 0; display: flex; flex-direction: column; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .8rem 1.1rem; }
+  .city { margin: 0; font-size: .75rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #94a3b8; }
+  h1 { margin: .15rem 0 0; font-size: clamp(1.05rem, 3.2vw, 1.5rem); line-height: 1.2; }
+  .live { display: inline-flex; align-items: center; gap: .4rem; font-size: .75rem; font-weight: 900;
+    text-transform: uppercase; color: #22c55e; white-space: nowrap; }
+  .live i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: p 1.4s infinite; }
+  @keyframes p { 50% { opacity: .3; } }
+  #map { flex: 1; min-height: 0; background: #1f2937; }
+  footer { display: flex; flex-wrap: wrap; gap: .5rem 1.1rem; padding: .75rem 1.1rem calc(.75rem + env(safe-area-inset-bottom));
+    font-size: .9rem; font-weight: 700; }
+  footer span { display: inline-flex; align-items: center; gap: .45rem; }
+  footer i { width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 0 2px rgba(255,255,255,.25); }
+  .muted { color: #94a3b8; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <p class="city" id="city">Playa del Carmen</p>
+      <h1 id="title">Seguimiento de votación</h1>
+    </div>
+    <span class="live"><i></i> En vivo</span>
+  </header>
+  <div id="map" aria-label="Mapa de votación"></div>
+  <footer id="legend"><span class="muted">Cargando…</span></footer>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import { getFirestore, collection, query, where, getDocs, doc, onSnapshot }
+  from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+/* ===== Ajustes ===== */
+const FIREBASE = {
+  apiKey: "AIzaSyCTKcMeBVPK6WHqMQbEFjqt2ErvPPbAPBA",
+  authDomain: "muestramx-61d39.firebaseapp.com",
+  projectId: "muestramx-61d39",
+  appId: "1:225645214792:web:025d60e43e41c8da6a2c7d",
+};
+const CITY = { lat: 20.6296, lng: -87.0739, zoom: 13 };   // Playa del Carmen
+const CITY_MATCH = /playa del carmen|solidaridad/i;       // encuesta a mostrar si no se indica ?e=ID
+const HALF_CELL = 0.0025;                                  // los puntos se reparten en su zona (~500 m)
+/* =================== */
+
+const PARTY = { MORENA:"#9F2241", PVEM:"#2E9E44", VERDE:"#2E9E44", PT:"#D52B1E", PAN:"#0059A8", PRI:"#00843D",
+  PRD:"#E5B800", MC:"#FF7A00", "MOVIMIENTO CIUDADANO":"#FF7A00", INDEPENDIENTE:"#6B7280" };
+const PALETTE = ["#E63946","#1D8FE1","#06A77D","#F4A259","#9B5DE5","#F15BB5","#00BBF9","#FEE440"];
+const partyColor = (p) => {
+  const k = String(p || "").trim().toUpperCase();
+  if (!k) return null;
+  if (PARTY[k]) return PARTY[k];
+  const first = k.split(/[\s\-/,+]+/).find((x) => PARTY[x]);
+  return first ? PARTY[first] : null;
+};
+const txt = (v) => (v && typeof v === "object" ? v.es || v.en || "" : String(v || ""));
+// Número pseudoaleatorio estable: los puntos no "brincan" cuando entran votos nuevos.
+const seeded = (s) => { let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return ((h >>> 0) % 10000) / 10000; };
+
+const map = L.map("map", { preferCanvas: true }).setView([CITY.lat, CITY.lng], CITY.zoom);
+const esri = (s) => L.tileLayer(`https://server.arcgisonline.com/ArcGIS/rest/services/${s}/MapServer/tile/{z}/{y}/{x}`,
+  { attribution: "Tiles &copy; Esri", maxZoom: 19 });
+const bases = { Oscuro: esri("Canvas/World_Dark_Gray_Base"), Mapa: esri("World_Street_Map"), "Satélite": esri("World_Imagery") };
+bases.Oscuro.addTo(map);
+L.control.layers(bases, undefined, { position: "topright" }).addTo(map);
+const dots = L.layerGroup().addTo(map);
+const legendEl = document.getElementById("legend");
+
+const db = getFirestore(initializeApp(FIREBASE));
+
+async function pickSurvey() {
+  const wanted = new URLSearchParams(location.search).get("e");
+  const snap = await getDocs(query(collection(db, "encuestas"), where("active", "==", true)));
+  const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  if (wanted) return list.find((s) => s.id === wanted) || null;
+  return list.find((s) => CITY_MATCH.test(`${txt(s.city)} ${txt(s.title)}`)) || null;
+}
+
+function colorsFor(survey) {
+  const out = {};
+  (Array.isArray(survey.options) ? survey.options : []).forEach((o, i) => {
+    if (!o || !String(o.label || "").trim()) return;
+    const id = String(o.id ?? `opt-${i + 1}`);
+    out[id] = { label: String(o.label).trim(), color: partyColor(o.party) || PALETTE[i % PALETTE.length] };
+  });
+  return out;
+}
+
+let framed = false;
+function draw(celdas, colors) {
+  dots.clearLayers();
+  const present = new Set();
+  const pts = [];
+  for (const [key, counts] of Object.entries(celdas || {})) {
+    const [i, j] = key.split("_").map(Number);
+    if (!Number.isFinite(i) || !Number.isFinite(j)) continue;
+    const clat = (i + 0.5) * 2 * HALF_CELL, clng = (j + 0.5) * 2 * HALF_CELL;
+    for (const [opt, nRaw] of Object.entries(counts || {})) {
+      const n = Number(nRaw) || 0;
+      if (!n) continue;
+      present.add(opt);
+      const color = colors[opt]?.color || "#BE3455";
+      for (let k = 0; k < n; k++) {
+        const s = `${key}|${opt}|${k}`;
+        const p = [clat + (seeded(s + "a") * 2 - 1) * HALF_CELL, clng + (seeded(s + "b") * 2 - 1) * HALF_CELL];
+        pts.push(p);
+        L.circleMarker(p, { radius: 5, color: "#0b1220", weight: 1, fillColor: color, fillOpacity: .9, interactive: false }).addTo(dots);
+      }
+    }
+  }
+  const items = Object.entries(colors).filter(([id]) => present.has(id));
+  legendEl.innerHTML = items.length
+    ? items.map(([, v]) => `<span><i style="background:${v.color}"></i>${v.label.replace(/[<>&]/g, "")}</span>`).join("")
+    : `<span class="muted">Aún no hay votos con ubicación.</span>`;
+  if (!framed && pts.length) {
+    framed = true;
+    const near = pts.filter(([a, b]) => Math.abs(a - CITY.lat) < 0.12 && Math.abs(b - CITY.lng) < 0.12);
+    map.fitBounds(L.latLngBounds(near.length ? near : pts), { padding: [30, 30], maxZoom: 15 });
+  }
+}
+
+try {
+  const survey = await pickSurvey();
+  if (!survey) {
+    legendEl.innerHTML = `<span class="muted">No hay una encuesta activa de Playa del Carmen.</span>`;
+  } else {
+    document.getElementById("title").textContent = txt(survey.title) || "Seguimiento de votación";
+    document.getElementById("city").textContent = txt(survey.city) || "Playa del Carmen";
+    document.title = `${txt(survey.title)} · Seguimiento`;
+    const colors = colorsFor(survey);
+    onSnapshot(doc(db, "resultados_encuestas", `${survey.id}__mapa`),
+      (snap) => draw(snap.exists() ? snap.data().celdas : {}, colors),
+      () => { legendEl.innerHTML = `<span class="muted">No se pudo cargar el mapa.</span>`; });
+  }
+} catch (e) {
+  legendEl.innerHTML = `<span class="muted">No se pudo conectar. Recarga la página.</span>`;
+}
+</script>
+</body>
+</html>

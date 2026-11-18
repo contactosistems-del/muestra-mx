@@ -21,7 +21,5 @@ export const routes: Routes = [
     canActivate: [adminGuard],
     loadComponent: () => import('./features/admin/admin-monitor.page').then((m) => m.AdminMonitorPage),
   },
-  // Enlace privado para candidatos: no aparece en el menú ni en el sitio.
-  { path: 'seguimiento/:id', loadComponent: () => import('./features/private/candidate-map.page').then((m) => m.CandidateMapPage) },
   { path: '**', redirectTo: '' },
 ];

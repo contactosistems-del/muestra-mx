@@ -108,12 +108,6 @@ type AdminTab = 'results' | 'charts' | 'surveys' | 'content' | 'news';
 
               <section class="block">
                 <h3>{{ i18n.t('electoralMap') }} · {{ i18n.tx(survey.shortLabel) }}</h3>
-                <p class="candidate-link">
-                  Enlace privado para el candidato (solo puntos, sin números):
-                  <a [href]="'/seguimiento/' + survey.id" target="_blank" rel="noopener">abrir</a> ·
-                  <button type="button" class="ghost" (click)="copyCandidateLink(survey.id)">{{ linkCopied() ? 'Copiado ✓' : 'Copiar enlace' }}</button>
-                  <br /><small>Si no aparecen los votos anteriores, presiona «Sincronizar» una vez.</small>
-                </p>
                 <div class="map-box map-box-wide">
                   @for (mapId of [survey.id]; track mapId) {
                     <app-leaflet-map
@@ -502,8 +496,6 @@ type AdminTab = 'results' | 'charts' | 'surveys' | 'content' | 'news';
       border: 1px solid var(--border-color);
     }
     .map-box-wide { height: 420px; min-height: 420px; }
-    .candidate-link { margin: 0 0 .8rem; font-size: .88rem; line-height: 1.6; }
-    .candidate-link small { opacity: .7; }
     .results-list {
       display: flex;
       flex-direction: column;
@@ -751,7 +743,6 @@ export class AdminMonitorPage implements OnInit, OnDestroy {
   readonly unlocking = signal(false);
   readonly unlockMsg = signal('');
   readonly pendingTitle = signal('');
-  readonly linkCopied = signal(false);
   selectedNewsId = '';
 
   readonly activeSurveys = computed(() =>
@@ -899,12 +890,6 @@ export class AdminMonitorPage implements OnInit, OnDestroy {
     } finally {
       this.syncing.set(false);
     }
-  }
-
-  async copyCandidateLink(surveyId: string): Promise<void> {
-    await navigator.clipboard.writeText(`${location.origin}/seguimiento/${encodeURIComponent(surveyId)}`);
-    this.linkCopied.set(true);
-    setTimeout(() => this.linkCopied.set(false), 1800);
   }
 
   exportCsv(): void {
