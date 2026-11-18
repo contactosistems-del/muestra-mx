@@ -116,7 +116,8 @@
 
   /* ---------- Puntos ---------- */
   .dot { transform-box: fill-box; transform-origin: center; }
-  .ine-mode .dot { opacity: .55; }
+  /* Sobre las capas del INE los puntos de votos llevan borde blanco para distinguirlos del color de la sección. */
+  .ine-mode .dot { stroke: #fff; stroke-width: 1.6px; stroke-opacity: .95; }
   .dot.intro { animation: drop .6s cubic-bezier(.2,.9,.25,1.4) both; }
   @keyframes drop { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: scale(1); } }
   .pulse { width: 14px; height: 14px; border-radius: 50%; background: var(--c); animation: ring 1.1s ease-out 3; }
@@ -144,6 +145,9 @@
   .scale { display: none; align-items: center; gap: .5rem; margin-bottom: .6rem; font-size: .72rem; font-weight: 700; color: var(--muted); }
   .scale.show { display: flex; }
   .scale .bar { flex: 1; height: 8px; border-radius: 6px; }
+  .scale b { color: var(--txt); font-weight: 800; white-space: nowrap; }
+  .mode .sw { width: 10px; height: 10px; border-radius: 3px; background: var(--k); box-shadow: 0 0 8px var(--k); }
+  .mode.on .sw { box-shadow: 0 0 0 2px rgba(255,255,255,.7); }
   .src { font-size: .62rem; color: #64748b; margin-top: .35rem; }
   .sec-pop .leaflet-popup-content-wrapper { background: rgba(13,17,28,.96); color: var(--txt); border: 1px solid var(--line); border-radius: 16px;
     box-shadow: 0 20px 40px -12px rgba(0,0,0,.9); }
@@ -200,17 +204,17 @@
   </header>
 
   <div class="modes" id="modes">
-    <button class="mode on" data-mode="votos">Votos en vivo</button>
-    <button class="mode" data-mode="ln">Electores <span class="tag">INE</span></button>
-    <button class="mode" data-mode="jov">Jóvenes 18-29</button>
-    <button class="mode" data-mode="muj">Mujeres</button>
-    <button class="mode" data-mode="may">Mayores 65+</button>
+    <button class="mode on" data-mode="votos"><span class="sw" style="--k:#ff4f7b"></span>Votos en vivo</button>
+    <button class="mode" data-mode="ln"><span class="sw" style="--k:#2fa0d0"></span>Electores <span class="tag">INE</span></button>
+    <button class="mode" data-mode="jov"><span class="sw" style="--k:#3cc47a"></span>Jóvenes 18-29</button>
+    <button class="mode" data-mode="muj"><span class="sw" style="--k:#b05be0"></span>Mujeres</button>
+    <button class="mode" data-mode="may"><span class="sw" style="--k:#d98c16"></span>Mayores 65+</button>
   </div>
 
   <div class="toast" id="toast"><i></i><span></span></div>
 
   <footer>
-    <div class="scale" id="scale"><span id="scale-min"></span><span class="bar" id="scale-bar"></span><span id="scale-max"></span></div>
+    <div class="scale" id="scale"><b id="scale-title"></b><span id="scale-min"></span><span class="bar" id="scale-bar"></span><span id="scale-max"></span></div>
     <div id="legend"><span class="muted">Cargando…</span></div>
     <div class="foot-row">
       <span id="hint">Toca un candidato para ver solo sus puntos · toca una sección para ver sus datos</span>
@@ -393,13 +397,18 @@ function draw(fromServer) {
 
 
 /* ---------- Secciones electorales del INE ---------- */
+// Cada capa con su propio color, para que se distinga qué se está viendo.
 const MODES = {
-  ln:  { label: "Electores por sección", val: (p) => p.ln, fmt: (v) => v.toLocaleString("es-MX") },
-  jov: { label: "% jóvenes 18-29", val: (p) => p.ln ? p.e1 / p.ln : 0, fmt: (v) => Math.round(v * 100) + "%" },
-  muj: { label: "% mujeres", val: (p) => p.ln ? p.m / p.ln : 0, fmt: (v) => Math.round(v * 100) + "%" },
-  may: { label: "% mayores de 65", val: (p) => p.ln ? p.e4 / p.ln : 0, fmt: (v) => Math.round(v * 100) + "%" },
+  ln:  { label: "Electores por sección", val: (p) => p.ln, fmt: (v) => v.toLocaleString("es-MX"),
+         ramp: ["#0b1f3a", "#123f6b", "#1c6aa0", "#2fa0d0", "#7fdcff"] },
+  jov: { label: "% de jóvenes (18-29)", val: (p) => p.ln ? p.e1 / p.ln : 0, fmt: (v) => Math.round(v * 100) + "%",
+         ramp: ["#0f2a1c", "#145a3a", "#1d8a55", "#3cc47a", "#9af5b8"] },
+  muj: { label: "% de mujeres", val: (p) => p.ln ? p.m / p.ln : 0, fmt: (v) => Math.round(v * 100) + "%",
+         ramp: ["#2a1036", "#4f1d6b", "#7c2fa3", "#b05be0", "#e7a8ff"] },
+  may: { label: "% de mayores de 65", val: (p) => p.ln ? p.e4 / p.ln : 0, fmt: (v) => Math.round(v * 100) + "%",
+         ramp: ["#2e1a05", "#5c3507", "#9a5a0a", "#d98c16", "#ffd06b"] },
 };
-const RAMP = ["#2a1420", "#5a1a33", "#8f1f3c", "#BE3455", "#ff4f7b"];
+let RAMP = MODES.ln.ramp;
 let breaks = [];
 const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
 
@@ -461,6 +470,8 @@ function paintSections() {
   if (!secLayer) return;
   const m = MODES[mode];
   if (m) {
+    RAMP = m.ramp;
+    document.getElementById("scale-title").textContent = m.label;
     breaks = quantiles(secLayer.getLayers().map((l) => m.val(l.feature.properties)));
     document.getElementById("scale-min").textContent = m.fmt(breaks[0]);
     document.getElementById("scale-max").textContent = m.fmt(breaks[5]);
