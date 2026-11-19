@@ -584,7 +584,7 @@ function colorsFor(survey) {
     const baseId = String(o.id ?? `opt-${i + 1}`);
     const id = out[baseId] ? `${baseId}#${i}` : baseId;
     const img = String(o.imageUrl || "").trim();
-    out[id] = { label: String(o.label).trim(), color: partyColor(o.party) || PALETTE[i % PALETTE.length],
+    out[id] = { label: String(o.label).trim(), color: (CITY.colors || {})[id] || partyColor(o.party) || PALETTE[i % PALETTE.length],
       img: !img ? "" : /^(https?:|data:)/.test(img) ? img : SITE + (img.startsWith("/") ? "" : "/") + img };
   });
   return out;
