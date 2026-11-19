@@ -10,6 +10,9 @@ import { FIREBASE_AUTH } from '../../domain/tokens';
 const MAX_ATTEMPTS = 5;
 const LOCK_MS = 60_000;
 
+/** Cuentas con permisos de administrador. Debe coincidir con isAdmin() en firebase/firestore.rules. */
+export const ADMIN_EMAILS = ['admin@muestra.mx'];
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly auth = inject(FIREBASE_AUTH);
@@ -23,7 +26,8 @@ export class AuthService {
   constructor() {
     const stop = onAuthStateChanged(this.auth, (user) => {
       this.user.set(user);
-      this.isAdmin.set(!!user);
+      // Solo las cuentas de ADMIN_EMAILS son admin (igual que en las reglas de Firestore).
+      this.isAdmin.set(!!user && ADMIN_EMAILS.includes((user.email ?? '').toLowerCase()));
       this.email.set(user?.email ?? null);
     });
     inject(DestroyRef).onDestroy(stop);

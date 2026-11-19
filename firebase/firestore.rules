@@ -3,19 +3,24 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Solo esta cuenta administra muestra.mx. Cualquier otra cuenta que inicie sesión NO tiene permisos de admin.
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email in ['admin@muestra.mx'];
+    }
+
     match /encuestas/{document} {
-      allow read: if request.auth != null || resource.data.get('active', true) == true;
-      allow create, update, delete: if request.auth != null;
+      allow read: if isAdmin() || resource.data.get('active', true) == true;
+      allow create, update, delete: if isAdmin();
     }
 
     match /votos/{document} {
       allow create: if true;
-      allow read, update, delete: if request.auth != null;
+      allow read, update, delete: if isAdmin();
     }
 
     match /voto_dispositivo/{document} {
       allow get, create: if true;
-      allow list, update, delete: if request.auth != null;
+      allow list, update, delete: if isAdmin();
     }
 
     match /resultados_encuestas/{document} {
@@ -25,12 +30,12 @@ service cloud.firestore {
 
     match /noticias/{document} {
       allow read: if true;
-      allow create, update, delete: if request.auth != null;
+      allow create, update, delete: if isAdmin();
     }
 
     match /contenido/{document} {
       allow read: if true;
-      allow create, update, delete: if request.auth != null;
+      allow create, update, delete: if isAdmin();
     }
 
   }
