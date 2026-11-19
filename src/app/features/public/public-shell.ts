@@ -10,12 +10,13 @@ import { Chatbot } from '../../shared/chatbot/chatbot';
 import { HireUs } from '../../shared/hire-us/hire-us';
 import { LoginModal } from '../admin/login-modal';
 import { NewsEditor } from '../admin/news-editor';
+import { SocialShare } from '../admin/social-share';
 import { SurveyModal } from '../survey/survey-modal';
 
 @Component({
   selector: 'app-public-shell',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Chatbot, HireUs, SurveyModal, LoginModal, NewsEditor],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Chatbot, HireUs, SurveyModal, LoginModal, NewsEditor, SocialShare],
   templateUrl: './public-shell.html',
   host: { class: 'notranslate', translate: 'no' },
 })

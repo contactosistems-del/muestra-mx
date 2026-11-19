@@ -23,6 +23,8 @@ export class NewsService {
   readonly editorOpen = signal(false);
   readonly editingId = signal<string | null>(null);
   readonly busy = signal(false);
+  /** Noticia abierta en la ventana "Publicar en redes" (null = cerrada). */
+  readonly shareId = signal<string | null>(null);
 
   constructor() {
     const stop = this.repo.watch((items) => {
@@ -41,6 +43,15 @@ export class NewsService {
     if (!id || isEditorialNews(id) || !this.byId(id)) return;
     this.editingId.set(id);
     this.editorOpen.set(true);
+  }
+
+  openShare(id: string): void {
+    if (!id || isEditorialNews(id) || !this.byId(id)) return;
+    this.shareId.set(id);
+  }
+
+  closeShare(): void {
+    this.shareId.set(null);
   }
 
   closeEditor(): void {
@@ -87,6 +98,9 @@ export class NewsService {
       const id = await this.repo.add(draft);
       this.closeEditor();
       await this.router.navigateByUrl(`/noticias/${id}`);
+      // Recién publicada: se abre "Publicar en redes" en cuanto la noticia llega de Firestore.
+      for (let i = 0; i < 20 && !this.byId(id); i += 1) await new Promise((r) => setTimeout(r, 250));
+      this.openShare(id);
     } finally {
       this.busy.set(false);
     }

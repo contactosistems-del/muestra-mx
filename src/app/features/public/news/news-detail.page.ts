@@ -1,3 +1,4 @@
+import { AuthService } from '../../../core/services/auth.service';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -15,6 +16,11 @@ import { newsCategoryLabel } from '../../../data/catalog';
       <article class="article-sheet news-detail" [attr.lang]="i18n.lang()">
         <div class="article-top">
           <a routerLink="/noticias" class="back-link">{{ i18n.t('newsBack') }}</a>
+          @if (auth.isAdmin() && !news.isEditorial(item.id)) {
+            <button type="button" class="share-btn social-btn" (click)="news.openShare(item.id)">
+              <i class="fa-solid fa-bullhorn"></i> Publicar en redes
+            </button>
+          }
           <button type="button" class="share-btn" (click)="copy()">
             <i class="fa-solid fa-share-nodes"></i> {{ copied() ? i18n.t('copied') : i18n.t('copyLink') }}
           </button>
@@ -46,6 +52,7 @@ import { newsCategoryLabel } from '../../../data/catalog';
     .news-detail { max-width: 860px; }
     .article-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; }
     .back-link { font-size: .85rem; font-weight: 800; color: var(--brand-red); }
+    .social-btn { background: #BE3455 !important; margin-right: .4rem; }
     .share-btn { background: #25D366; color: #FFF; border: none; padding: .4rem .8rem; border-radius: 4px; font-size: .75rem; font-weight: 800; cursor: pointer; }
     h1 { font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 900; margin: .8rem 0 0.6rem; line-height: 1.2; overflow-wrap: anywhere; }
     .meta { color: var(--text-muted); font-size: .88rem; margin-bottom: 1.2rem; }
@@ -60,6 +67,7 @@ import { newsCategoryLabel } from '../../../data/catalog';
 export class NewsDetailPage {
   readonly i18n = inject(I18nService);
   readonly news = inject(NewsService);
+  readonly auth = inject(AuthService);
   readonly newsCategoryLabel = newsCategoryLabel;
   readonly copied = signal(false);
   private readonly id = toSignal(inject(ActivatedRoute).paramMap.pipe(map((params) => params.get('id'))), {

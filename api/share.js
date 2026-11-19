@@ -43,7 +43,9 @@ async function newsMeta(id) {
   if (!title) return null;
   const rawImage = val(f.imageUrl) || '';
   let image = DEFAULT.image;
-  if (f.imageBytes || String(rawImage).startsWith('data:')) image = `${SITE}/api/news-image?id=${encodeURIComponent(id)}`;
+  const social = val(f.social) || {};
+  if (social.wide) image = absolute(String(social.wide));
+  else if (f.imageBytes || String(rawImage).startsWith('data:')) image = `${SITE}/api/news-image?id=${encodeURIComponent(id)}`;
   else if (rawImage) image = absolute(String(rawImage));
   return { title, description: summary(es(f.body)), image, type: 'article' };
 }

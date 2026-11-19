@@ -91,6 +91,9 @@
 @if (news.editorOpen()) {
   <app-news-editor />
 }
+@if (news.shareId() && auth.isAdmin()) {
+  <app-social-share />
+}
 
 @if (i18n.lang(); as lang) {
 <footer class="site-footer" [attr.lang]="lang">

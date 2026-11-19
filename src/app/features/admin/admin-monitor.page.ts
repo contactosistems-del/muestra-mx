@@ -10,6 +10,7 @@ import { ResultCard } from '../../shared/result-card/result-card';
 import { AdminInsights } from './admin-insights';
 import { ContentCms } from './content-cms';
 import { NewsEditor } from './news-editor';
+import { SocialShare } from './social-share';
 import { SurveyCms } from './survey-cms';
 
 type AdminTab = 'results' | 'charts' | 'surveys' | 'content' | 'news';
@@ -17,7 +18,7 @@ type AdminTab = 'results' | 'charts' | 'surveys' | 'content' | 'news';
 @Component({
   selector: 'app-admin-monitor',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, FormsModule, LeafletMap, ResultCard, AdminInsights, ContentCms, SurveyCms, NewsEditor],
+  imports: [RouterLink, FormsModule, LeafletMap, ResultCard, AdminInsights, ContentCms, SurveyCms, NewsEditor, SocialShare],
   template: `
     <section class="admin-monitor-overlay active">
       <div class="monitor-shell">
@@ -214,6 +215,9 @@ type AdminTab = 'results' | 'charts' | 'surveys' | 'content' | 'news';
                       @if (news.isEditorial(item.id)) {
                         <span class="badge">{{ i18n.lang() === 'es' ? 'Publicada desde el código' : 'Published from code' }}</span>
                       } @else {
+                        <button type="button" class="ghost" (click)="news.openShare(item.id)">
+                          <i class="fa-solid fa-bullhorn"></i> Redes
+                        </button>
                         <button type="button" class="ghost" (click)="news.openEdit(item.id)">
                           {{ i18n.t('editNews') }}
                         </button>
@@ -233,6 +237,9 @@ type AdminTab = 'results' | 'charts' | 'surveys' | 'content' | 'news';
 
       @if (news.editorOpen()) {
         <app-news-editor />
+      }
+      @if (news.shareId()) {
+        <app-social-share />
       }
 
       @if (confirmOpen()) {
