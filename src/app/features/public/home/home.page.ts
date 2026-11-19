@@ -115,7 +115,7 @@ export class HomePage {
   readonly content = inject(ContentService);
   readonly news = inject(NewsService);
   readonly newsCategoryLabel = newsCategoryLabel;
-  readonly latestNews = computed(() => this.news.items().slice(0, 3));
+  readonly latestNews = computed(() => this.news.items().slice(0, 6));
 
   excerpt(text: string): string {
     const clean = text.trim();
