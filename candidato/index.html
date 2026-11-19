@@ -163,6 +163,23 @@
   .sp-row { display: flex; justify-content: space-between; font-size: .78rem; font-weight: 700; margin: .3rem 0 .15rem; }
   .sp-track { height: 6px; border-radius: 4px; background: rgba(255,255,255,.08); overflow: hidden; display: flex; }
   .sp-track i { display: block; height: 100%; }
+  /* ---------- Panel de población (CONAPO) ---------- */
+  .pop { position: absolute; z-index: 1200; left: .7rem; right: .7rem; top: calc(8.6rem + env(safe-area-inset-top)); max-width: 440px; margin: 0 auto;
+    max-height: calc(100% - 9.5rem); overflow: auto; padding: 1rem 1.1rem 1.1rem; border-radius: 18px; background: rgba(10,13,22,.94);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--line); box-shadow: 0 30px 60px -20px rgba(0,0,0,.9);
+    opacity: 0; transform: translateY(-12px) scale(.98); pointer-events: none; transition: opacity .3s, transform .3s; }
+  .pop.show { opacity: 1; transform: none; pointer-events: auto; }
+  .pop-x { position: absolute; right: .7rem; top: .6rem; width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line);
+    background: rgba(255,255,255,.06); color: #fff; font: 900 .9rem/1 inherit; cursor: pointer; }
+  .pop-big { font-family: Montserrat, sans-serif; font-weight: 900; font-size: 2rem; line-height: 1.05; margin: .25rem 0 .1rem; }
+  .pop-up { display: inline-block; margin-left: .4rem; font: 800 .78rem "Plus Jakarta Sans", sans-serif; color: #3cc47a; vertical-align: middle; }
+  .pop-sub { color: var(--muted); font-size: .8rem; font-weight: 600; }
+  .pop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin: .9rem 0; }
+  .pop-card { padding: .6rem .7rem; border-radius: 12px; background: rgba(255,255,255,.05); border: 1px solid var(--line); }
+  .pop-card b { display: block; font-family: Montserrat, sans-serif; font-size: 1.05rem; font-weight: 900; }
+  .pop-card span { font-size: .68rem; color: var(--muted); font-weight: 700; }
+  .pop svg { width: 100%; height: 90px; display: block; margin-top: .3rem; }
+  .pop .src { margin-top: .7rem; }
   .leaflet-tooltip.sec-lbl { background: rgba(7,9,15,.78); border: 1px solid rgba(255,255,255,.18); color: #fff; box-shadow: none;
     padding: 1px 6px; border-radius: 8px; font: 800 11px/1.3 "Plus Jakarta Sans", sans-serif; }
   .leaflet-tooltip.sec-lbl::before { display: none; }
@@ -210,6 +227,7 @@
   </header>
 
   <div class="modes" id="modes">
+    <button class="mode" id="pop-btn" data-pop="1"><span class="sw" style="--k:#fff"></span>Población 2027 <span class="tag">CONAPO</span></button>
     <button class="mode on" data-mode="votos"><span class="sw" style="--k:#ff4f7b"></span>Votos en vivo</button>
     <button class="mode" data-mode="ln"><span class="sw" style="--k:#2fa0d0"></span>Electores <span class="tag">INE</span></button>
     <button class="mode" data-mode="jov"><span class="sw" style="--k:#3cc47a"></span>Jóvenes 18-29</button>
@@ -218,6 +236,8 @@
     <button class="mode" data-mode="adu"><span class="sw" style="--k:#c9c021"></span>Adultos 30-64</button>
     <button class="mode" data-mode="may"><span class="sw" style="--k:#d98c16"></span>Mayores 65+</button>
   </div>
+
+  <div class="pop" id="pop" role="dialog" aria-label="Población del municipio"></div>
 
   <div class="toast" id="toast"><i></i><span></span></div>
 
@@ -537,12 +557,75 @@ async function loadSections() {
   } catch { /* sin capa del INE */ }
 }
 
-document.querySelectorAll(".mode").forEach((b) => b.onclick = () => {
+document.querySelectorAll(".mode[data-mode]").forEach((b) => b.onclick = () => {
   mode = b.dataset.mode;
-  document.querySelectorAll(".mode").forEach((x) => x.classList.toggle("on", x === b));
+  document.querySelectorAll(".mode[data-mode]").forEach((x) => x.classList.toggle("on", x === b));
   paintSections();
 });
 loadSections();
+
+
+/* ---------- Población del municipio (CONAPO) ---------- */
+const popEl = document.getElementById("pop");
+const popBtn = document.getElementById("pop-btn");
+let popData = null;
+const fmtN = (n) => Math.round(n).toLocaleString("es-MX");
+
+function sparkline(serie, mark) {
+  const ys = Object.keys(serie).map(Number), vs = ys.map((y) => serie[y]);
+  const W = 400, H = 90, P = 6, min = Math.min(...vs), max = Math.max(...vs);
+  const x = (y) => P + ((y - ys[0]) / (ys[ys.length - 1] - ys[0])) * (W - 2 * P);
+  const yv = (v) => H - P - ((v - min) / (max - min || 1)) * (H - 2 * P - 14);
+  const pts = ys.map((y) => `${x(y).toFixed(1)},${yv(serie[y]).toFixed(1)}`).join(" ");
+  const proj = ys.filter((y) => y >= 2020).map((y) => `${x(y).toFixed(1)},${yv(serie[y]).toFixed(1)}`).join(" ");
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+    <defs><linearGradient id="pg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff4f7b" stop-opacity=".35"/><stop offset="1" stop-color="#ff4f7b" stop-opacity="0"/></linearGradient></defs>
+    <polygon points="${P},${H} ${pts} ${W - P},${H}" fill="url(#pg)"/>
+    <polyline points="${pts}" fill="none" stroke="#8b95a7" stroke-width="2"/>
+    <polyline points="${proj}" fill="none" stroke="#ff4f7b" stroke-width="2.5" stroke-dasharray="6 4"/>
+    <circle cx="${x(mark)}" cy="${yv(serie[mark])}" r="5" fill="#ff4f7b" stroke="#fff" stroke-width="2"/>
+    <text x="${P}" y="12" fill="#8b95a7" font-size="11" font-weight="700">${ys[0]}</text>
+    <text x="${W - P}" y="12" fill="#8b95a7" font-size="11" font-weight="700" text-anchor="end">${ys[ys.length - 1]}</text>
+    <text x="${x(mark)}" y="${Math.max(24, yv(serie[mark]) - 10)}" fill="#fff" font-size="11" font-weight="800" text-anchor="middle">2027</text>
+  </svg>`;
+}
+
+function renderPop() {
+  const d = popData, a = d.y2027, b = d.y2020;
+  const grow = b.total ? ((a.total - b.total) / b.total) * 100 : 0;
+  const ln = secLayer ? secLayer.getLayers().reduce((s, l) => s + (l.feature.properties.ln || 0), 0) : 0;
+  const ages = [["Niñas y niños 0-11", a.ninos, "#00BBF9"], ["Jóvenes 12-29", a.jovenes, "#3cc47a"], ["Adultos 30-59", a.adultos, "#c9c021"], ["Mayores 60+", a.mayores, "#d98c16"]];
+  popEl.innerHTML = `<button class="pop-x" aria-label="Cerrar">✕</button>
+    <div class="sp-k">Población de ${esc(CITY.name)} · Proyección</div>
+    <div class="pop-big">${fmtN(a.total)}<span class="pop-up">${grow >= 0 ? "▲" : "▼"} ${Math.abs(grow).toFixed(1)}% vs 2020</span></div>
+    <div class="pop-sub">habitantes estimados en 2027</div>
+    ${sparkline(d.serie, 2027)}
+    <div class="pop-grid">
+      <div class="pop-card"><b>${fmtN(a.mayores_edad)}</b><span>mayores de edad (2027)</span></div>
+      <div class="pop-card"><b>${ln ? fmtN(ln) : "—"}</b><span>en lista nominal INE hoy</span></div>
+      <div class="pop-card"><b>${a.edad_mediana} años</b><span>edad mediana</span></div>
+      <div class="pop-card"><b>${pct(a.mujeres, a.total)}% · ${pct(a.hombres, a.total)}%</b><span>mujeres · hombres</span></div>
+    </div>
+    ${ages.map(([k, v, c]) => `<div class="sp-row"><span>${k}</span><span>${pct(v, a.total)}% · ${fmtN(v)}</span></div>
+      <div class="sp-track"><i style="width:${pct(v, a.total)}%;background:${c}"></i></div>`).join("")}
+    <div class="src">Fuente: ${esc(d.fuente)} (municipio de ${esc(d.municipio)}). Lista nominal: INE, 5 nov 2026.</div>`;
+  popEl.querySelector(".pop-x").onclick = () => togglePop(false);
+}
+
+function togglePop(show) {
+  const on = show ?? !popEl.classList.contains("show");
+  if (on && popData) renderPop();
+  popEl.classList.toggle("show", on && !!popData);
+  popBtn.classList.toggle("on", on && !!popData);
+}
+popBtn.onclick = () => togglePop();
+(async () => {
+  try {
+    const r = await fetch(CITY.data.replace("-secciones.json", "-poblacion.json"));
+    if (r.ok) popData = await r.json();
+  } catch { /* sin datos de CONAPO */ }
+  if (!popData) popBtn.style.display = "none";
+})();
 
 /* ---------- Arranque ---------- */
 try {
