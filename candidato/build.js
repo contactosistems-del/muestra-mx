@@ -12,12 +12,12 @@ const path = require('path');
 const CIUDADES = [
   { slug: '', og: 'playa', name: 'Playa del Carmen', survey: 'playa-del-carmen-2027', lat: 20.6296, lng: -87.0739, zoom: 13 },
   { slug: 'tulum', og: 'tulum', name: 'Tulum', survey: 'tulum-2027', lat: 20.2114, lng: -87.4654, zoom: 13,
-    // Colores pedidos por la campaña (por id de opción en la encuesta).
+    // Colores pedidos para cada candidato (por id de opción en la encuesta). Solo colores, sin partidos.
     colors: {
-      a: '#FF7A00', // Romualda Dzul · naranja (MC)
-      b: '#2E9E44', // Fili Tah · verde (PVEM)
-      c: '#9F2241', // Jorge Portilla · guinda (Morena)
-      d: '#0059A8', // Iliana Canul · azul (PAN)
+      a: '#FF8A1F', // Romualda Dzul · naranja
+      b: '#22C55E', // Fili Tah · verde
+      c: '#B0284F', // Jorge Portilla · guinda
+      d: '#2F7BFF', // Iliana Canul · azul
     } },
   { slug: 'tabasco', og: 'tabasco', name: 'Centro, Tabasco', survey: 'tabasco_centro2027', lat: 17.9895, lng: -92.9475, zoom: 12 },
 ];
