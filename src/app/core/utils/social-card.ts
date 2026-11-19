@@ -37,7 +37,11 @@ export async function renderSocialCards(input: SocialCardInput): Promise<SocialC
 /** Saca el crédito de la foto ("Foto: …") del final del texto de la nota, si lo tiene. */
 export function photoCredit(body: string): string {
   const m = String(body || '').match(/(?:^|\n)\s*Foto:\s*(.+)\s*$/i);
-  return m ? `Foto: ${m[1].trim()}`.slice(0, 80) : '';
+  if (!m) return '';
+  let credit = m[1].trim();
+  // "Descripción. Autor / Fuente (licencia)" → solo "Autor / Fuente (licencia)", para que quepa.
+  if (credit.length > 55 && credit.includes('. ')) credit = credit.slice(credit.lastIndexOf('. ') + 2);
+  return `Foto: ${credit}`.slice(0, 64);
 }
 
 function loadImage(src: string): Promise<HTMLImageElement | null> {
